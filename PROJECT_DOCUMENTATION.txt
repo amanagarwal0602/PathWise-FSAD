@@ -1,0 +1,595 @@
+================================================================================
+                        PATHWISE - CAREER GUIDANCE PLATFORM
+                           PROJECT DOCUMENTATION
+================================================================================
+
+PROJECT NAME: PathWise - Career Guidance & Counseling Platform
+VERSION: 1.0.0
+PROJECT TYPE: Full Stack Application Development (FSAD)
+
+================================================================================
+                              TABLE OF CONTENTS
+================================================================================
+1. Project Overview
+2. Tech Stack
+3. Project Structure
+4. Navigation & Routing
+5. User Roles & Features
+6. Core Functionalities
+7. Data Management
+8. UI/UX Features
+9. Deployment Configuration
+
+================================================================================
+                          1. PROJECT OVERVIEW
+================================================================================
+
+PathWise is a comprehensive Career Guidance Platform designed to help students
+make informed career decisions through personalized guidance and expert 
+counselling. The platform connects students with professional counsellors and
+provides AI-powered career aptitude assessments.
+
+KEY OBJECTIVES:
+- Help students discover their career aptitude through assessments
+- Connect students with expert career counsellors
+- Enable seamless communication between students and counsellors
+- Provide administrative tools for platform management
+- Deliver personalized career recommendations
+
+================================================================================
+                            2. TECH STACK
+================================================================================
+
+FRONTEND FRAMEWORK:
+------------------
+- React 18.2.0            : Modern JavaScript library for building user interfaces
+- React DOM 18.2.0        : React package for DOM-specific methods
+
+ROUTING:
+--------
+- React Router DOM 7.13.1 : Declarative routing for React applications
+                            (Supports nested routes, dynamic routing, navigation)
+
+BUILD TOOL:
+-----------
+- Vite 4.4.0              : Next-generation frontend build tool
+                            (Fast dev server, HMR, optimized production builds)
+- @vitejs/plugin-react    : Official React plugin for Vite
+
+ICONS & UI:
+-----------
+- Lucide React 0.263.1    : Beautiful & consistent icon toolkit
+                            (Modern replacement for Feather icons)
+
+FONTS:
+------
+- Google Fonts:
+  - Fraunces              : Serif font for headings (weights: 300, 400, 600, 700)
+  - DM Sans               : Sans-serif font for body (weights: 300, 400, 500, 600)
+
+STATE MANAGEMENT:
+-----------------
+- React Context API       : Built-in state management solution
+- localStorage            : Browser-based persistent storage
+
+STYLING:
+--------
+- Custom CSS              : Hand-crafted styles in global.css
+- CSS Variables           : Theme customization support
+- Responsive Design       : Mobile-first approach
+
+DEPLOYMENT:
+-----------
+- Vercel                  : Serverless deployment platform
+                            (Configured via vercel.json)
+
+DEVELOPMENT TOOLS:
+------------------
+- npm                     : Package manager
+- ES Modules              : Modern JavaScript module system
+
+================================================================================
+                          3. PROJECT STRUCTURE
+================================================================================
+
+PathWise-FSAD-PS24/
+│
+├── index.html                 # Main HTML entry point
+├── package.json               # Dependencies and scripts
+├── vite.config.js             # Vite build configuration
+├── vercel.json                # Vercel deployment configuration
+├── README.md                  # Project readme
+│
+├── public/                    # Static assets
+│   ├── logo.png               # Application logo
+│   └── sample/
+│       └── index.html         # Sample/demo page
+│
+└── src/                       # Source code directory
+    │
+    ├── main.jsx               # Application entry point
+    ├── App.jsx                # Root component with routing
+    │
+    ├── components/            # Reusable UI components
+    │   ├── CareerPaths.jsx    # Career paths showcase
+    │   ├── Counsellors.jsx    # Counsellors listing
+    │   ├── CTA.jsx            # Call-to-action component
+    │   ├── Features.jsx       # Platform features display
+    │   ├── Footer.jsx         # Page footer
+    │   ├── Hero.jsx           # Hero/landing section
+    │   ├── HowItWorks.jsx     # Process explanation
+    │   ├── Navbar.jsx         # Navigation bar
+    │   ├── Stats.jsx          # Statistics display
+    │   └── Testimonials.jsx   # User testimonials
+    │
+    ├── context/               # State management
+    │   └── DataContext.jsx    # Global data context provider
+    │
+    ├── pages/                 # Page components
+    │   ├── Login.jsx          # User login page
+    │   ├── Register.jsx       # User registration page
+    │   ├── StudentDashboard.jsx    # Student portal
+    │   ├── CounsellorDashboard.jsx # Counsellor portal
+    │   └── AdminDashboard.jsx      # Admin control panel
+    │
+    └── styles/
+        └── global.css         # Global stylesheet
+
+================================================================================
+                        4. NAVIGATION & ROUTING
+================================================================================
+
+ROUTE CONFIGURATION (React Router DOM v7):
+------------------------------------------
+
+URL PATH              COMPONENT                DESCRIPTION
+--------              ---------                -----------
+/                     Redirect to /login       Default route
+/login                Login.jsx                User authentication
+/register             Register.jsx             New user registration
+/student              StudentDashboard.jsx     Student portal
+/counsellor           CounsellorDashboard.jsx  Counsellor portal
+/admin                AdminDashboard.jsx       Admin control panel
+
+NAVIGATION FLOW:
+----------------
+1. Default (/) → Redirects to Login Page
+2. Login → Role-based redirect:
+   - Admin → /admin
+   - Counsellor → /counsellor
+   - Student → /student
+3. Register → Login Page (after successful registration)
+4. Logout → Login Page (clears session)
+
+PROTECTED NAVIGATION:
+---------------------
+- Each dashboard checks for authenticated user via localStorage
+- Role-based access control implemented
+- Automatic redirection for unauthorized access
+
+================================================================================
+                       5. USER ROLES & FEATURES
+================================================================================
+
+There are THREE user roles in the system:
+
+------------------------------------------------------------------------------
+ROLE 1: STUDENT
+------------------------------------------------------------------------------
+
+DASHBOARD TABS:
+1. Dashboard (Home)
+   - Welcome message with user name
+   - Statistics cards showing:
+     * Tests taken count
+     * Scheduled meetings count
+     * Messages count
+   - Assigned counsellor information
+
+2. Take Test
+   - Career Aptitude Assessment
+   - 10 multiple-choice questions
+   - Multiple selections allowed per question
+   - Progress bar tracking
+   - Categories: Analytical, Creative, Technical, Social
+
+3. My Results
+   - View all test results
+   - Category-wise score breakdown
+   - Recommended careers based on aptitude
+   - Test completion dates
+
+4. Chat
+   - Real-time messaging with assigned counsellor
+   - Message history
+   - Timestamp display
+   - Send/receive functionality
+
+5. Meetings
+   - View scheduled meetings
+   - Meeting status (pending/approved/scheduled)
+   - Join meeting links (Google Meet/Zoom/Teams)
+
+------------------------------------------------------------------------------
+ROLE 2: COUNSELLOR
+------------------------------------------------------------------------------
+
+DASHBOARD TABS:
+1. Dashboard (Home)
+   - Welcome message
+   - Statistics:
+     * Pending student requests
+     * Total students assigned
+     * Scheduled meetings
+     * Created groups
+   - Alerts for pending requests/meetings
+
+2. Requests
+   - View pending student requests
+   - Accept/manage student assignments
+   - Student registration date display
+
+3. My Students
+   - View all assigned students
+   - Student test results summary
+   - Quick actions: Chat, Schedule Meeting
+   - Student profile information
+
+4. Chat
+   - Student list sidebar
+   - Individual chat with each student
+   - Message history
+   - Send notifications
+
+5. Meetings
+   - Create new meetings:
+     * Individual (single student)
+     * Group (multiple students)
+   - Set meeting details:
+     * Title, Date, Time
+     * Meeting link (Google Meet/Zoom/Teams)
+   - Manage meeting requests
+   - Share meeting links with students
+
+6. Groups
+   - Create student groups
+   - Group meeting scheduling
+   - Batch communication
+
+------------------------------------------------------------------------------
+ROLE 3: ADMIN
+------------------------------------------------------------------------------
+
+DASHBOARD TABS:
+1. Dashboard (Home)
+   - Platform statistics:
+     * Total students
+     * Total counsellors
+     * Total meetings
+     * Total messages
+   - Quick actions:
+     * Add Counsellor
+     * Add Student
+     * Create Meeting
+     * View All Chats
+   - Assignment overview
+   - Recent chat activity
+
+2. Students
+   - Complete student list with data table
+   - View individual student profiles
+   - Student information:
+     * Name, Email, Status
+     * Assigned counsellor
+     * Test count
+   - Actions:
+     * View details
+     * Edit profile
+     * Toggle status (Active/Inactive)
+     * Delete user
+
+3. Counsellors
+   - Counsellor management
+   - View counsellor profiles
+   - Information displayed:
+     * Name, Email, Specialization
+     * Assigned student count
+     * Meeting count
+   - Full CRUD operations
+
+4. Assignments
+   - Student-counsellor assignment management
+   - Assign/reassign counsellors to students
+   - View unassigned students
+
+5. Meetings
+   - Create meetings for any student-counsellor pair
+   - View all platform meetings
+   - Manage meeting statuses
+   - Delete meetings
+
+================================================================================
+                       6. CORE FUNCTIONALITIES
+================================================================================
+
+A. AUTHENTICATION SYSTEM
+------------------------
+- Email/password login
+- Role-based authentication
+- Session management via localStorage
+- Auto-redirect based on user role
+- Default admin credentials: admin/admin
+
+B. CAREER APTITUDE TEST
+-----------------------
+- 10 comprehensive questions
+- Multiple selection per question
+- Categories assessed:
+  1. Analytical - Problem-solving, logical thinking
+  2. Creative - Design, arts, content creation
+  3. Technical - Engineering, programming, mechanics
+  4. Social - People skills, teaching, counselling
+  
+- Career Recommendations by Category:
+  * Analytical: Data Scientist, Financial Analyst, Actuary, Research Scientist, 
+                Statistician, Business Analyst
+  * Creative: Graphic Designer, Content Writer, UI/UX Designer, Animator, 
+              Film Director, Architect
+  * Technical: Software Engineer, Mechanical Engineer, Civil Engineer, 
+               Network Administrator, Data Engineer, Robotics Engineer
+  * Social: Counsellor, HR Manager, Teacher, Social Worker, 
+            Public Relations, Healthcare Professional
+
+C. REAL-TIME CHAT SYSTEM
+------------------------
+- One-to-one messaging
+- Student-counsellor communication
+- Message timestamps
+- Chat history persistence
+- Meeting notification messages
+
+D. MEETING MANAGEMENT
+---------------------
+- Individual and group meetings
+- Meeting link integration (Google Meet/Zoom/Teams)
+- Status tracking: Pending → Approved/Rejected → Completed
+- Automatic notifications to participants
+- Calendar-style scheduling
+
+E. USER MANAGEMENT (ADMIN)
+--------------------------
+- Add/Edit/Delete users
+- Activate/Deactivate accounts
+- Role assignment
+- Counsellor specialization settings
+- Bulk operations
+
+F. ASSIGNMENT SYSTEM
+--------------------
+- Counsellor accepts student requests
+- Admin can assign counsellors
+- Track assigned/unassigned students
+- Assignment history
+
+================================================================================
+                        7. DATA MANAGEMENT
+================================================================================
+
+DATA CONTEXT (DataContext.jsx):
+-------------------------------
+The application uses React Context API for global state management.
+
+DATA STRUCTURE:
+{
+  users: [
+    {
+      id: Number,
+      name: String,
+      email: String,
+      password: String,
+      role: 'student' | 'counsellor' | 'admin',
+      status: 'active' | 'inactive',
+      specialization: String (for counsellors),
+      assignedCounsellor: Number (for students),
+      createdAt: ISO String
+    }
+  ],
+  meetings: [
+    {
+      id: Number,
+      counsellorId: Number,
+      studentId: Number,
+      title: String,
+      date: String,
+      time: String,
+      type: 'individual' | 'group',
+      meetingLink: String,
+      participants: Array<Number>,
+      status: 'pending' | 'scheduled' | 'approved' | 'rejected',
+      createdAt: ISO String
+    }
+  ],
+  groups: [
+    {
+      id: Number,
+      counsellorId: Number,
+      name: String,
+      studentIds: Array<Number>,
+      createdAt: ISO String
+    }
+  ],
+  chats: [
+    {
+      id: Number,
+      fromId: Number,
+      toId: Number,
+      message: String,
+      timestamp: ISO String
+    }
+  ],
+  testResults: [
+    {
+      id: Number,
+      studentId: Number,
+      answers: Object,
+      categoryCounts: Object,
+      topCategory: String,
+      recommendedCareers: Array<String>,
+      completedAt: ISO String
+    }
+  ]
+}
+
+CONTEXT FUNCTIONS:
+------------------
+- addUser(userData)              : Register new user
+- login(email, password)         : Authenticate user
+- deleteUser(userId)             : Remove user
+- toggleUserStatus(userId)       : Activate/Deactivate user
+- acceptStudentRequest(studentId, counsellorId) : Assign counsellor
+- saveTestResult(studentId, result) : Store test results
+- addChatMessage(fromId, toId, message) : Send chat message
+- createMeeting(counsellorId, meetingData) : Schedule meeting
+- requestMeeting(studentId, counsellorId, meetingData) : Request meeting
+- updateMeetingStatus(meetingId, status) : Change meeting status
+- createGroup(counsellorId, name, studentIds) : Create student group
+
+PERSISTENCE:
+------------
+- All data persisted in localStorage
+- Key: 'pathwiseData' for main data
+- Key: 'currentUser' for session
+- Auto-save on data changes via useEffect
+
+================================================================================
+                        8. UI/UX FEATURES
+================================================================================
+
+DESIGN PRINCIPLES:
+------------------
+- Clean, modern interface
+- Consistent color scheme
+- Intuitive navigation
+- Responsive layout
+- Accessibility considerations
+
+LAYOUT COMPONENTS:
+------------------
+1. Login/Register Pages
+   - Split-screen design
+   - Left: Branding & features
+   - Right: Form panel
+   - Feature checkmarks
+   - Role selection cards
+
+2. Dashboard Layout
+   - Sidebar navigation
+   - User avatar & info
+   - Quick navigation buttons
+   - Main content area
+   - Logout button
+
+3. Statistics Cards
+   - Icon + Number display
+   - Label descriptions
+   - Clickable cards (admin)
+
+4. Data Tables (Admin)
+   - Sortable columns
+   - Action buttons
+   - Status badges
+   - Pagination support
+
+5. Chat Interface
+   - Contact list sidebar
+   - Message bubbles (sent/received)
+   - Timestamp display
+   - Input field with send button
+
+6. Test Interface
+   - Progress bar
+   - Question counter
+   - Multiple selection checkboxes
+   - Navigation buttons
+   - Result visualization
+
+UI COMPONENTS LIBRARY:
+----------------------
+- Hero section
+- Feature cards
+- Testimonial sliders
+- Career path cards
+- Statistics counters
+- Call-to-action sections
+- Footer with links
+
+================================================================================
+                     9. DEPLOYMENT CONFIGURATION
+================================================================================
+
+VERCEL CONFIGURATION (vercel.json):
+-----------------------------------
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
+
+This configuration enables:
+- Single Page Application (SPA) routing
+- Client-side routing support
+- 404 handling for direct URL access
+
+NPM SCRIPTS:
+------------
+- npm run dev     : Start development server (Vite)
+- npm run build   : Build for production
+- npm run preview : Preview production build
+
+BUILD OUTPUT:
+-------------
+- Optimized production bundle
+- Code splitting
+- Asset optimization
+- Tree shaking
+
+================================================================================
+                          ADDITIONAL NOTES
+================================================================================
+
+COUNSELLOR SPECIALIZATIONS:
+---------------------------
+- Engineering & Technology
+- Medical & Healthcare
+- Business & Management
+- Arts & Design
+- Science & Research
+- Law & Legal
+- General Guidance
+
+DEFAULT CREDENTIALS:
+--------------------
+Admin Account:
+- Email: admin
+- Password: admin
+
+BROWSER SUPPORT:
+----------------
+- Modern browsers with ES6+ support
+- Chrome, Firefox, Safari, Edge (latest versions)
+
+LOCAL STORAGE REQUIREMENTS:
+---------------------------
+- Required for data persistence
+- Approximately 5MB storage needed
+- Clear storage to reset application data
+
+================================================================================
+                              END OF DOCUMENT
+================================================================================
+
+Document Created: February 2026
+Project: PathWise - FSAD PS24
+Version: 1.0.0
+
+================================================================================
