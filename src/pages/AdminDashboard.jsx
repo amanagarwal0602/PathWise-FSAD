@@ -11,7 +11,6 @@ function AdminDashboard() {
   } = useData();
   
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [selectedReport, setSelectedReport] = useState(null);
   const [showAddCounsellor, setShowAddCounsellor] = useState(false);
   const [showAddStudent, setShowAddStudent] = useState(false);
   const [showEditUser, setShowEditUser] = useState(null);
@@ -220,79 +219,6 @@ function AdminDashboard() {
     ).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
   };
 
-  // Get all unique chat pairs
-  const getAllChatPairs = () => {
-    const pairs = [];
-    students.forEach(student => {
-      if (student.assignedCounsellor) {
-        const counsellor = data.users.find(u => u.id === student.assignedCounsellor);
-        if (counsellor) {
-          const chatCount = getChatBetween(student.id, counsellor.id).length;
-          pairs.push({
-            student,
-            counsellor,
-            chatCount
-          });
-        }
-      }
-    });
-    return pairs;
-  };
-
-  // Generate report data
-  const generateReport = (type) => {
-    let reportData = [];
-    switch(type) {
-      case 'students':
-        reportData = students.map(s => ({
-          name: s.name,
-          email: s.email,
-          status: s.status || 'active',
-          counsellor: getCounsellorName(s.assignedCounsellor),
-          testsCompleted: data.testResults.filter(t => t.studentId === s.id).length
-        }));
-        break;
-      case 'counsellors':
-        reportData = counsellors.map(c => ({
-          name: c.name,
-          email: c.email,
-          specialization: c.specialization || 'General',
-          status: c.status || 'active',
-          studentsAssigned: getStudentCount(c.id),
-          meetingsCreated: data.meetings.filter(m => m.counsellorId === c.id).length
-        }));
-        break;
-      case 'tests':
-        reportData = data.testResults.map(t => {
-          const student = data.users.find(u => u.id === t.studentId);
-          return {
-            student: student?.name || 'Unknown',
-            topCategory: t.topCategory,
-            date: new Date(t.completedAt).toLocaleDateString(),
-            careers: t.recommendedCareers?.join(', ') || ''
-          };
-        });
-        break;
-      case 'meetings':
-        reportData = data.meetings.map(m => {
-          const student = data.users.find(u => m.participants?.includes(u.id) || u.id === m.studentId);
-          const counsellor = data.users.find(u => u.id === m.counsellorId);
-          return {
-            title: m.title || m.topic,
-            student: student?.name || 'Multiple',
-            counsellor: counsellor?.name || 'Unknown',
-            date: m.date,
-            time: m.time,
-            status: m.status
-          };
-        });
-        break;
-      default:
-        break;
-    }
-    setSelectedReport({ type, data: reportData });
-  };
-
   const getTodayDate = () => new Date().toISOString().split('T')[0];
 
   return (
@@ -300,13 +226,12 @@ function AdminDashboard() {
       {/* Sidebar */}
       <aside className="sidebar admin-sidebar">
         <div className="sidebar-header">
-          <span className="logo-icon">🎯</span>
+          <img src="/logo.png" alt="PathWise" className="logo-img" />
           <h2>PathWise</h2>
         </div>
-        <div className="user-info admin-badge">
-          <div className="avatar">👑</div>
-          <span>Administrator</span>
-          <small>Full Access</small>
+        <div className="user-info">
+          <div className="avatar">👤</div>
+          <span>Admin</span>
         </div>
         
         <nav className="sidebar-nav">
@@ -322,17 +247,8 @@ function AdminDashboard() {
           <button className={activeTab === 'assignments' ? 'active' : ''} onClick={() => setActiveTab('assignments')}>
             🔗 Assignments
           </button>
-          <button className={activeTab === 'chats' ? 'active' : ''} onClick={() => setActiveTab('chats')}>
-            💬 All Chats
-          </button>
           <button className={activeTab === 'meetings' ? 'active' : ''} onClick={() => setActiveTab('meetings')}>
             📅 Meetings
-          </button>
-          <button className={activeTab === 'tests' ? 'active' : ''} onClick={() => setActiveTab('tests')}>
-            📝 Tests
-          </button>
-          <button className={activeTab === 'reports' ? 'active' : ''} onClick={() => setActiveTab('reports')}>
-            📈 Reports
           </button>
         </nav>
 
@@ -922,49 +838,6 @@ function AdminDashboard() {
           </div>
         )}
 
-        {/* All Chats */}
-        {activeTab === 'chats' && !viewingChat && (
-          <div className="manage-section">
-            <h1>💬 All Conversations</h1>
-            <p className="subtitle">View all chats between students and counsellors</p>
-            
-            {getAllChatPairs().length === 0 ? (
-              <div className="empty-state">
-                <span className="empty-icon">💬</span>
-                <p>No chat conversations yet.</p>
-              </div>
-            ) : (
-              <div className="chat-pairs-list">
-                {getAllChatPairs().map((pair, i) => (
-                  <div key={i} className="chat-pair-card" onClick={() => setViewingChat({ studentId: pair.student.id, counsellorId: pair.counsellor.id })}>
-                    <div className="pair-users">
-                      <div className="pair-user">
-                        <span className="user-icon">🎓</span>
-                        <div>
-                          <strong>{pair.student.name}</strong>
-                          <small>Student</small>
-                        </div>
-                      </div>
-                      <span className="pair-arrow">↔️</span>
-                      <div className="pair-user">
-                        <span className="user-icon">👨‍🏫</span>
-                        <div>
-                          <strong>{pair.counsellor.name}</strong>
-                          <small>Counsellor</small>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="pair-stats">
-                      <span className="message-count">💬 {pair.chatCount} messages</span>
-                      <button className="btn-primary btn-small">View Chat →</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
         {/* View Chat Between Student-Counsellor */}
         {viewingChat && (
           <div className="modal-overlay" onClick={() => setViewingChat(null)}>
@@ -1093,127 +966,6 @@ function AdminDashboard() {
                     })}
                   </tbody>
                 </table>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Tests */}
-        {activeTab === 'tests' && (
-          <div className="tests-section">
-            <h1>Test Management</h1>
-            
-            <div className="test-info-card">
-              <h3>Career Aptitude Test</h3>
-              <div className="test-stats">
-                <p><strong>Questions:</strong> {aptitudeQuestions.length}</p>
-                <p><strong>Total Completions:</strong> {data.testResults.length}</p>
-              </div>
-            </div>
-
-            <div className="test-results-summary">
-              <h3>All Test Results</h3>
-              {data.testResults.length === 0 ? (
-                <p className="no-data">No test results yet.</p>
-              ) : (
-                <div className="data-table-container">
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th>Student</th>
-                        <th>Top Category</th>
-                        <th>Recommended Careers</th>
-                        <th>Date</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.testResults.map((result, i) => {
-                        const student = data.users.find(u => u.id === result.studentId);
-                        return (
-                          <tr key={i}>
-                            <td>
-                              <span className="clickable-name" onClick={() => { setViewingStudent(result.studentId); setActiveTab('students'); }}>
-                                {student?.name || 'Unknown'}
-                              </span>
-                            </td>
-                            <td><span className="category-badge">{result.topCategory}</span></td>
-                            <td>{result.recommendedCareers?.slice(0, 3).join(', ')}</td>
-                            <td>{new Date(result.completedAt).toLocaleDateString()}</td>
-                            <td>
-                              <button className="btn-small btn-primary" onClick={() => { setViewingStudent(result.studentId); setActiveTab('students'); }}>
-                                View Student
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Reports */}
-        {activeTab === 'reports' && (
-          <div className="reports-section">
-            <h1>Reports & Analytics</h1>
-            
-            <div className="report-options">
-              <div className="report-card" onClick={() => generateReport('students')}>
-                <span className="report-icon">👥</span>
-                <h3>Student Report</h3>
-                <p>All student data and activities</p>
-              </div>
-              <div className="report-card" onClick={() => generateReport('counsellors')}>
-                <span className="report-icon">👨‍🏫</span>
-                <h3>Counsellor Report</h3>
-                <p>Counsellor performance data</p>
-              </div>
-              <div className="report-card" onClick={() => generateReport('tests')}>
-                <span className="report-icon">📝</span>
-                <h3>Test Results</h3>
-                <p>All test outcomes</p>
-              </div>
-              <div className="report-card" onClick={() => generateReport('meetings')}>
-                <span className="report-icon">📅</span>
-                <h3>Meeting Report</h3>
-                <p>All scheduled meetings</p>
-              </div>
-            </div>
-
-            {selectedReport && (
-              <div className="report-display">
-                <div className="report-header">
-                  <h3>{selectedReport.type.charAt(0).toUpperCase() + selectedReport.type.slice(1)} Report</h3>
-                  <button className="btn-secondary" onClick={() => setSelectedReport(null)}>Close</button>
-                </div>
-                {selectedReport.data.length === 0 ? (
-                  <p className="no-data">No data available.</p>
-                ) : (
-                  <div className="data-table-container">
-                    <table className="data-table report-table">
-                      <thead>
-                        <tr>
-                          {Object.keys(selectedReport.data[0]).map(key => (
-                            <th key={key}>{key.charAt(0).toUpperCase() + key.slice(1)}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {selectedReport.data.map((row, i) => (
-                          <tr key={i}>
-                            {Object.values(row).map((val, j) => (
-                              <td key={j}>{val}</td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
               </div>
             )}
           </div>

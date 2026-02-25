@@ -194,7 +194,7 @@ function CounsellorDashboard() {
       {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-header">
-          <span className="logo-icon">🎯</span>
+          <img src="/logo.png" alt="PathWise" className="logo-img" />
           <h2>PathWise</h2>
         </div>
         <div className="user-info">

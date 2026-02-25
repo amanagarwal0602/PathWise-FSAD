@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 
@@ -6,7 +6,7 @@ function StudentDashboard() {
   const navigate = useNavigate();
   const { 
     data, currentUser, aptitudeQuestions, careerMapping,
-    saveTestResult, addChatMessage, requestMeeting 
+    saveTestResult, addChatMessage 
   } = useData();
   
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -14,7 +14,6 @@ function StudentDashboard() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
   const [chatMessage, setChatMessage] = useState('');
-  const [meetingForm, setMeetingForm] = useState({ topic: '', date: '', time: '10:00' });
 
   // Get current student data
   const student = data.users.find(u => u.id === currentUser?.id);
@@ -100,25 +99,12 @@ function StudentDashboard() {
     }
   };
 
-  // Request meeting
-  const submitMeetingRequest = () => {
-    if (meetingForm.topic && meetingForm.date && assignedCounsellor) {
-      requestMeeting(currentUser.id, assignedCounsellor.id, {
-        topic: meetingForm.topic,
-        date: meetingForm.date,
-        time: meetingForm.time
-      });
-      setMeetingForm({ topic: '', date: '', time: '10:00' });
-      alert('Meeting request sent!');
-    }
-  };
-
   return (
     <div className="dashboard-layout">
       {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-header">
-          <span className="logo-icon">🎯</span>
+          <img src="/logo.png" alt="PathWise" className="logo-img" />
           <h2>PathWise</h2>
         </div>
         <div className="user-info">
@@ -128,26 +114,23 @@ function StudentDashboard() {
         
         <nav className="sidebar-nav">
           <button className={activeTab === 'dashboard' ? 'active' : ''} onClick={() => setActiveTab('dashboard')}>
-            🏠 Dashboard
+            Dashboard
           </button>
           <button className={activeTab === 'test' ? 'active' : ''} onClick={() => setActiveTab('test')}>
-            📝 Take Test
+            Take Test
           </button>
           <button className={activeTab === 'results' ? 'active' : ''} onClick={() => setActiveTab('results')}>
-            📊 My Results
-          </button>
-          <button className={activeTab === 'counsellor' ? 'active' : ''} onClick={() => setActiveTab('counsellor')}>
-            👨‍🏫 My Counsellor
+            My Results
           </button>
           <button className={activeTab === 'chat' ? 'active' : ''} onClick={() => setActiveTab('chat')}>
-            💬 Chat
+            Chat
           </button>
           <button className={activeTab === 'meetings' ? 'active' : ''} onClick={() => setActiveTab('meetings')}>
-            📅 Meetings
+            Meetings
           </button>
         </nav>
 
-        <button className="logout-btn" onClick={handleLogout}>🚪 Logout</button>
+        <button className="logout-btn" onClick={handleLogout}>Logout</button>
       </aside>
 
       {/* Main Content */}
@@ -167,13 +150,6 @@ function StudentDashboard() {
                 </div>
               </div>
               <div className="stat-card">
-                <span className="stat-icon">👨‍🏫</span>
-                <div>
-                  <h3>{assignedCounsellor ? '1' : '0'}</h3>
-                  <p>Counsellor</p>
-                </div>
-              </div>
-              <div className="stat-card">
                 <span className="stat-icon">📅</span>
                 <div>
                   <h3>{myMeetings.length}</h3>
@@ -189,36 +165,16 @@ function StudentDashboard() {
               </div>
             </div>
 
-            {/* Counsellor Status */}
-            <div className="info-card">
-              <h3>Counsellor Status</h3>
-              {assignedCounsellor ? (
+            {/* Counsellor Info */}
+            {assignedCounsellor && (
+              <div className="info-card">
+                <h3>Your Counsellor</h3>
                 <div className="counsellor-info">
-                  <p>✅ You are assigned to: <strong>{assignedCounsellor.name}</strong></p>
-                  <p>Specialization: {assignedCounsellor.specialization || 'General'}</p>
+                  <p><strong>{assignedCounsellor.name}</strong></p>
+                  <p>{assignedCounsellor.specialization || 'General Guidance'}</p>
                 </div>
-              ) : (
-                <div className="pending-status">
-                  <p>⏳ Waiting for a counsellor to accept your request...</p>
-                  <p className="hint">A counsellor will be assigned to you soon.</p>
-                </div>
-              )}
-            </div>
-
-            {/* Quick Actions */}
-            <div className="quick-actions">
-              <h3>Quick Actions</h3>
-              <div className="action-buttons">
-                <button className="action-btn" onClick={() => setActiveTab('test')}>
-                  📝 Take Aptitude Test
-                </button>
-                {assignedCounsellor && (
-                  <button className="action-btn" onClick={() => setActiveTab('chat')}>
-                    💬 Chat with Counsellor
-                  </button>
-                )}
               </div>
-            </div>
+            )}
           </div>
         )}
 
@@ -229,9 +185,9 @@ function StudentDashboard() {
               <div className="test-intro">
                 <h1>Career Aptitude Test</h1>
                 <div className="test-info">
-                  <p>📝 {aptitudeQuestions.length} Questions</p>
-                  <p>⏱️ ~10-15 minutes</p>
-                  <p>✅ Multiple selections allowed</p>
+                  <p>{aptitudeQuestions.length} Questions</p>
+                  <p>~10-15 minutes</p>
+                  <p>Multiple selections allowed</p>
                 </div>
                 <p className="test-desc">
                   This test will analyze your interests and suggest career paths that match your personality.
@@ -273,7 +229,7 @@ function StudentDashboard() {
                 <div className="test-navigation">
                   {currentQuestion > 0 && (
                     <button className="btn-secondary" onClick={() => setCurrentQuestion(currentQuestion - 1)}>
-                      ← Previous
+                      Previous
                     </button>
                   )}
                   <button 
@@ -281,7 +237,7 @@ function StudentDashboard() {
                     onClick={nextQuestion}
                     disabled={!(answers[aptitudeQuestions[currentQuestion].id]?.length > 0)}
                   >
-                    {currentQuestion === aptitudeQuestions.length - 1 ? 'Submit Test' : 'Next →'}
+                    {currentQuestion === aptitudeQuestions.length - 1 ? 'Submit Test' : 'Next'}
                   </button>
                 </div>
               </div>
@@ -345,38 +301,6 @@ function StudentDashboard() {
           </div>
         )}
 
-        {/* My Counsellor */}
-        {activeTab === 'counsellor' && (
-          <div className="counsellor-section">
-            <h1>My Counsellor</h1>
-            
-            {assignedCounsellor ? (
-              <div className="counsellor-card">
-                <div className="counsellor-avatar">👨‍🏫</div>
-                <h2>{assignedCounsellor.name}</h2>
-                <p className="specialization">{assignedCounsellor.specialization || 'General Guidance'}</p>
-                <p className="email">{assignedCounsellor.email}</p>
-                
-                <div className="counsellor-actions">
-                  <button className="btn-primary" onClick={() => setActiveTab('chat')}>
-                    💬 Start Chat
-                  </button>
-                  <button className="btn-secondary" onClick={() => setActiveTab('meetings')}>
-                    📅 Request Meeting
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="empty-state">
-                <span className="empty-icon">⏳</span>
-                <h2>Waiting for Assignment</h2>
-                <p>Your request has been sent to available counsellors.</p>
-                <p>Once a counsellor accepts, you'll be able to chat and schedule meetings.</p>
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Chat */}
         {activeTab === 'chat' && (
           <div className="chat-section">
@@ -432,63 +356,25 @@ function StudentDashboard() {
         {/* Meetings */}
         {activeTab === 'meetings' && (
           <div className="meetings-section">
-            <h1>Meetings</h1>
+            <h1>Scheduled Meetings</h1>
             
-            {assignedCounsellor && (
-              <div className="meeting-request-form">
-                <h3>Request a Meeting</h3>
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label>Topic</label>
-                    <input
-                      type="text"
-                      value={meetingForm.topic}
-                      onChange={(e) => setMeetingForm({ ...meetingForm, topic: e.target.value })}
-                      placeholder="What would you like to discuss?"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Date</label>
-                    <input
-                      type="date"
-                      value={meetingForm.date}
-                      onChange={(e) => setMeetingForm({ ...meetingForm, date: e.target.value })}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Time</label>
-                    <select
-                      value={meetingForm.time}
-                      onChange={(e) => setMeetingForm({ ...meetingForm, time: e.target.value })}
-                    >
-                      <option value="09:00">9:00 AM</option>
-                      <option value="10:00">10:00 AM</option>
-                      <option value="11:00">11:00 AM</option>
-                      <option value="14:00">2:00 PM</option>
-                      <option value="15:00">3:00 PM</option>
-                      <option value="16:00">4:00 PM</option>
-                    </select>
-                  </div>
-                </div>
-                <button className="btn-primary" onClick={submitMeetingRequest}>
-                  Send Request
-                </button>
-              </div>
-            )}
-
             <div className="meetings-list">
-              <h3>My Meetings</h3>
               {myMeetings.length === 0 ? (
-                <p className="no-data">No meetings scheduled.</p>
+                <p className="no-data">No meetings scheduled yet.</p>
               ) : (
                 myMeetings.map((meeting, index) => (
                   <div key={index} className={`meeting-card status-${meeting.status}`}>
                     <div className="meeting-info">
                       <h4>{meeting.topic || meeting.title}</h4>
-                      <p>📅 {meeting.date} at {meeting.time}</p>
+                      <p>{meeting.date} at {meeting.time}</p>
                       <span className={`status-badge ${meeting.status}`}>
                         {meeting.status}
                       </span>
+                      {meeting.meetingLink && meeting.status === 'approved' && (
+                        <a href={meeting.meetingLink} target="_blank" rel="noopener noreferrer" className="btn-primary btn-small">
+                          Join Meeting
+                        </a>
+                      )}
                     </div>
                   </div>
                 ))

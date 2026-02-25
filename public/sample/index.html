@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PathWise - Sample Data Manager</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      color: #1e3a5f;
+      margin-bottom: 8px;
+      font-size: 28px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #64748b;
+      margin-bottom: 32px;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .card h2 {
+      color: #1e293b;
+      font-size: 18px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-box .num {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1e3a5f;
+    }
+    .stat-box .label {
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-primary {
+      background: #1e3a5f;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #2d5a87;
+    }
+    .btn-danger {
+      background: #dc2626;
+      color: white;
+    }
+    .btn-danger:hover {
+      background: #b91c1c;
+    }
+    .btn-warning {
+      background: #f59e0b;
+      color: white;
+    }
+    .btn-warning:hover {
+      background: #d97706;
+    }
+    .btn-success {
+      background: #10b981;
+      color: white;
+    }
+    .btn-success:hover {
+      background: #059669;
+    }
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+    .alert-success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+    .alert-info {
+      background: #dbeafe;
+      color: #1e40af;
+      border: 1px solid #bfdbfe;
+    }
+    .alert-info code {
+      background: #fff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 13px;
+    }
+    .data-preview {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .data-preview h4 {
+      color: #475569;
+      font-size: 13px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .data-list {
+      font-size: 13px;
+      color: #64748b;
+    }
+    .data-list div {
+      padding: 6px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .data-list div:last-child {
+      border-bottom: none;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 20px;
+      color: #1e3a5f;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+    .warning-box {
+      background: #fef3c7;
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+    .warning-box p {
+      color: #92400e;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-link">← Back to PathWise</a>
+    
+    <h1><img src="/logo.png" alt="PathWise" style="height: 32px; vertical-align: middle; margin-right: 8px;" /> PathWise Sample Data Manager</h1>
+    <p class="subtitle">Add demo data to showcase the platform or clear all data</p>
+
+    <div id="alert-container"></div>
+
+    <div class="card">
+      <h2>📊 Current Data Statistics</h2>
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-box">
+          <div class="num" id="stat-students">0</div>
+          <div class="label">Students</div>
+        </div>
+        <div class="stat-box">
+          <div class="num" id="stat-counsellors">0</div>
+          <div class="label">Counsellors</div>
+        </div>
+        <div class="stat-box">
+          <div class="num" id="stat-meetings">0</div>
+          <div class="label">Meetings</div>
+        </div>
+        <div class="stat-box">
+          <div class="num" id="stat-tests">0</div>
+          <div class="label">Test Results</div>
+        </div>
+        <div class="stat-box">
+          <div class="num" id="stat-chats">0</div>
+          <div class="label">Chat Messages</div>
+        </div>
+        <div class="stat-box">
+          <div class="num" id="stat-groups">0</div>
+          <div class="label">Groups</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>➕ Add Sample Data</h2>
+      <p style="color: #64748b; font-size: 14px; margin-bottom: 16px;">
+        Add realistic demo data to make the platform look active and well-used.
+      </p>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="addAllSampleData()">
+          🚀 Add All Sample Data
+        </button>
+        <button class="btn btn-success" onclick="addStudents()">
+          👥 Add Students (15)
+        </button>
+        <button class="btn btn-success" onclick="addCounsellors()">
+          👨‍🏫 Add Counsellors (5)
+        </button>
+        <button class="btn btn-success" onclick="addMeetings()">
+          📅 Add Meetings (20)
+        </button>
+        <button class="btn btn-success" onclick="addTestResults()">
+          📝 Add Test Results (25)
+        </button>
+        <button class="btn btn-success" onclick="addChats()">
+          💬 Add Chat Messages (50)
+        </button>
+      </div>
+      <div class="alert alert-info" style="margin-top: 16px;">
+        <strong>Sample Login Credentials:</strong><br>
+        Student: <code>student@gmail.com</code> / <code>1234</code><br>
+        Counsellor: <code>counsellor@gmail.com</code> / <code>1234</code><br>
+        Admin: <code>admin</code> / <code>admin</code>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🗑️ Remove Data</h2>
+      <div class="btn-group">
+        <button class="btn btn-danger" onclick="clearAllData()">
+          ⚠️ Clear ALL Data
+        </button>
+        <button class="btn btn-warning" onclick="clearSampleOnly()">
+          🧹 Clear Sample Data Only
+        </button>
+      </div>
+      <div class="warning-box">
+        <p><strong>Warning:</strong> Clearing data will remove users, meetings, test results, and chat messages. Admin account will be preserved.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>👀 Data Preview</h2>
+      <div id="data-preview" class="data-preview">
+        <p style="color: #94a3b8;">Click "Refresh Preview" to see current data</p>
+      </div>
+      <button class="btn btn-primary" style="margin-top: 16px;" onclick="refreshPreview()">
+        🔄 Refresh Preview
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Sample Data Configuration
+    const sampleStudents = [
+      { name: "Demo Student", email: "student@gmail.com" },
+      { name: "Aarav Sharma", email: "aarav.sharma@student.edu" },
+      { name: "Priya Patel", email: "priya.patel@student.edu" },
+      { name: "Rohan Gupta", email: "rohan.gupta@student.edu" },
+      { name: "Ananya Singh", email: "ananya.singh@student.edu" },
+      { name: "Vikram Reddy", email: "vikram.reddy@student.edu" },
+      { name: "Sneha Kumar", email: "sneha.kumar@student.edu" },
+      { name: "Arjun Nair", email: "arjun.nair@student.edu" },
+      { name: "Ishita Verma", email: "ishita.verma@student.edu" },
+      { name: "Karthik Iyer", email: "karthik.iyer@student.edu" },
+      { name: "Meera Joshi", email: "meera.joshi@student.edu" },
+      { name: "Aditya Rao", email: "aditya.rao@student.edu" },
+      { name: "Kavya Menon", email: "kavya.menon@student.edu" },
+      { name: "Rahul Deshmukh", email: "rahul.deshmukh@student.edu" },
+      { name: "Nisha Agarwal", email: "nisha.agarwal@student.edu" }
+    ];
+
+    const sampleCounsellors = [
+      { name: "Demo Counsellor", email: "counsellor@gmail.com", specialization: "Career Counselling" },
+      { name: "Dr. Rajesh Khanna", email: "rajesh.khanna@pathwise.edu", specialization: "Technical Careers" },
+      { name: "Dr. Sunita Mehta", email: "sunita.mehta@pathwise.edu", specialization: "Academic Guidance" },
+      { name: "Prof. Amit Saxena", email: "amit.saxena@pathwise.edu", specialization: "Healthcare" },
+      { name: "Dr. Neha Sharma", email: "neha.sharma@pathwise.edu", specialization: "Creative Arts" }
+    ];
+
+    const categories = ["Realistic", "Investigative", "Artistic", "Social", "Enterprising", "Conventional"];
+    
+    const careersByCategory = {
+      "Realistic": ["Mechanical Engineer", "Civil Engineer", "Architect", "Electrician", "Pilot"],
+      "Investigative": ["Data Scientist", "Research Scientist", "Medical Doctor", "Pharmacist", "Software Developer"],
+      "Artistic": ["Graphic Designer", "Content Writer", "Film Director", "Interior Designer", "Music Producer"],
+      "Social": ["Teacher", "Counsellor", "Social Worker", "HR Manager", "Healthcare Administrator"],
+      "Enterprising": ["Entrepreneur", "Marketing Manager", "Sales Director", "Business Consultant", "Investment Banker"],
+      "Conventional": ["Accountant", "Financial Analyst", "Data Analyst", "Operations Manager", "Quality Assurance"]
+    };
+
+    const meetingTopics = [
+      "Career Path Discussion",
+      "Resume Review Session",
+      "Interview Preparation",
+      "Skill Assessment Review",
+      "Higher Education Planning",
+      "Internship Opportunities",
+      "Industry Insights Session",
+      "Goal Setting Workshop",
+      "Aptitude Test Analysis",
+      "Career Change Guidance"
+    ];
+
+    const chatMessages = [
+      "Hello! I wanted to discuss my career options.",
+      "Thank you for scheduling the meeting. Looking forward to it!",
+      "I've completed the aptitude test. Can we review the results?",
+      "What courses would you recommend for data science?",
+      "I'm confused between engineering and medicine.",
+      "Can you help me prepare for campus placements?",
+      "I'd like to explore opportunities in the tech industry.",
+      "Thank you for your guidance. It was very helpful!",
+      "When is a good time for our next session?",
+      "I've updated my resume as suggested. Please review.",
+      "The workshop was very informative. Thank you!",
+      "I'm interested in pursuing an MBA. What are my options?",
+      "How can I improve my communication skills?",
+      "I got an internship offer! Thanks for your support.",
+      "Can we discuss scholarship opportunities?",
+      "Your advice helped me clear the interview!",
+      "I need guidance on choosing the right specialization.",
+      "The meeting link isn't working. Can you resend?",
+      "I've shortlisted 3 companies. Can we discuss?",
+      "Thank you for believing in me!"
+    ];
+
+    const counsellorResponses = [
+      "Great to hear from you! Let's schedule a session.",
+      "I've reviewed your profile. You have excellent potential!",
+      "Based on your aptitude, I'd recommend exploring technical careers.",
+      "Let's discuss this in our next meeting. I'll send the link.",
+      "Congratulations on your progress! Keep up the good work.",
+      "I've shared some resources that might help you.",
+      "Your test results show strong analytical skills.",
+      "Happy to help! Feel free to reach out anytime.",
+      "I've sent you the meeting invite. See you then!",
+      "That's a great question. Let me explain in detail.",
+      "Your dedication is commendable. You'll do great!",
+      "I'd suggest focusing on building practical skills.",
+      "Let's create a roadmap for your career goals.",
+      "I'm proud of your achievements!",
+      "Keep exploring and learning. The future is bright!"
+    ];
+
+    // Utility Functions
+    function getData() {
+      const stored = localStorage.getItem('pathwiseData');
+      if (stored) {
+        return JSON.parse(stored);
+      }
+      return {
+        users: [{ id: 1, name: 'Admin', email: 'admin', password: 'admin', role: 'admin' }],
+        meetings: [],
+        testResults: [],
+        chats: [],
+        groups: [],
+        resources: []
+      };
+    }
+
+    function saveData(data) {
+      localStorage.setItem('pathwiseData', JSON.stringify(data));
+    }
+
+    function showAlert(message, type = 'success') {
+      const container = document.getElementById('alert-container');
+      container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+      setTimeout(() => container.innerHTML = '', 3000);
+    }
+
+    function getNextId(array) {
+      return array.length > 0 ? Math.max(...array.map(item => item.id)) + 1 : 1;
+    }
+
+    function randomDate(daysBack, daysForward = 30) {
+      const now = new Date();
+      const past = new Date(now.getTime() - daysBack * 24 * 60 * 60 * 1000);
+      const future = new Date(now.getTime() + daysForward * 24 * 60 * 60 * 1000);
+      const randomTime = past.getTime() + Math.random() * (future.getTime() - past.getTime());
+      return new Date(randomTime);
+    }
+
+    function formatDate(date) {
+      return date.toISOString().split('T')[0];
+    }
+
+    function randomItem(array) {
+      return array[Math.floor(Math.random() * array.length)];
+    }
+
+    // Update Stats
+    function updateStats() {
+      const data = getData();
+      const students = data.users.filter(u => u.role === 'student');
+      const counsellors = data.users.filter(u => u.role === 'counsellor');
+      
+      document.getElementById('stat-students').textContent = students.length;
+      document.getElementById('stat-counsellors').textContent = counsellors.length;
+      document.getElementById('stat-meetings').textContent = data.meetings.length;
+      document.getElementById('stat-tests').textContent = data.testResults.length;
+      document.getElementById('stat-chats').textContent = data.chats.length;
+      document.getElementById('stat-groups').textContent = data.groups.length;
+    }
+
+    // Add Students
+    function addStudents() {
+      const data = getData();
+      let added = 0;
+      
+      sampleStudents.forEach(student => {
+        if (!data.users.find(u => u.email === student.email)) {
+          data.users.push({
+            id: getNextId(data.users),
+            name: student.name,
+            email: student.email,
+            password: '1234',
+            role: 'student',
+            status: 'active',
+            isSample: true
+          });
+          added++;
+        }
+      });
+      
+      saveData(data);
+      updateStats();
+      showAlert(`Added ${added} new students!`);
+    }
+
+    // Add Counsellors
+    function addCounsellors() {
+      const data = getData();
+      let added = 0;
+      
+      sampleCounsellors.forEach(counsellor => {
+        if (!data.users.find(u => u.email === counsellor.email)) {
+          data.users.push({
+            id: getNextId(data.users),
+            name: counsellor.name,
+            email: counsellor.email,
+            password: '1234',
+            role: 'counsellor',
+            specialization: counsellor.specialization,
+            status: 'active',
+            isSample: true
+          });
+          added++;
+        }
+      });
+      
+      saveData(data);
+      updateStats();
+      showAlert(`Added ${added} new counsellors!`);
+    }
+
+    // Assign Students to Counsellors
+    function assignStudentsToCounsellors() {
+      const data = getData();
+      const students = data.users.filter(u => u.role === 'student' && !u.assignedCounsellor);
+      const counsellors = data.users.filter(u => u.role === 'counsellor');
+      
+      if (counsellors.length === 0) return;
+      
+      students.forEach((student, i) => {
+        const counsellor = counsellors[i % counsellors.length];
+        const userIndex = data.users.findIndex(u => u.id === student.id);
+        if (userIndex !== -1) {
+          data.users[userIndex].assignedCounsellor = counsellor.id;
+        }
+      });
+      
+      saveData(data);
+    }
+
+    // Add Meetings
+    function addMeetings() {
+      const data = getData();
+      const students = data.users.filter(u => u.role === 'student');
+      const counsellors = data.users.filter(u => u.role === 'counsellor');
+      
+      if (students.length === 0 || counsellors.length === 0) {
+        showAlert('Please add students and counsellors first!', 'info');
+        return;
+      }
+
+      const times = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'];
+      const statuses = ['completed', 'completed', 'completed', 'approved', 'pending'];
+      
+      for (let i = 0; i < 20; i++) {
+        const student = randomItem(students);
+        const counsellor = counsellors.find(c => c.id === student.assignedCounsellor) || randomItem(counsellors);
+        const meetingDate = randomDate(60, 14);
+        const status = meetingDate < new Date() ? 'completed' : randomItem(['approved', 'pending']);
+        
+        data.meetings.push({
+          id: getNextId(data.meetings),
+          title: randomItem(meetingTopics),
+          counsellorId: counsellor.id,
+          participants: [student.id],
+          date: formatDate(meetingDate),
+          time: randomItem(times),
+          type: Math.random() > 0.8 ? 'group' : 'individual',
+          status: status,
+          meetingLink: `https://meet.google.com/abc-${Math.random().toString(36).substring(7)}`,
+          isSample: true
+        });
+      }
+      
+      saveData(data);
+      updateStats();
+      showAlert('Added 20 sample meetings!');
+    }
+
+    // Add Test Results
+    function addTestResults() {
+      const data = getData();
+      const students = data.users.filter(u => u.role === 'student');
+      
+      if (students.length === 0) {
+        showAlert('Please add students first!', 'info');
+        return;
+      }
+
+      students.forEach(student => {
+        // Each student may have 1-2 test results
+        const numTests = Math.random() > 0.6 ? 2 : 1;
+        
+        for (let i = 0; i < numTests; i++) {
+          const category = randomItem(categories);
+          const testDate = randomDate(90, 0);
+          
+          // Generate scores
+          const scores = {};
+          categories.forEach(cat => {
+            scores[cat] = Math.floor(Math.random() * 20) + 10;
+          });
+          scores[category] = Math.floor(Math.random() * 10) + 25; // Top category higher
+          
+          data.testResults.push({
+            id: getNextId(data.testResults),
+            studentId: student.id,
+            scores: scores,
+            topCategory: category,
+            recommendedCareers: careersByCategory[category].slice(0, 3),
+            completedAt: testDate.toISOString(),
+            isSample: true
+          });
+        }
+      });
+      
+      saveData(data);
+      updateStats();
+      showAlert(`Added ${data.testResults.filter(t => t.isSample).length} test results!`);
+    }
+
+    // Add Chat Messages
+    function addChats() {
+      const data = getData();
+      const students = data.users.filter(u => u.role === 'student' && u.assignedCounsellor);
+      
+      if (students.length === 0) {
+        showAlert('Please add students and assign them to counsellors first!', 'info');
+        return;
+      }
+
+      students.forEach(student => {
+        const counsellorId = student.assignedCounsellor;
+        const numMessages = Math.floor(Math.random() * 6) + 3; // 3-8 messages per pair
+        
+        for (let i = 0; i < numMessages; i++) {
+          const isStudent = i % 2 === 0;
+          const msgDate = randomDate(30, 0);
+          
+          data.chats.push({
+            id: getNextId(data.chats),
+            fromId: isStudent ? student.id : counsellorId,
+            toId: isStudent ? counsellorId : student.id,
+            message: isStudent ? randomItem(chatMessages) : randomItem(counsellorResponses),
+            timestamp: msgDate.toISOString(),
+            isSample: true
+          });
+        }
+      });
+      
+      // Sort chats by timestamp
+      data.chats.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+      
+      saveData(data);
+      updateStats();
+      showAlert(`Added ${data.chats.filter(c => c.isSample).length} chat messages!`);
+    }
+
+    // Add All Sample Data
+    function addAllSampleData() {
+      addStudents();
+      addCounsellors();
+      
+      setTimeout(() => {
+        assignStudentsToCounsellors();
+        addMeetings();
+        addTestResults();
+        addChats();
+        updateStats();
+        showAlert('🎉 All sample data added successfully!');
+      }, 100);
+    }
+
+    // Clear All Data
+    function clearAllData() {
+      if (!confirm('Are you sure you want to clear ALL data? This cannot be undone!')) return;
+      
+      const freshData = {
+        users: [{ id: 1, name: 'Admin', email: 'admin', password: 'admin', role: 'admin' }],
+        meetings: [],
+        testResults: [],
+        chats: [],
+        groups: [],
+        resources: []
+      };
+      
+      saveData(freshData);
+      updateStats();
+      showAlert('All data cleared. Admin account preserved.');
+    }
+
+    // Clear Sample Data Only
+    function clearSampleOnly() {
+      if (!confirm('Remove all sample data? Real user data will be preserved.')) return;
+      
+      const data = getData();
+      
+      data.users = data.users.filter(u => !u.isSample);
+      data.meetings = data.meetings.filter(m => !m.isSample);
+      data.testResults = data.testResults.filter(t => !t.isSample);
+      data.chats = data.chats.filter(c => !c.isSample);
+      data.groups = data.groups.filter(g => !g.isSample);
+      
+      saveData(data);
+      updateStats();
+      showAlert('Sample data removed. Real data preserved.');
+    }
+
+    // Refresh Preview
+    function refreshPreview() {
+      const data = getData();
+      const students = data.users.filter(u => u.role === 'student');
+      const counsellors = data.users.filter(u => u.role === 'counsellor');
+      
+      let html = '';
+      
+      // Students Preview
+      html += '<h4>👥 Students</h4><div class="data-list">';
+      if (students.length === 0) {
+        html += '<div>No students</div>';
+      } else {
+        students.slice(0, 5).forEach(s => {
+          const counsellor = data.users.find(u => u.id === s.assignedCounsellor);
+          html += `<div><strong>${s.name}</strong> - ${s.email} ${counsellor ? '→ ' + counsellor.name : '(unassigned)'}</div>`;
+        });
+        if (students.length > 5) html += `<div>... and ${students.length - 5} more</div>`;
+      }
+      html += '</div>';
+      
+      // Counsellors Preview
+      html += '<h4 style="margin-top: 16px;">👨‍🏫 Counsellors</h4><div class="data-list">';
+      if (counsellors.length === 0) {
+        html += '<div>No counsellors</div>';
+      } else {
+        counsellors.forEach(c => {
+          const studentCount = students.filter(s => s.assignedCounsellor === c.id).length;
+          html += `<div><strong>${c.name}</strong> - ${c.specialization || 'General'} (${studentCount} students)</div>`;
+        });
+      }
+      html += '</div>';
+      
+      // Meetings Preview
+      html += '<h4 style="margin-top: 16px;">📅 Recent Meetings</h4><div class="data-list">';
+      if (data.meetings.length === 0) {
+        html += '<div>No meetings</div>';
+      } else {
+        data.meetings.slice(-5).reverse().forEach(m => {
+          html += `<div><strong>${m.title}</strong> - ${m.date} (${m.status})</div>`;
+        });
+        if (data.meetings.length > 5) html += `<div>... and ${data.meetings.length - 5} more</div>`;
+      }
+      html += '</div>';
+      
+      // Test Results Preview
+      html += '<h4 style="margin-top: 16px;">📝 Recent Tests</h4><div class="data-list">';
+      if (data.testResults.length === 0) {
+        html += '<div>No test results</div>';
+      } else {
+        data.testResults.slice(-5).reverse().forEach(t => {
+          const student = data.users.find(u => u.id === t.studentId);
+          html += `<div><strong>${student?.name || 'Unknown'}</strong> - ${t.topCategory}</div>`;
+        });
+        if (data.testResults.length > 5) html += `<div>... and ${data.testResults.length - 5} more</div>`;
+      }
+      html += '</div>';
+      
+      document.getElementById('data-preview').innerHTML = html;
+    }
+
+    // Initialize
+    updateStats();
+  </script>
+</body>
+</html>
