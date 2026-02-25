@@ -43,6 +43,17 @@ function StudentDashboard() {
     m.participants?.includes(currentUser?.id) || m.studentId === currentUser?.id
   );
 
+  // Check if student has had a meeting with general counsellor (completed)
+  const hasCompletedMeetingWithGeneral = myMeetings.some(m => 
+    m.status === 'completed' && 
+    (m.counsellorId === generalCounsellor?.id || m.participants?.includes(generalCounsellor?.id))
+  );
+
+  // Determine student journey stage
+  const hasAssessment = !!myAssessment;
+  const hasCounsellor = !!assignedCounsellor;
+  const canAccessDashboard = hasAssessment && hasCompletedMeetingWithGeneral && hasCounsellor;
+
   // Get unique sections from questions
   const sections = [...new Set(interestAssessmentQuestions.map(q => q.section))];
 
@@ -71,14 +82,20 @@ function StudentDashboard() {
 
   // Auto-navigate based on student progress
   useEffect(() => {
-    if (!myAssessment) {
-      // If assessment not completed, always go to assessment
+    if (!hasAssessment) {
+      // Step 1: If assessment not completed, go to assessment
       setActiveTab('assessment');
-    } else if (myAssessment && activeTab === 'assessment' && !testStarted) {
-      // If assessment done and we're on assessment tab, go to chat
+    } else if (hasAssessment && !hasCompletedMeetingWithGeneral) {
+      // Step 2: Assessment done, waiting for meeting with general counsellor
       setActiveTab('chat');
+    } else if (hasAssessment && hasCompletedMeetingWithGeneral && !hasCounsellor) {
+      // Step 3: Meeting done, waiting for counsellor assignment
+      setActiveTab('waiting');
+    } else if (canAccessDashboard && activeTab === 'assessment') {
+      // Step 4: All done, can access full dashboard
+      setActiveTab('dashboard');
     }
-  }, [myAssessment]);
+  }, [hasAssessment, hasCompletedMeetingWithGeneral, hasCounsellor, canAccessDashboard]);
 
   // Next question
   const nextQuestion = () => {
@@ -189,20 +206,40 @@ function StudentDashboard() {
         </div>
         
         <nav className="sidebar-nav">
-          <button className={activeTab === 'dashboard' ? 'active' : ''} onClick={() => setActiveTab('dashboard')}>
-            🏠 Dashboard
+          <button 
+            className={activeTab === 'dashboard' ? 'active' : ''} 
+            onClick={() => canAccessDashboard && setActiveTab('dashboard')}
+            disabled={!canAccessDashboard}
+            style={{ opacity: canAccessDashboard ? 1 : 0.5 }}
+          >
+            🏠 Dashboard {!canAccessDashboard && '🔒'}
           </button>
           <button className={activeTab === 'assessment' ? 'active' : ''} onClick={() => setActiveTab('assessment')}>
             📋 Interest Assessment
           </button>
-          <button className={activeTab === 'results' ? 'active' : ''} onClick={() => setActiveTab('results')}>
-            📊 My Results
+          <button 
+            className={activeTab === 'results' ? 'active' : ''} 
+            onClick={() => hasAssessment && setActiveTab('results')}
+            disabled={!hasAssessment}
+            style={{ opacity: hasAssessment ? 1 : 0.5 }}
+          >
+            📊 My Results {!hasAssessment && '🔒'}
           </button>
-          <button className={activeTab === 'chat' ? 'active' : ''} onClick={() => setActiveTab('chat')}>
-            💬 Chat
+          <button 
+            className={activeTab === 'chat' ? 'active' : ''} 
+            onClick={() => hasAssessment && setActiveTab('chat')}
+            disabled={!hasAssessment}
+            style={{ opacity: hasAssessment ? 1 : 0.5 }}
+          >
+            💬 Chat {!hasAssessment && '🔒'}
           </button>
-          <button className={activeTab === 'meetings' ? 'active' : ''} onClick={() => setActiveTab('meetings')}>
-            📅 Meetings
+          <button 
+            className={activeTab === 'meetings' ? 'active' : ''} 
+            onClick={() => hasAssessment && setActiveTab('meetings')}
+            disabled={!hasAssessment}
+            style={{ opacity: hasAssessment ? 1 : 0.5 }}
+          >
+            📅 Meetings {!hasAssessment && '🔒'}
           </button>
           <button className={activeTab === 'profile' ? 'active' : ''} onClick={() => setActiveTab('profile')}>
             👤 Profile
@@ -320,6 +357,42 @@ function StudentDashboard() {
                 </button>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Waiting for Counsellor Assignment */}
+        {activeTab === 'waiting' && (
+          <div className="waiting-section">
+            <div className="waiting-container">
+              <div className="waiting-icon">⏳</div>
+              <h1>Awaiting Counsellor Assignment</h1>
+              <p>Great job! You've completed your assessment and meeting with our general counsellor.</p>
+              <p>We are now matching you with a specialized career counsellor based on your interests.</p>
+              
+              <div className="waiting-progress">
+                <div className="progress-step completed">
+                  <span className="step-check">✓</span>
+                  <span>Assessment Completed</span>
+                </div>
+                <div className="progress-step completed">
+                  <span className="step-check">✓</span>
+                  <span>Meeting with General Counsellor</span>
+                </div>
+                <div className="progress-step active">
+                  <span className="step-spinner">⟳</span>
+                  <span>Counsellor Assignment in Progress</span>
+                </div>
+              </div>
+
+              <div className="waiting-info">
+                <p>📧 You will be notified once a counsellor is assigned to you.</p>
+                <p>💬 Meanwhile, you can continue chatting if you have any questions.</p>
+              </div>
+
+              <button className="btn-secondary" onClick={() => setActiveTab('chat')}>
+                💬 Continue Chat
+              </button>
+            </div>
           </div>
         )}
 

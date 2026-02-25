@@ -4270,3 +4270,116 @@ body {
     display: none;
   }
 }
+
+/* ========================================
+   WAITING SECTION (Student Dashboard)
+======================================== */
+
+.waiting-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 40px 20px;
+}
+
+.waiting-container {
+  background: white;
+  padding: 48px;
+  border-radius: 20px;
+  text-align: center;
+  max-width: 600px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.waiting-icon {
+  font-size: 64px;
+  margin-bottom: 24px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+}
+
+.waiting-container h1 {
+  font-size: 28px;
+  color: var(--dark);
+  margin-bottom: 16px;
+}
+
+.waiting-container > p {
+  color: var(--gray);
+  font-size: 16px;
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+.waiting-progress {
+  margin: 32px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.progress-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  border-radius: 30px;
+  background: var(--light);
+  font-size: 14px;
+  color: var(--gray);
+  width: 100%;
+  max-width: 350px;
+}
+
+.progress-step.completed {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.progress-step.active {
+  background: #dbeafe;
+  color: #2563eb;
+  border: 2px solid #2563eb;
+}
+
+.progress-step .step-check {
+  font-size: 18px;
+}
+
+.progress-step .step-spinner {
+  font-size: 18px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.waiting-info {
+  margin: 24px 0;
+  padding: 20px;
+  background: var(--light);
+  border-radius: 12px;
+}
+
+.waiting-info p {
+  font-size: 14px;
+  color: var(--dark);
+  margin: 8px 0;
+}
+
+/* Disabled Nav Button Styles */
+.sidebar-nav button:disabled {
+  cursor: not-allowed;
+}
+
+.sidebar-nav button:disabled:hover {
+  background: transparent;
+}
