@@ -577,6 +577,12 @@ General Counsellor Account:
 - Email: general@pathwise.com
 - Password: general123
 
+Evaluator Accounts:
+- Email: evaluator1@pathwise.com | Password: eval123
+- Email: evaluator2@pathwise.com | Password: eval123
+- Email: evaluator3@pathwise.com | Password: eval123
+- Email: evaluator4@pathwise.com | Password: eval123
+
 BROWSER SUPPORT:
 ----------------
 - Modern browsers with ES6+ support

@@ -11,7 +11,7 @@ function StudentDashboard() {
     updateStudentStatus
   } = useData();
   
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('assessment'); // Start with assessment
   const [testStarted, setTestStarted] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -68,6 +68,17 @@ function StudentDashboard() {
       setCurrentSection(interestAssessmentQuestions[currentQuestion].section);
     }
   }, [currentQuestion, testStarted]);
+
+  // Auto-navigate based on student progress
+  useEffect(() => {
+    if (!myAssessment) {
+      // If assessment not completed, always go to assessment
+      setActiveTab('assessment');
+    } else if (myAssessment && activeTab === 'assessment' && !testStarted) {
+      // If assessment done and we're on assessment tab, go to chat
+      setActiveTab('chat');
+    }
+  }, [myAssessment]);
 
   // Next question
   const nextQuestion = () => {

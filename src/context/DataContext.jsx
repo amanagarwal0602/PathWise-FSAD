@@ -26,6 +26,43 @@ const initialData = {
       role: 'general_counsellor', 
       status: 'active',
       specialization: 'General Guidance'
+    },
+    // Evaluators (General Counsellors for student evaluation)
+    { 
+      id: 3, 
+      name: 'Evaluator 1', 
+      email: 'evaluator1@pathwise.com', 
+      password: 'eval123', 
+      role: 'general_counsellor', 
+      status: 'active',
+      specialization: 'General Guidance'
+    },
+    { 
+      id: 4, 
+      name: 'Evaluator 2', 
+      email: 'evaluator2@pathwise.com', 
+      password: 'eval123', 
+      role: 'general_counsellor', 
+      status: 'active',
+      specialization: 'General Guidance'
+    },
+    { 
+      id: 5, 
+      name: 'Evaluator 3', 
+      email: 'evaluator3@pathwise.com', 
+      password: 'eval123', 
+      role: 'general_counsellor', 
+      status: 'active',
+      specialization: 'General Guidance'
+    },
+    { 
+      id: 6, 
+      name: 'Evaluator 4', 
+      email: 'evaluator4@pathwise.com', 
+      password: 'eval123', 
+      role: 'general_counsellor', 
+      status: 'active',
+      specialization: 'General Guidance'
     }
   ],
   meetings: [],
@@ -329,10 +366,15 @@ export function DataProvider({ children }) {
     const saved = localStorage.getItem('pathwiseData');
     if (saved) {
       const parsed = JSON.parse(saved);
-      // Ensure new fields exist
+      // Merge system users (admin, evaluators) with saved users to ensure they always exist
+      const systemUserEmails = initialData.users.map(u => u.email);
+      const savedNonSystemUsers = parsed.users?.filter(u => !systemUserEmails.includes(u.email)) || [];
+      const mergedUsers = [...initialData.users, ...savedNonSystemUsers];
+      
       return {
         ...initialData,
         ...parsed,
+        users: mergedUsers, // Use merged users
         interestAssessments: parsed.interestAssessments || [],
         studentNotes: parsed.studentNotes || [],
         counsellorRecommendations: parsed.counsellorRecommendations || []
