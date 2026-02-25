@@ -573,6 +573,10 @@ Admin Account:
 - Email: admin
 - Password: admin
 
+General Counsellor Account:
+- Email: general@pathwise.com
+- Password: general123
+
 BROWSER SUPPORT:
 ----------------
 - Modern browsers with ES6+ support
@@ -585,11 +589,186 @@ LOCAL STORAGE REQUIREMENTS:
 - Clear storage to reset application data
 
 ================================================================================
+                    10. ENHANCED FEATURES (v2.0)
+================================================================================
+
+MCQ ASSESSMENT MODULE:
+----------------------
+The enhanced assessment module includes 15 carefully designed questions across
+7 distinct sections to comprehensively evaluate student aptitudes:
+
+SECTIONS:
+1. Learning Style          - How students prefer to acquire knowledge
+2. Problem-Solving         - Analytical vs creative thinking approaches
+3. Work Environment        - Team vs individual work preferences
+4. Communication           - Verbal vs written communication strengths
+5. Project Interest        - Types of projects that engage the student
+6. Career Values           - What matters most in career choices
+7. Technical Aptitude      - Comfort with technology and tools
+
+ASSESSMENT FEATURES:
+- Progress bar with percentage completion
+- Section indicators showing current progress
+- Previous/Next navigation between questions
+- 4 options per question with visual selection feedback
+- Auto-save functionality
+- Comprehensive results report generation
+
+STUDENT STATUS WORKFLOW:
+------------------------
+Students progress through 7 distinct stages in their guidance journey:
+
+1. REGISTERED           → Initial signup complete
+2. VERIFIED             → Account verified by admin
+3. ASSESSMENT_COMPLETED → Interest assessment finished
+4. ASSIGNED_TO_GENERAL  → Awaiting initial review
+5. CHAT_EVALUATION      → In conversation with general counsellor
+6. COUNSELLOR_ASSIGNED  → Matched with specialist counsellor
+7. ACTIVE_GUIDANCE      → Ongoing personalized guidance
+
+GENERAL COUNSELLOR DASHBOARD:
+-----------------------------
+New role for initial student evaluation and counsellor matching.
+
+FEATURES:
+- Student list panel with search and filter capabilities
+- Filter options: New, Assessment Done, Chat Active, Awaiting, Assigned, Flagged
+- Real-time student count statistics
+- Detailed student profile view with assessment results
+- Live chat interface for student communication
+- Notes and flags system for student tracking
+- Counsellor recommendation engine with match scores
+- One-click counsellor assignment with summary
+
+LAYOUT:
+- Left Panel: Student list with status indicators
+- Center Panel: Student details, chat, notes tabs
+- Right Panel: Counsellor recommendations and assignment
+
+COUNSELLOR RECOMMENDATION ENGINE:
+---------------------------------
+Intelligent matching based on multiple factors:
+
+MATCHING CRITERIA:
+- Field alignment (assessment results vs specialization)
+- Counsellor availability (student load)
+- Historical performance (rating, reviews)
+- Active status
+
+MATCH SCORE CALCULATION:
+- Base score from field matching
+- Availability bonus for counsellors with fewer students
+- Rating modifier for performance
+- Final scores ranked for optimal recommendations
+
+ENHANCED REGISTRATION:
+----------------------
+Student registration now collects additional information:
+
+NEW FIELDS:
+- College/University name
+- Branch/Major of study
+- Year of study (1st-5th year or Graduate)
+- Phone number
+- Career goals (optional text)
+- Achievements/Skills (optional text)
+
+DATA STRUCTURES:
+----------------
+New data models introduced for enhanced functionality:
+
+STUDENT_STATUS ENUM:
+- registered
+- verified
+- assessment_completed
+- assigned_to_general
+- chat_evaluation
+- counsellor_assigned
+- active_guidance
+
+ASSESSMENT RESULT STRUCTURE:
+{
+  scores: { category: score, ... },
+  traits: ['trait1', 'trait2', ...],
+  recommendedFields: ['field1', 'field2', ...],
+  insights: { learningStyle, problemSolving, ... }
+}
+
+STUDENT FLAGS:
+{
+  isFlagged: boolean,
+  flagReason: string,
+  flaggedBy: string,
+  flaggedAt: timestamp
+}
+
+STUDENT NOTES:
+{
+  id: string,
+  text: string,
+  author: string,
+  authorRole: string,
+  timestamp: date
+}
+
+CAREER MAPPING:
+---------------
+10 career fields mapped to student assessment results:
+
+1. Engineering & Technology    - Logical, technical, analytical traits
+2. Medical & Healthcare        - Caring, detail-oriented traits
+3. Business & Management       - Leadership, strategic traits
+4. Arts & Creative            - Creative, visual, expressive traits
+5. Science & Research         - Curious, methodical traits
+6. Law & Legal               - Arguments, detail-oriented traits
+7. Education & Teaching      - Communication, nurturing traits
+8. IT & Data Science         - Technical, analytical traits
+9. Environmental Sciences    - Sustainable, fieldwork traits
+10. Social Sciences          - Understanding, social traits
+
+CSS ENHANCEMENTS:
+-----------------
+Comprehensive styling added for all new components:
+
+GENERAL COUNSELLOR DASHBOARD:
+- .gc-dashboard, .gc-header, .gc-layout
+- .gc-sidebar, .gc-student-list, .gc-student-item
+- .gc-main, .gc-stats, .gc-stat-card
+- .gc-student-detail, .gc-tabs, .gc-tab
+- .gc-chat-container, .gc-notes-section
+- .gc-right-panel, .gc-counsellor-card
+- .gc-assign-btn, .gc-summary-section
+
+ASSESSMENT UI:
+- .assessment-container, .assessment-header
+- .assessment-progress, .progress-bar, .progress-fill
+- .assessment-section-indicator, .section-dot
+- .question-card, .options-grid, .option-btn
+- .nav-btn (prev, next, submit)
+
+RESULTS UI:
+- .results-container, .results-header
+- .trait-cards, .trait-card, .trait-icon
+- .field-recommendations, .field-card
+- .insights-grid, .insight-card
+
+STATUS TRACKER:
+- .student-status-tracker
+- .status-step (completed, current)
+- .status-icon, .status-label
+
+RESPONSIVE DESIGN:
+- Breakpoints at 1200px and 768px
+- Mobile-friendly layouts
+- Hidden panels for smaller screens
+
+================================================================================
                               END OF DOCUMENT
 ================================================================================
 
 Document Created: February 2026
+Last Updated: v2.0 Enhancement Release
 Project: PathWise - FSAD PS24
-Version: 1.0.0
+Version: 2.0.0
 
 ================================================================================

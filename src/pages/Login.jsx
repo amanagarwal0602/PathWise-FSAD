@@ -18,6 +18,8 @@ function Login() {
       const user = JSON.parse(currentUser);
       if (user.role === 'admin') {
         navigate('/admin', { replace: true });
+      } else if (user.role === 'general_counsellor') {
+        navigate('/general-counsellor', { replace: true });
       } else if (user.role === 'counsellor') {
         navigate('/counsellor', { replace: true });
       } else {
@@ -41,6 +43,8 @@ function Login() {
       
       if (user.role === 'admin') {
         navigate('/admin', { replace: true });
+      } else if (user.role === 'general_counsellor') {
+        navigate('/general-counsellor', { replace: true });
       } else if (user.role === 'counsellor') {
         navigate('/counsellor', { replace: true });
       } else {

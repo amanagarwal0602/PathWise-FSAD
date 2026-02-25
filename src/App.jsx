@@ -8,6 +8,7 @@ import Register from './pages/Register';
 import StudentDashboard from './pages/StudentDashboard';
 import CounsellorDashboard from './pages/CounsellorDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import GeneralCounsellorDashboard from './pages/GeneralCounsellorDashboard';
 
 // Main App Component with Routing
 function App() {
@@ -25,6 +26,7 @@ function App() {
           {/* Dashboard Routes */}
           <Route path="/student" element={<StudentDashboard />} />
           <Route path="/counsellor" element={<CounsellorDashboard />} />
+          <Route path="/general-counsellor" element={<GeneralCounsellorDashboard />} />
           <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
       </BrowserRouter>

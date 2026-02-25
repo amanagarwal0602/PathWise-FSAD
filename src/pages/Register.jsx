@@ -4,7 +4,7 @@ import { useData } from '../context/DataContext';
 
 function Register() {
   const navigate = useNavigate();
-  const { addUser } = useData();
+  const { addUser, STUDENT_STATUS } = useData();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -12,7 +12,14 @@ function Register() {
     password: '',
     confirmPassword: '',
     role: 'student',
-    specialization: ''
+    specialization: '',
+    // New student fields
+    college: '',
+    branch: '',
+    year: '',
+    careerGoals: '',
+    achievements: '',
+    phone: ''
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -38,14 +45,36 @@ function Register() {
     setIsLoading(true);
     await new Promise(resolve => setTimeout(resolve, 400));
 
-    addUser({
+    const userData = {
       name: formData.name,
       email: formData.email,
       password: formData.password,
       role: formData.role,
-      specialization: formData.specialization,
-      status: 'active'
-    });
+      status: formData.role === 'student' ? STUDENT_STATUS.REGISTERED : 'pending_approval'
+    };
+
+    // Add student-specific fields
+    if (formData.role === 'student') {
+      userData.college = formData.college;
+      userData.branch = formData.branch;
+      userData.year = formData.year;
+      userData.careerGoals = formData.careerGoals;
+      userData.achievements = formData.achievements;
+      userData.phone = formData.phone;
+      userData.guidanceStage = 'initial';
+      userData.assignedCounsellor = null;
+      userData.assessmentCompleted = false;
+    }
+
+    // Add counsellor-specific fields
+    if (formData.role === 'counsellor') {
+      userData.specialization = formData.specialization;
+      userData.assignedStudents = [];
+      userData.rating = 0;
+      userData.reviewCount = 0;
+    }
+
+    addUser(userData);
 
     alert('Registration successful! Please login.');
     navigate('/login');
@@ -169,6 +198,94 @@ function Register() {
                     <option value="General">General Guidance</option>
                   </select>
                 </div>
+              )}
+
+              {/* Student-specific fields */}
+              {formData.role === 'student' && (
+                <>
+                  <div className="form-row-2">
+                    <div className="form-field">
+                      <label htmlFor="college">College/University</label>
+                      <input
+                        id="college"
+                        type="text"
+                        name="college"
+                        value={formData.college}
+                        onChange={handleChange}
+                        placeholder="Enter your college name"
+                        required
+                      />
+                    </div>
+                    <div className="form-field">
+                      <label htmlFor="branch">Branch/Major</label>
+                      <input
+                        id="branch"
+                        type="text"
+                        name="branch"
+                        value={formData.branch}
+                        onChange={handleChange}
+                        placeholder="e.g., Computer Science"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-row-2">
+                    <div className="form-field">
+                      <label htmlFor="year">Year of Study</label>
+                      <select
+                        id="year"
+                        name="year"
+                        value={formData.year}
+                        onChange={handleChange}
+                        required
+                      >
+                        <option value="">Select Year</option>
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                        <option value="5">5th Year</option>
+                        <option value="graduate">Graduate</option>
+                      </select>
+                    </div>
+                    <div className="form-field">
+                      <label htmlFor="phone">Phone Number</label>
+                      <input
+                        id="phone"
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        placeholder="Enter phone number"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-field">
+                    <label htmlFor="careerGoals">Career Goals (Optional)</label>
+                    <textarea
+                      id="careerGoals"
+                      name="careerGoals"
+                      value={formData.careerGoals}
+                      onChange={handleChange}
+                      placeholder="Briefly describe your career aspirations..."
+                      rows="2"
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label htmlFor="achievements">Achievements/Skills (Optional)</label>
+                    <textarea
+                      id="achievements"
+                      name="achievements"
+                      value={formData.achievements}
+                      onChange={handleChange}
+                      placeholder="Any notable achievements, certifications, or skills..."
+                      rows="2"
+                    />
+                  </div>
+                </>
               )}
 
               <div className="form-row-2">
