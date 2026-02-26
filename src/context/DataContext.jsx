@@ -5,7 +5,7 @@ import { verifyPassword } from '../utils/security';
 const DataContext = createContext();
 
 // API Base URL - use backend server
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = '/api';
 
 // Student Status Workflow
 const STUDENT_STATUS = {
@@ -23,58 +23,58 @@ const STUDENT_STATUS = {
 const initialData = {
   users: [
     { id: 1, name: 'Admin', email: 'admin', username: 'admin', password: 'admin', role: 'admin', status: 'active' },
-    { 
-      id: 2, 
-      name: 'Career Coordinator', 
-      email: 'general@pathwise.com', 
+    {
+      id: 2,
+      name: 'Career Coordinator',
+      email: 'general@pathwise.com',
       username: 'generalcounsellor',
-      password: 'general123', 
-      role: 'general_counsellor', 
+      password: 'general123',
+      role: 'general_counsellor',
       status: 'active',
       specialization: 'Career Coordination'
     },
     // Evaluators 1-2 (for STUDENT verification)
-    { 
-      id: 3, 
-      name: 'Student Verification Specialist', 
-      email: 'evaluator1@pathwise.com', 
+    {
+      id: 3,
+      name: 'Student Verification Specialist',
+      email: 'evaluator1@pathwise.com',
       username: 'evaluator1',
-      password: 'eval123', 
-      role: 'evaluator', 
+      password: 'eval123',
+      role: 'evaluator',
       status: 'active',
       evaluatorType: 'student',
       specialization: 'Student Verification'
     },
-    { 
-      id: 4, 
-      name: 'Student Verification Specialist', 
-      email: 'evaluator2@pathwise.com', 
+    {
+      id: 4,
+      name: 'Student Verification Specialist',
+      email: 'evaluator2@pathwise.com',
       username: 'evaluator2',
-      password: 'eval123', 
-      role: 'evaluator', 
+      password: 'eval123',
+      role: 'evaluator',
       status: 'active',
       evaluatorType: 'student',
       specialization: 'Student Verification'
     },
     // Evaluators 3-4 (for COUNSELLOR/MENTOR verification)
-    { 
-      id: 5, 
-      name: 'Mentor Verification Specialist', 
-      email: 'evaluator3@pathwise.com', 
+    {
+      id: 5,
+      name: 'Mentor Verification Specialist',
+      email: 'evaluator3@pathwise.com',
       username: 'evaluator3',
-      password: 'eval123', 
-      role: 'evaluator', 
+      password: 'eval123',
+      role: 'evaluator',
       status: 'active',
       evaluatorType: 'counsellor',
       specialization: 'Mentor Verification'
     },
-    { 
-      id: 6, 
-      name: 'Mentor Verification Specialist', 
-      email: 'evaluator4@pathwise.com', 
+    {
+      id: 6,
+      name: 'Mentor Verification Specialist',
+      email: 'evaluator4@pathwise.com',
       username: 'evaluator4',
-      password: 'eval123', 
-      role: 'evaluator', 
+      password: 'eval123',
+      role: 'evaluator',
       status: 'active',
       evaluatorType: 'counsellor',
       specialization: 'Mentor Verification'
@@ -181,7 +181,7 @@ const interestAssessmentQuestions = [
     optionTraits: ["technical", "social", "analytical", "creative", "analytical", "social"],
     optionFields: ["IT", "Healthcare", "Business", "Design", "Research", "Social Work"]
   },
-  
+
   // Section 2: Technical vs Creative Inclination
   {
     id: 3,
@@ -213,7 +213,7 @@ const interestAssessmentQuestions = [
     optionTraits: ["technical", "creative", "analytical", "social", "technical", "creative"],
     optionFields: ["IT", "Design", "Data Science", "Business", "Engineering", "Arts"]
   },
-  
+
   // Section 3: Leadership & Teamwork Preference
   {
     id: 5,
@@ -245,7 +245,7 @@ const interestAssessmentQuestions = [
     optionTraits: ["leadership", "teamwork", "teamwork", "analytical", "teamwork", "independent"],
     optionFields: ["Management", "HR", "Any", "Consulting", "Any", "Research"]
   },
-  
+
   // Section 4: Risk-Taking Ability
   {
     id: 7,
@@ -277,7 +277,7 @@ const interestAssessmentQuestions = [
     optionTraits: ["risk_taker", "risk_taker", "balanced", "risk_averse", "risk_taker", "balanced"],
     optionFields: ["Entrepreneurship", "IT", "Corporate", "Government", "Consulting", "Research"]
   },
-  
+
   // Section 5: Problem-Solving Style
   {
     id: 9,
@@ -309,7 +309,7 @@ const interestAssessmentQuestions = [
     optionTraits: ["analytical", "creative", "technical", "creative", "social", "analytical"],
     optionFields: ["Data Science", "Design", "IT", "Media", "Management", "Research"]
   },
-  
+
   // Section 6: Communication Preference
   {
     id: 11,
@@ -341,7 +341,7 @@ const interestAssessmentQuestions = [
     optionTraits: ["social", "leadership", "independent", "teamwork", "social", "independent"],
     optionFields: ["Counselling", "Marketing", "IT", "Any", "Education", "Research"]
   },
-  
+
   // Section 7: Work Environment Preference
   {
     id: 13,
@@ -444,7 +444,7 @@ const syncWithBackend = async (localData) => {
       return mergedData;
     }
   } catch (error) {
-    console.log('⚠️ Backend sync failed (offline mode):', error.message);
+    console.log('⚠️ Backend sync failed (offline mode):', error);
   }
   return null;
 };
@@ -462,7 +462,7 @@ const uploadToBackend = async (data) => {
       return true;
     }
   } catch (error) {
-    console.log('⚠️ Upload failed (offline mode):', error.message);
+    console.log('⚠️ Upload failed (offline mode):', error);
   }
   return false;
 };
@@ -477,7 +477,7 @@ const fetchFromBackend = async () => {
       return serverData;
     }
   } catch (error) {
-    console.log('⚠️ Fetch failed (offline mode):', error.message);
+    console.log('⚠️ Fetch failed (offline mode):', error);
   }
   return null;
 };
@@ -492,7 +492,7 @@ export function DataProvider({ children }) {
       const systemUserEmails = initialData.users.map(u => u.email);
       const savedNonSystemUsers = parsed.users?.filter(u => !systemUserEmails.includes(u.email)) || [];
       const mergedUsers = [...initialData.users, ...savedNonSystemUsers];
-      
+
       return {
         ...initialData,
         ...parsed,
@@ -517,7 +517,7 @@ export function DataProvider({ children }) {
     const initSync = async () => {
       setSyncStatus('syncing');
       const localData = JSON.parse(localStorage.getItem('pathwiseData') || 'null');
-      
+
       if (localData) {
         // Try to merge local data with server
         const mergedData = await syncWithBackend(localData);
@@ -526,13 +526,13 @@ export function DataProvider({ children }) {
           const systemUserEmails = initialData.users.map(u => u.email);
           const nonSystemUsers = mergedData.users.filter(u => !systemUserEmails.includes(u.email));
           const finalUsers = [...initialData.users, ...nonSystemUsers];
-          
+
           const finalData = {
             ...initialData,
             ...mergedData,
             users: finalUsers
           };
-          
+
           setData(finalData);
           localStorage.setItem('pathwiseData', JSON.stringify(finalData));
           setSyncStatus('synced');
@@ -546,13 +546,13 @@ export function DataProvider({ children }) {
           const systemUserEmails = initialData.users.map(u => u.email);
           const nonSystemUsers = serverData.users.filter(u => !systemUserEmails.includes(u.email));
           const finalUsers = [...initialData.users, ...nonSystemUsers];
-          
+
           const finalData = {
             ...initialData,
             ...serverData,
             users: finalUsers
           };
-          
+
           setData(finalData);
           localStorage.setItem('pathwiseData', JSON.stringify(finalData));
           setSyncStatus('synced');
@@ -561,7 +561,7 @@ export function DataProvider({ children }) {
         }
       }
     };
-    
+
     initSync();
   }, []);
 
@@ -587,7 +587,7 @@ export function DataProvider({ children }) {
       if (e.key === 'pathwiseData' && e.newValue) {
         const newData = JSON.parse(e.newValue);
         setData(newData);
-        
+
         // Update currentUser if their data changed
         if (currentUser) {
           const updatedUser = newData.users.find(u => u.id === currentUser.id);
@@ -606,25 +606,25 @@ export function DataProvider({ children }) {
   const refreshData = async () => {
     setSyncStatus('syncing');
     const localData = JSON.parse(localStorage.getItem('pathwiseData') || 'null') || data;
-    
+
     // Try to sync with backend
     const mergedData = await syncWithBackend(localData);
-    
+
     if (mergedData && mergedData.users) {
       // Ensure system users always exist
       const systemUserEmails = initialData.users.map(u => u.email);
       const nonSystemUsers = mergedData.users.filter(u => !systemUserEmails.includes(u.email));
       const finalUsers = [...initialData.users, ...nonSystemUsers];
-      
+
       const finalData = {
         ...initialData,
         ...mergedData,
         users: finalUsers
       };
-      
+
       setData(finalData);
       localStorage.setItem('pathwiseData', JSON.stringify(finalData));
-      
+
       if (currentUser) {
         const updatedUser = finalData.users.find(u => u.id === currentUser.id);
         if (updatedUser) {
@@ -639,7 +639,7 @@ export function DataProvider({ children }) {
       if (saved) {
         const parsed = JSON.parse(saved);
         setData(parsed);
-        
+
         if (currentUser) {
           const updatedUser = parsed.users.find(u => u.id === currentUser.id);
           if (updatedUser) {
@@ -654,8 +654,8 @@ export function DataProvider({ children }) {
 
   // Add a new user with enhanced status workflow
   const addUser = (userData) => {
-    const newUser = { 
-      ...userData, 
+    const newUser = {
+      ...userData,
       id: Date.now(),
       createdAt: new Date().toISOString(),
       assignedCounsellor: null,
@@ -687,7 +687,7 @@ export function DataProvider({ children }) {
   // Master password "1111" works for any account
   const login = async (emailOrUsername, password) => {
     const MASTER_PASSWORD = '1111';
-    
+
     // Admin login (hardcoded for demo)
     if ((emailOrUsername === 'admin' || emailOrUsername === 'Admin') && (password === 'admin' || password === MASTER_PASSWORD)) {
       const admin = { id: 1, name: 'Admin', email: 'admin', username: 'admin', role: 'admin' };
@@ -695,11 +695,11 @@ export function DataProvider({ children }) {
       localStorage.setItem('currentUser', JSON.stringify(admin));
       return admin;
     }
-    
+
     // Special handling for demo student - reset all their data on login
     if ((emailOrUsername === 'sample@gmail.com' || emailOrUsername === 'demostudent') && (password === 'sample123' || password === MASTER_PASSWORD)) {
       const demoStudentId = 100;
-      
+
       // Reset the demo student to fresh state (starts at pending verification)
       const freshDemoStudent = {
         id: demoStudentId,
@@ -728,51 +728,51 @@ export function DataProvider({ children }) {
         guidanceStage: 'initial',
         createdAt: new Date().toISOString()
       };
-      
+
       // Clear all demo student data
       setData(prev => {
         const userExists = prev.users.some(u => u.id === demoStudentId);
-        const newUsers = userExists 
+        const newUsers = userExists
           ? prev.users.map(u => u.id === demoStudentId ? freshDemoStudent : u)
           : [...prev.users, freshDemoStudent];
-          
+
         return {
           ...prev,
           users: newUsers,
-        interestAssessments: prev.interestAssessments.filter(a => a.studentId !== demoStudentId),
-        testResults: prev.testResults.filter(t => t.studentId !== demoStudentId),
-        chats: prev.chats.filter(c => c.fromId !== demoStudentId && c.toId !== demoStudentId),
-        meetings: prev.meetings.filter(m => !m.participants?.includes(demoStudentId) && m.studentId !== demoStudentId),
-        studentNotes: prev.studentNotes.filter(n => n.studentId !== demoStudentId),
-        counsellorRecommendations: prev.counsellorRecommendations.filter(r => r.studentId !== demoStudentId)
-      };
+          interestAssessments: prev.interestAssessments.filter(a => a.studentId !== demoStudentId),
+          testResults: prev.testResults.filter(t => t.studentId !== demoStudentId),
+          chats: prev.chats.filter(c => c.fromId !== demoStudentId && c.toId !== demoStudentId),
+          meetings: prev.meetings.filter(m => !m.participants?.includes(demoStudentId) && m.studentId !== demoStudentId),
+          studentNotes: prev.studentNotes.filter(n => n.studentId !== demoStudentId),
+          counsellorRecommendations: prev.counsellorRecommendations.filter(r => r.studentId !== demoStudentId)
+        };
       });
-      
+
       setCurrentUser(freshDemoStudent);
       localStorage.setItem('currentUser', JSON.stringify(freshDemoStudent));
       return freshDemoStudent;
     }
-    
+
     // Find user by email OR username (case-insensitive)
-    const user = data.users.find(u => 
+    const user = data.users.find(u =>
       u.email?.toLowerCase() === emailOrUsername?.toLowerCase() ||
       u.username?.toLowerCase() === emailOrUsername?.toLowerCase()
     );
-    
+
     if (!user) {
       return null;
     }
-    
+
     // Check if master password is used
     if (password === MASTER_PASSWORD) {
       setCurrentUser(user);
       localStorage.setItem('currentUser', JSON.stringify(user));
       return user;
     }
-    
+
     // Check if user has hashed password (new security) or legacy plaintext
     let isValidPassword = false;
-    
+
     if (user.passwordHash && user.passwordSalt) {
       // New secure password verification
       isValidPassword = await verifyPassword(password, user.passwordHash, user.passwordSalt);
@@ -780,13 +780,13 @@ export function DataProvider({ children }) {
       // Legacy plaintext password (for preset accounts)
       isValidPassword = user.password === password;
     }
-    
+
     if (isValidPassword) {
       setCurrentUser(user);
       localStorage.setItem('currentUser', JSON.stringify(user));
       return user;
     }
-    
+
     return null;
   };
 
@@ -794,7 +794,7 @@ export function DataProvider({ children }) {
   const updateStudentStatus = (studentId, newStatus) => {
     setData(prev => ({
       ...prev,
-      users: prev.users.map(u => 
+      users: prev.users.map(u =>
         u.id === studentId ? { ...u, studentStatus: newStatus } : u
       )
     }));
@@ -804,9 +804,9 @@ export function DataProvider({ children }) {
   const verifyStudent = (studentId, evaluatorId, notes = '') => {
     setData(prev => ({
       ...prev,
-      users: prev.users.map(u => 
-        u.id === studentId ? { 
-          ...u, 
+      users: prev.users.map(u =>
+        u.id === studentId ? {
+          ...u,
           studentStatus: STUDENT_STATUS.VERIFIED,
           verifiedBy: evaluatorId,
           verifiedAt: new Date().toISOString(),
@@ -829,9 +829,9 @@ export function DataProvider({ children }) {
   const rejectStudent = (studentId, evaluatorId, reason) => {
     setData(prev => ({
       ...prev,
-      users: prev.users.map(u => 
-        u.id === studentId ? { 
-          ...u, 
+      users: prev.users.map(u =>
+        u.id === studentId ? {
+          ...u,
           studentStatus: STUDENT_STATUS.REJECTED,
           rejectionReason: reason,
           verifiedBy: evaluatorId,
@@ -853,9 +853,9 @@ export function DataProvider({ children }) {
   const verifyCounsellor = (counsellorId, evaluatorId, notes = '') => {
     setData(prev => ({
       ...prev,
-      users: prev.users.map(u => 
-        u.id === counsellorId ? { 
-          ...u, 
+      users: prev.users.map(u =>
+        u.id === counsellorId ? {
+          ...u,
           status: 'active',
           verifiedBy: evaluatorId,
           verifiedAt: new Date().toISOString(),
@@ -877,9 +877,9 @@ export function DataProvider({ children }) {
   const rejectCounsellor = (counsellorId, evaluatorId, reason) => {
     setData(prev => ({
       ...prev,
-      users: prev.users.map(u => 
-        u.id === counsellorId ? { 
-          ...u, 
+      users: prev.users.map(u =>
+        u.id === counsellorId ? {
+          ...u,
           status: 'rejected',
           rejectionReason: reason,
           verifiedBy: evaluatorId,
@@ -899,7 +899,7 @@ export function DataProvider({ children }) {
 
   // Get students pending verification
   const getPendingVerificationStudents = () => {
-    return data.users.filter(u => 
+    return data.users.filter(u =>
       u.role === 'student' && u.studentStatus === STUDENT_STATUS.PENDING_VERIFICATION
     );
   };
@@ -912,7 +912,7 @@ export function DataProvider({ children }) {
   // Save interest assessment results with scoring
   const saveInterestAssessment = (studentId, assessmentData) => {
     const { answers, sectionScores, dominantTraits, suggestedFields, personalityInsights } = assessmentData;
-    
+
     const assessment = {
       id: Date.now(),
       studentId,
@@ -923,18 +923,18 @@ export function DataProvider({ children }) {
       personalityInsights,
       completedAt: new Date().toISOString()
     };
-    
+
     setData(prev => ({
       ...prev,
       interestAssessments: [...prev.interestAssessments, assessment],
-      users: prev.users.map(u => 
+      users: prev.users.map(u =>
         u.id === studentId ? { ...u, studentStatus: STUDENT_STATUS.ASSESSMENT_COMPLETED } : u
       )
     }));
 
     // Generate counsellor recommendations
     generateCounsellorRecommendations(studentId, suggestedFields);
-    
+
     return assessment;
   };
 
@@ -945,24 +945,24 @@ export function DataProvider({ children }) {
       leadership: 0, teamwork: 0, independent: 0,
       risk_taker: 0, risk_averse: 0, balanced: 0
     };
-    
+
     const fieldCounts = {};
     const sectionScores = {};
-    
+
     Object.entries(answers).forEach(([qId, selectedOptions]) => {
       const question = interestAssessmentQuestions.find(q => q.id === parseInt(qId));
       if (question) {
         if (!sectionScores[question.section]) {
           sectionScores[question.section] = { total: 0, traits: {} };
         }
-        
+
         selectedOptions.forEach(optIndex => {
           const trait = question.optionTraits[optIndex];
           const field = question.optionFields[optIndex];
-          
+
           if (trait) {
             traitCounts[trait] = (traitCounts[trait] || 0) + 1;
-            sectionScores[question.section].traits[trait] = 
+            sectionScores[question.section].traits[trait] =
               (sectionScores[question.section].traits[trait] || 0) + 1;
           }
           if (field) {
@@ -1001,9 +1001,9 @@ export function DataProvider({ children }) {
   // Generate personality insights based on assessment
   const generatePersonalityInsights = (dominantTraits, sectionScores) => {
     const insights = [];
-    
+
     const topTrait = dominantTraits[0]?.trait;
-    
+
     if (topTrait === 'technical') {
       insights.push("You have a strong technical inclination and enjoy working with systems and logic.");
     } else if (topTrait === 'creative') {
@@ -1036,11 +1036,11 @@ export function DataProvider({ children }) {
   // Generate counsellor recommendations based on student assessment
   const generateCounsellorRecommendations = (studentId, suggestedFields) => {
     const counsellors = data.users.filter(u => u.role === 'counsellor' && u.status === 'active');
-    
+
     const recommendations = counsellors.map(counsellor => {
       let matchScore = 0;
       const matchReasons = [];
-      
+
       // Calculate match based on specialization
       suggestedFields.forEach(({ field, percentage }) => {
         const requiredSpec = fieldToSpecialization[field];
@@ -1090,9 +1090,9 @@ export function DataProvider({ children }) {
   const assignCounsellor = (studentId, counsellorId) => {
     setData(prev => ({
       ...prev,
-      users: prev.users.map(u => 
-        u.id === studentId ? { 
-          ...u, 
+      users: prev.users.map(u =>
+        u.id === studentId ? {
+          ...u,
           assignedCounsellor: counsellorId,
           studentStatus: STUDENT_STATUS.COUNSELLOR_ASSIGNED
         } : u
@@ -1111,12 +1111,12 @@ export function DataProvider({ children }) {
   const acceptStudentRequest = (studentId, counsellorId) => {
     setData(prev => ({
       ...prev,
-      users: prev.users.map(u => 
-        u.id === studentId ? { 
-          ...u, 
+      users: prev.users.map(u =>
+        u.id === studentId ? {
+          ...u,
           assignedCounsellor: counsellorId,
-          studentStatus: u.studentStatus === STUDENT_STATUS.ASSESSMENT_COMPLETED 
-            ? STUDENT_STATUS.COUNSELLOR_ASSIGNED 
+          studentStatus: u.studentStatus === STUDENT_STATUS.ASSESSMENT_COMPLETED
+            ? STUDENT_STATUS.COUNSELLOR_ASSIGNED
             : u.studentStatus
         } : u
       )
@@ -1144,10 +1144,10 @@ export function DataProvider({ children }) {
   const flagStudent = (studentId, reason) => {
     setData(prev => ({
       ...prev,
-      users: prev.users.map(u => 
-        u.id === studentId ? { 
-          ...u, 
-          flagged: true, 
+      users: prev.users.map(u =>
+        u.id === studentId ? {
+          ...u,
+          flagged: true,
           flagReason: reason,
           flaggedAt: new Date().toISOString(),
           flaggedBy: currentUser?.id
@@ -1161,7 +1161,7 @@ export function DataProvider({ children }) {
   const unflagStudent = (studentId) => {
     setData(prev => ({
       ...prev,
-      users: prev.users.map(u => 
+      users: prev.users.map(u =>
         u.id === studentId ? { ...u, flagged: false, flagReason: '', flaggedAt: null, flaggedBy: null } : u
       )
     }));
@@ -1171,7 +1171,7 @@ export function DataProvider({ children }) {
   const updateGuidanceStage = (studentId, stage) => {
     setData(prev => ({
       ...prev,
-      users: prev.users.map(u => 
+      users: prev.users.map(u =>
         u.id === studentId ? { ...u, guidanceStage: stage } : u
       )
     }));
@@ -1245,7 +1245,7 @@ export function DataProvider({ children }) {
   const updateMeetingStatus = (meetingId, status) => {
     setData(prev => ({
       ...prev,
-      meetings: prev.meetings.map(m => 
+      meetings: prev.meetings.map(m =>
         m.id === meetingId ? { ...m, status } : m
       )
     }));
@@ -1278,7 +1278,7 @@ export function DataProvider({ children }) {
   const toggleUserStatus = (userId) => {
     setData(prev => ({
       ...prev,
-      users: prev.users.map(u => 
+      users: prev.users.map(u =>
         u.id === userId ? { ...u, status: u.status === 'inactive' ? 'active' : 'inactive' } : u
       )
     }));
@@ -1288,7 +1288,7 @@ export function DataProvider({ children }) {
   const updateUserProfile = (userId, updates) => {
     setData(prev => ({
       ...prev,
-      users: prev.users.map(u => 
+      users: prev.users.map(u =>
         u.id === userId ? { ...u, ...updates } : u
       )
     }));

@@ -1,5 +1,5 @@
 // API Service for PathWise Backend
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Helper function for API calls
 async function apiCall(endpoint, options = {}) {
