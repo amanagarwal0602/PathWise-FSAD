@@ -9,7 +9,7 @@ const features = [
   {
     icon: "📅",
     title: "Book Counseling",
-    description: "Schedule one-on-one sessions with expert career counsellors for personalized guidance."
+    description: "Schedule one-on-one sessions with expert career mentors for personalized guidance."
   },
   {
     icon: "🔍",
@@ -24,7 +24,7 @@ const features = [
   {
     icon: "👥",
     title: "Expert Network",
-    description: "Connect with verified counsellors specializing in different career fields."
+    description: "Connect with verified mentors specializing in different career fields."
   },
   {
     icon: "📚",

@@ -2,7 +2,7 @@ import { Mail, Phone, MapPin } from "lucide-react";
 
 const links = {
   "For Students": ["Career Assessment", "Explore Paths", "Book Session", "Success Stories", "Resources"],
-  "For Admins": ["Admin Dashboard", "Manage Counsellors", "Track Engagement", "Resource Library", "Reports"],
+  "For Admins": ["Admin Dashboard", "Manage Mentors", "Track Engagement", "Resource Library", "Reports"],
   "Company": ["About PathWise", "Our Mission", "Careers at PathWise", "Blog", "Press Kit"],
   "Support": ["Help Center", "Contact Us", "Privacy Policy", "Terms of Use", "Cookie Policy"],
 };
@@ -77,7 +77,7 @@ export default function Footer() {
         }}>
           <p style={{ fontSize: 12.5 }}>© 2025 PathWise Career Platform. FSAD-PS24 Project. All rights reserved.</p>
           <div style={{ display: "flex", gap: 6 }}>
-            {["User Login", "Admin Portal", "Counsellor Portal"].map((label, i) => (
+            {["User Login", "Admin Portal", "Mentor Portal"].map((label, i) => (
               <a key={i} href="#" style={{
                 fontSize: 12, padding: "5px 12px", borderRadius: 6,
                 border: "1px solid rgba(255,255,255,0.12)",

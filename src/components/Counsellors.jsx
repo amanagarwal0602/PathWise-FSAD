@@ -13,7 +13,7 @@ const counsellors = [
   },
   {
     name: "Rahul Mehta",
-    role: "Business & Finance Counsellor",
+    role: "Business & Finance Mentor",
     exp: "9 years exp.",
     rating: 4.8,
     sessions: "1,780 sessions",
@@ -55,7 +55,7 @@ export default function Counsellors() {
               fontSize: 12, fontWeight: 700, letterSpacing: "1.5px",
               padding: "6px 14px", borderRadius: 100, marginBottom: 14,
               textTransform: "uppercase",
-            }}>Expert Counsellors</span>
+            }}>Expert Mentors</span>
             <h2 style={{
               fontFamily: "var(--font-display)",
               fontSize: "clamp(1.8rem, 4vw, 2.8rem)",
@@ -70,7 +70,7 @@ export default function Counsellors() {
           }}
             onMouseEnter={e => { e.currentTarget.style.background = "var(--teal)"; e.currentTarget.style.color = "#fff"; }}
             onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--teal)"; }}
-          >View All Counsellors</button>
+          >View All Mentors</button>
         </div>
 
         <div style={{

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
+import { useSiteSettings } from '../context/SiteSettingsContext';
 
 function GeneralCounsellorDashboard() {
   const navigate = useNavigate();
@@ -11,6 +12,9 @@ function GeneralCounsellorDashboard() {
     addChatSummary, getStudentNotes, getInterestAssessment,
     getCounsellorRecommendations, updateStudentStatus, generateCounsellorRecommendations
   } = useData();
+  
+  // Site settings for dynamic branding
+  const { settings } = useSiteSettings();
   
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -150,15 +154,15 @@ function GeneralCounsellorDashboard() {
   return (
     <div className="dashboard-layout general-counsellor-layout">
       {/* Sidebar */}
-      <aside className="sidebar gc-sidebar">
+      <aside className="sidebar">
         <div className="sidebar-header">
-          <img src="/logo.png" alt="PathWise" className="logo-img" />
-          <h2>PathWise</h2>
+          <img src={settings.logoUrl || "/logo.png"} alt={settings.siteName} className="logo-img" />
+          <h2>{settings.siteName}</h2>
         </div>
         <div className="user-info">
-          <div className="avatar gc-avatar">👨‍🏫</div>
-          <span>{currentUser?.name || 'General Counsellor'}</span>
-          <small className="role-badge">General Counsellor</small>
+          <div className="avatar">👨‍💼</div>
+          <span>{currentUser?.name || 'Career Coordinator'}</span>
+          <small className="role-badge">Career Coordinator</small>
         </div>
         
         <nav className="sidebar-nav">
@@ -169,7 +173,10 @@ function GeneralCounsellorDashboard() {
             👥 Students {stats.assessmentDone > 0 && <span className="badge">{stats.assessmentDone}</span>}
           </button>
           <button className={activeTab === 'counsellors' ? 'active' : ''} onClick={() => setActiveTab('counsellors')}>
-            👨‍🏫 Counsellors
+            👨‍🏫 Career Mentors
+          </button>
+          <button className={activeTab === 'reports' ? 'active' : ''} onClick={() => setActiveTab('reports')}>
+            📈 Reports
           </button>
         </nav>
 
@@ -181,8 +188,20 @@ function GeneralCounsellorDashboard() {
         {/* Dashboard Overview */}
         {activeTab === 'dashboard' && (
           <div className="gc-dashboard">
-            <h1>General Counsellor Dashboard</h1>
-            <p className="subtitle">Control center for student guidance and counsellor assignment</p>
+            {/* Welcome Banner */}
+            {settings.dashboard.showWelcomeMessage && (
+              <div className="welcome-banner coordinator-banner">
+                <h2>👋 Welcome, {currentUser?.name}!</h2>
+                <p>Your control center for student guidance and mentor assignment</p>
+              </div>
+            )}
+            
+            {!settings.dashboard.showWelcomeMessage && (
+              <>
+                <h1>Career Coordinator Dashboard</h1>
+                <p className="subtitle">Control center for student guidance and mentor assignment</p>
+              </>
+            )}
             
             <div className="stats-grid gc-stats">
               <div className="stat-card" onClick={() => { setActiveTab('students'); setStudentFilter('all'); }}>
@@ -380,7 +399,7 @@ function GeneralCounsellorDashboard() {
                       </button>
                     )}
                     <button className="btn-primary" onClick={() => setShowAssignModal(true)}>
-                      {selectedStudent.assignedCounsellor ? '🔄 Reassign' : '👨‍🏫 Assign'} Counsellor
+                      {selectedStudent.assignedCounsellor ? '🔄 Reassign' : '👨‍🏫 Assign'} Mentor
                     </button>
                   </div>
                 </div>
@@ -414,6 +433,28 @@ function GeneralCounsellorDashboard() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Verification Info */}
+                  {selectedStudent.verifiedBy && (
+                    <div className="detail-section">
+                      <h3>✅ Verification Details</h3>
+                      <div className="info-grid">
+                        <div className="info-item">
+                          <label>Verified By</label>
+                          <span>
+                            {(() => {
+                              const evaluator = data.users.find(u => u.id === selectedStudent.verifiedBy);
+                              return evaluator ? `${evaluator.name} (${evaluator.email})` : 'Verification Specialist';
+                            })()}
+                          </span>
+                        </div>
+                        <div className="info-item">
+                          <label>Verified On</label>
+                          <span>{selectedStudent.verifiedAt ? new Date(selectedStudent.verifiedAt).toLocaleString() : 'N/A'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Interest Assessment Report */}
                   {(() => {
@@ -479,12 +520,12 @@ function GeneralCounsellorDashboard() {
                     );
                   })()}
 
-                  {/* Assigned Counsellor */}
+                  {/* Assigned Mentor */}
                   {(() => {
                     const counsellor = getAssignedCounsellor(selectedStudent);
                     return (
                       <div className="detail-section">
-                        <h3>👨‍🏫 Assigned Counsellor</h3>
+                        <h3>👨‍🏫 Assigned Mentor</h3>
                         {counsellor ? (
                           <div className="counsellor-card">
                             <div className="counsellor-avatar">👨‍🏫</div>
@@ -501,9 +542,9 @@ function GeneralCounsellorDashboard() {
                           </div>
                         ) : (
                           <div className="empty-section">
-                            <p>No counsellor assigned yet</p>
+                            <p>No mentor assigned yet</p>
                             <button className="btn-primary btn-small" onClick={() => setShowAssignModal(true)}>
-                              Assign Counsellor
+                              Assign Mentor
                             </button>
                           </div>
                         )}
@@ -511,14 +552,14 @@ function GeneralCounsellorDashboard() {
                     );
                   })()}
 
-                  {/* Counsellor Recommendations */}
+                  {/* Mentor Recommendations */}
                   {(() => {
                     const recommendations = getCounsellorRecommendations(selectedStudent.id);
                     if (recommendations.length === 0) return null;
                     
                     return (
                       <div className="detail-section">
-                        <h3>🎯 Recommended Counsellors</h3>
+                        <h3>🎯 Recommended Mentors</h3>
                         <div className="recommendations-list">
                           {recommendations.slice(0, 3).map((rec, i) => (
                             <div key={i} className="recommendation-card">
@@ -650,7 +691,7 @@ function GeneralCounsellorDashboard() {
                       <option value="initial">Initial Contact</option>
                       <option value="assessment_review">Assessment Review</option>
                       <option value="career_exploration">Career Exploration</option>
-                      <option value="counsellor_matching">Counsellor Matching</option>
+                      <option value="counsellor_matching">Mentor Matching</option>
                       <option value="active_guidance">Active Guidance</option>
                       <option value="follow_up">Follow Up</option>
                       <option value="completed">Completed</option>
@@ -734,7 +775,7 @@ function GeneralCounsellorDashboard() {
                   
                   return (
                     <div className="snapshot-section counsellor-snapshot">
-                      <h4>Counsellor Snapshot</h4>
+                      <h4>Mentor Snapshot</h4>
                       <div className="snapshot-content">
                         <div className="snapshot-avatar">👨‍🏫</div>
                         <div className="snapshot-name">{counsellor.name}</div>
@@ -751,16 +792,16 @@ function GeneralCounsellorDashboard() {
           </div>
         )}
 
-        {/* Counsellors View */}
+        {/* Career Mentors View */}
         {activeTab === 'counsellors' && (
           <div className="gc-counsellors">
-            <h1>Counsellors</h1>
-            <p className="subtitle">View and manage counsellor profiles</p>
+            <h1>Career Mentors</h1>
+            <p className="subtitle">View and manage mentor profiles</p>
             
             <div className="counsellors-grid">
               {counsellors.length === 0 ? (
                 <div className="empty-state">
-                  <p>No counsellors available</p>
+                  <p>No mentors available</p>
                 </div>
               ) : (
                 counsellors.map(counsellor => {
@@ -814,6 +855,143 @@ function GeneralCounsellorDashboard() {
                   );
                 })
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Reports Section */}
+        {activeTab === 'reports' && (
+          <div className="gc-reports">
+            <h1>Reports & Analytics</h1>
+            <p className="subtitle">Overview of student progress and assignments</p>
+            
+            {/* Summary Stats */}
+            <div className="report-summary">
+              <div className="report-stat-card">
+                <h3>👥 Total Students</h3>
+                <span className="big-number">{stats.total}</span>
+                <div className="stat-breakdown">
+                  <span className="positive">✓ {stats.assigned} Assigned</span>
+                  <span className="warning">⏳ {stats.total - stats.assigned} Pending</span>
+                </div>
+              </div>
+              <div className="report-stat-card">
+                <h3>📋 Assessments</h3>
+                <span className="big-number">{stats.assessmentDone}</span>
+                <div className="stat-breakdown">
+                  <span>Ready for assignment</span>
+                </div>
+              </div>
+              <div className="report-stat-card">
+                <h3>👨‍🏫 Career Mentors</h3>
+                <span className="big-number">{counsellors.length}</span>
+              </div>
+              <div className="report-stat-card">
+                <h3>🚩 Flagged</h3>
+                <span className="big-number">{allStudents.filter(s => s.flagged).length}</span>
+              </div>
+            </div>
+
+            {/* Student Assignment Report */}
+            <div className="report-card">
+              <div className="report-card-header">
+                <h3>📊 Student Assignment Report</h3>
+                <button className="btn-secondary btn-small" onClick={() => {
+                  const reportData = allStudents.map(s => {
+                    const counsellor = data.users.find(u => u.id === s.assignedCounsellor);
+                    const assessment = data.interestAssessments?.find(a => a.studentId === s.id);
+                    return {
+                      name: s.name,
+                      email: s.email,
+                      status: s.studentStatus || 'registered',
+                      counsellor: counsellor?.name || 'Not Assigned',
+                      hasAssessment: assessment ? 'Yes' : 'No',
+                      flagged: s.flagged ? 'Yes' : 'No'
+                    };
+                  });
+                  const csv = 'Name,Email,Status,Counsellor,Assessment,Flagged\n' + 
+                    reportData.map(r => `${r.name},${r.email},${r.status},${r.counsellor},${r.hasAssessment},${r.flagged}`).join('\n');
+                  const blob = new Blob([csv], { type: 'text/csv' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'student_assignment_report.csv';
+                  a.click();
+                }}>
+                  📥 Download CSV
+                </button>
+              </div>
+              <div className="report-table-container">
+                <table className="report-table">
+                  <thead>
+                    <tr>
+                      <th>Student</th>
+                      <th>Status</th>
+                      <th>Assigned To</th>
+                      <th>Assessment</th>
+                      <th>Flag</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allStudents.map(s => {
+                      const counsellor = data.users.find(u => u.id === s.assignedCounsellor);
+                      const assessment = data.interestAssessments?.find(a => a.studentId === s.id);
+                      return (
+                        <tr key={s.id} className={s.flagged ? 'flagged-row' : ''}>
+                          <td>
+                            <strong>{s.name}</strong>
+                            <small>{s.email}</small>
+                          </td>
+                          <td>
+                            <span className={`status-badge ${s.studentStatus || 'registered'}`}>
+                              {s.studentStatus || 'Registered'}
+                            </span>
+                          </td>
+                          <td>{counsellor?.name || <span className="unassigned">Not Assigned</span>}</td>
+                          <td>{assessment ? <span className="positive">✓ Done</span> : <span className="pending">Pending</span>}</td>
+                          <td>{s.flagged ? <span className="flag-indicator">🚩</span> : '-'}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Counsellor Workload */}
+            <div className="report-card">
+              <div className="report-card-header">
+                <h3>👨‍🏫 Mentor Workload</h3>
+              </div>
+              <div className="report-table-container">
+                <table className="report-table">
+                  <thead>
+                    <tr>
+                      <th>Mentor</th>
+                      <th>Specialization</th>
+                      <th>Students</th>
+                      <th>Meetings</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {counsellors.map(c => {
+                      const studentCount = allStudents.filter(s => s.assignedCounsellor === c.id).length;
+                      const meetings = data.meetings.filter(m => m.counsellorId === c.id);
+                      return (
+                        <tr key={c.id}>
+                          <td>
+                            <strong>{c.name}</strong>
+                            <small>{c.email}</small>
+                          </td>
+                          <td>{c.specialization || 'General'}</td>
+                          <td>{studentCount}</td>
+                          <td>{meetings.length}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
@@ -898,6 +1076,11 @@ function GeneralCounsellorDashboard() {
           </div>
         </div>
       )}
+      
+      {/* Mobile Logout Button */}
+      <button className="mobile-logout-btn" onClick={handleLogout} title="Logout">
+        🚪
+      </button>
     </div>
   );
 }

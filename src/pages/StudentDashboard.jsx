@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
+import { useSiteSettings } from '../context/SiteSettingsContext';
+import { useToast } from '../context/ToastContext';
 
 function StudentDashboard() {
   const navigate = useNavigate();
@@ -8,8 +10,12 @@ function StudentDashboard() {
     data, currentUser, interestAssessmentQuestions, careerMapping,
     saveTestResult, addChatMessage, saveInterestAssessment,
     calculateInterestScores, getInterestAssessment, STUDENT_STATUS,
-    updateStudentStatus
+    updateStudentStatus, refreshData
   } = useData();
+  const { showToast } = useToast();
+  
+  // Site settings for dynamic branding
+  const { settings } = useSiteSettings();
   
   const [activeTab, setActiveTab] = useState('assessment'); // Start with assessment
   const [testStarted, setTestStarted] = useState(false);
@@ -17,6 +23,13 @@ function StudentDashboard() {
   const [answers, setAnswers] = useState({});
   const [chatMessage, setChatMessage] = useState('');
   const [currentSection, setCurrentSection] = useState('');
+
+  // Redirect to login if no user
+  useEffect(() => {
+    if (!currentUser) {
+      navigate('/login');
+    }
+  }, [currentUser, navigate]);
 
   // Get current student data
   const student = data.users.find(u => u.id === currentUser?.id);
@@ -52,10 +65,21 @@ function StudentDashboard() {
   // Determine student journey stage
   const hasAssessment = !!myAssessment;
   const hasCounsellor = !!assignedCounsellor;
-  const canAccessDashboard = hasAssessment && hasCompletedMeetingWithGeneral && hasCounsellor;
+  // Student can access dashboard if they have a counsellor assigned (simplified flow)
+  const canAccessDashboard = hasAssessment && hasCounsellor;
 
   // Get unique sections from questions
   const sections = [...new Set(interestAssessmentQuestions.map(q => q.section))];
+
+  // Auto-refresh for pending verification status
+  useEffect(() => {
+    if (student?.studentStatus === 'pending_verification') {
+      const interval = setInterval(() => {
+        refreshData();
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [student?.studentStatus, refreshData]);
 
   // Handle logout
   const handleLogout = () => {
@@ -85,17 +109,14 @@ function StudentDashboard() {
     if (!hasAssessment) {
       // Step 1: If assessment not completed, go to assessment
       setActiveTab('assessment');
-    } else if (hasAssessment && !hasCompletedMeetingWithGeneral) {
-      // Step 2: Assessment done, waiting for meeting with general counsellor
+    } else if (hasAssessment && !hasCounsellor) {
+      // Step 2: Assessment done, waiting for counsellor assignment - can chat meanwhile
       setActiveTab('chat');
-    } else if (hasAssessment && hasCompletedMeetingWithGeneral && !hasCounsellor) {
-      // Step 3: Meeting done, waiting for counsellor assignment
-      setActiveTab('waiting');
-    } else if (canAccessDashboard && activeTab === 'assessment') {
-      // Step 4: All done, can access full dashboard
+    } else if (canAccessDashboard && (activeTab === 'assessment' || activeTab === 'waiting')) {
+      // Step 3: Counsellor assigned, can access full dashboard
       setActiveTab('dashboard');
     }
-  }, [hasAssessment, hasCompletedMeetingWithGeneral, hasCounsellor, canAccessDashboard]);
+  }, [hasAssessment, hasCounsellor, canAccessDashboard]);
 
   // Next question
   const nextQuestion = () => {
@@ -115,8 +136,34 @@ function StudentDashboard() {
 
   // Calculate and save assessment result
   const submitAssessment = () => {
-    const scores = calculateInterestScores(answers);
+    // Ensure user is logged in
+    if (!currentUser) {
+      showToast('Session expired. Please log in again.', 'error');
+      navigate('/login');
+      return;
+    }
     
+    // Check if at least some answers exist
+    const answeredCount = Object.keys(answers).filter(k => answers[k]?.length > 0).length;
+    
+    if (answeredCount === 0) {
+      if (!window.confirm('You haven\'t answered any questions. Submit anyway with default results?')) {
+        return;
+      }
+    } else if (answeredCount < interestAssessmentQuestions.length) {
+      if (!window.confirm(`You've answered ${answeredCount} of ${interestAssessmentQuestions.length} questions. Submit with current answers?`)) {
+        return;
+      }
+    }
+    
+    console.log('Submitting assessment with answers:', answers);
+    console.log('Current user:', currentUser);
+    
+    // Calculate scores
+    const scores = calculateInterestScores(answers);
+    console.log('Calculated scores:', scores);
+    
+    // Save interest assessment
     saveInterestAssessment(currentUser.id, {
       answers,
       sectionScores: scores.sectionScores,
@@ -137,6 +184,8 @@ function StudentDashboard() {
       completedAt: new Date().toISOString()
     });
 
+    console.log('Assessment saved successfully');
+    
     setTestStarted(false);
     setCurrentQuestion(0);
     setAnswers({});
@@ -159,7 +208,8 @@ function StudentDashboard() {
   // Get status badge color
   const getStatusColor = (status) => {
     const colors = {
-      [STUDENT_STATUS.REGISTERED]: '#fbbf24',
+      'pending_verification': '#fbbf24',
+      'rejected': '#ef4444',
       [STUDENT_STATUS.VERIFIED]: '#60a5fa',
       [STUDENT_STATUS.ASSESSMENT_COMPLETED]: '#34d399',
       [STUDENT_STATUS.ASSIGNED_TO_GENERAL]: '#a78bfa',
@@ -173,24 +223,164 @@ function StudentDashboard() {
   // Format status for display
   const formatStatus = (status) => {
     const labels = {
-      [STUDENT_STATUS.REGISTERED]: 'Registered',
-      [STUDENT_STATUS.VERIFIED]: 'Verified',
-      [STUDENT_STATUS.ASSESSMENT_COMPLETED]: 'Assessment Done',
-      [STUDENT_STATUS.ASSIGNED_TO_GENERAL]: 'Under Review',
-      [STUDENT_STATUS.CHAT_EVALUATION]: 'In Evaluation',
-      [STUDENT_STATUS.COUNSELLOR_ASSIGNED]: 'Counsellor Assigned',
+      'pending_verification': 'Pending Verification',
+      'rejected': 'Registration Rejected',
+      [STUDENT_STATUS.VERIFIED]: 'Profile Verified',
+      [STUDENT_STATUS.ASSESSMENT_COMPLETED]: 'Assessment Complete',
+      [STUDENT_STATUS.ASSIGNED_TO_GENERAL]: 'Profile Under Review',
+      [STUDENT_STATUS.CHAT_EVALUATION]: 'In Consultation',
+      [STUDENT_STATUS.COUNSELLOR_ASSIGNED]: 'Mentor Matched',
       [STUDENT_STATUS.ACTIVE_GUIDANCE]: 'Active Guidance'
     };
     return labels[status] || status;
   };
+
+  // If student is pending verification or rejected, show appropriate screen
+  if (student?.studentStatus === 'pending_verification') {
+    return (
+      <div className="verification-pending-page">
+        <div className="verification-container">
+          <div className="verification-header">
+            <img src="/logo.png" alt="PathWise" className="verification-logo" />
+            <h1>PathWise</h1>
+          </div>
+          <div className="verification-content">
+            <div className="verification-icon pending">⏳</div>
+            <h2>Verification Pending</h2>
+            <p className="verification-message">
+              Thank you for registering with PathWise! Your account is currently under review 
+              by our verification team.
+            </p>
+            
+            <div className="verification-info-box">
+              <h3>What happens next?</h3>
+              <ul>
+                <li>✓ Our verification team will review your registration details</li>
+                <li>✓ They will verify your student credentials</li>
+                <li>✓ You'll receive access once approved</li>
+                <li>✓ This usually takes 24-48 hours</li>
+              </ul>
+            </div>
+
+            <div className="verification-details">
+              <h3>Your Submission Details</h3>
+              <div className="detail-row">
+                <span className="detail-label">Name:</span>
+                <span className="detail-value">{student.name}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Email:</span>
+                <span className="detail-value">{student.email}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">College:</span>
+                <span className="detail-value">{student.college || 'Not provided'}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Branch:</span>
+                <span className="detail-value">{student.branch || 'Not provided'}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Submitted:</span>
+                <span className="detail-value">{new Date(student.createdAt).toLocaleDateString()}</span>
+              </div>
+            </div>
+
+            <div className="verification-note">
+              <span className="note-icon">💡</span>
+              <p>
+                Page auto-refreshes every 5 seconds. Click refresh to check manually.
+              </p>
+            </div>
+
+            <div className="verification-actions">
+              <button className="btn-primary" onClick={refreshData}>
+                🔄 Refresh Status
+              </button>
+              <button className="btn-secondary" onClick={handleLogout}>
+                🚪 Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If student is rejected, show rejection screen
+  if (student?.studentStatus === 'rejected') {
+    return (
+      <div className="verification-pending-page rejected">
+        <div className="verification-container">
+          <div className="verification-header">
+            <img src="/logo.png" alt="PathWise" className="verification-logo" />
+            <h1>PathWise</h1>
+          </div>
+          <div className="verification-content">
+            <div className="verification-icon rejected">❌</div>
+            <h2>Registration Rejected</h2>
+            <p className="verification-message">
+              Unfortunately, your registration could not be verified. Please review the 
+              reason below and consider re-registering with correct information.
+            </p>
+            
+            <div className="rejection-reason-box">
+              <h3>Reason for Rejection:</h3>
+              <p className="rejection-text">{student.rejectionReason || 'No reason provided.'}</p>
+            </div>
+
+            <div className="verification-info-box warning">
+              <h3>What can you do?</h3>
+              <ul>
+                <li>Review the rejection reason carefully</li>
+                <li>Ensure you have valid student credentials</li>
+                <li>Re-register with accurate information</li>
+                <li>Contact support if you believe this is an error</li>
+              </ul>
+            </div>
+
+            <div className="verification-actions">
+              <button className="btn-primary" onClick={() => {
+                handleLogout();
+                setTimeout(() => navigate('/register'), 100);
+              }}>
+                📝 Register Again
+              </button>
+              <button className="btn-secondary" onClick={handleLogout}>
+                🚪 Logout
+              </button>
+            </div>
+
+            <div className="verification-note">
+              <span className="note-icon">📧</span>
+              <p>
+                If you believe this rejection was made in error, please contact 
+                <strong> support@pathwise.com</strong> with your details.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if no user (redirect will happen)
+  if (!currentUser) {
+    return (
+      <div className="loading-screen">
+        <div className="loader"></div>
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-layout">
       {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-header">
-          <img src="/logo.png" alt="PathWise" className="logo-img" />
-          <h2>PathWise</h2>
+          <img src={settings.logoUrl || "/logo.png"} alt={settings.siteName} className="logo-img" />
+          <h2>{settings.siteName}</h2>
         </div>
         <div className="user-info">
           <div className="avatar">🎓</div>
@@ -241,6 +431,14 @@ function StudentDashboard() {
           >
             📅 Meetings {!hasAssessment && '🔒'}
           </button>
+          <button 
+            className={activeTab === 'skills' ? 'active' : ''} 
+            onClick={() => hasAssessment && setActiveTab('skills')}
+            disabled={!hasAssessment}
+            style={{ opacity: hasAssessment ? 1 : 0.5 }}
+          >
+            🎯 Skill Assessment {!hasAssessment && '🔒'}
+          </button>
           <button className={activeTab === 'profile' ? 'active' : ''} onClick={() => setActiveTab('profile')}>
             👤 Profile
           </button>
@@ -255,7 +453,17 @@ function StudentDashboard() {
         {/* Dashboard Overview */}
         {activeTab === 'dashboard' && (
           <div className="dashboard-content">
-            <h1>Welcome, {currentUser?.name}!</h1>
+            {/* Welcome Banner */}
+            {settings.dashboard.showWelcomeMessage && (
+              <div className="welcome-banner">
+                <h2>👋 {settings.dashboard.welcomeMessage.replace('{name}', currentUser?.name || 'Student')}</h2>
+                <p>Track your progress and connect with your career mentor</p>
+              </div>
+            )}
+            
+            {!settings.dashboard.showWelcomeMessage && (
+              <h1>Welcome, {currentUser?.name}!</h1>
+            )}
             
             {/* Status Progress */}
             <div className="status-tracker">
@@ -300,7 +508,7 @@ function StudentDashboard() {
                 <span className="stat-icon">👨‍🏫</span>
                 <div>
                   <h3>{assignedCounsellor ? '✓' : 'Pending'}</h3>
-                  <p>Counsellor</p>
+                  <p>Career Mentor</p>
                 </div>
               </div>
             </div>
@@ -309,22 +517,22 @@ function StudentDashboard() {
             {!myAssessment && (
               <div className="alert-card">
                 <h3>📋 Complete Your Interest Assessment</h3>
-                <p>Take the assessment to help us understand your career interests and match you with the right counsellor.</p>
+                <p>Take the assessment to help us understand your career interests and match you with the right mentor.</p>
                 <button className="btn-primary" onClick={() => setActiveTab('assessment')}>
                   Start Assessment
                 </button>
               </div>
             )}
 
-            {/* Counsellor Info */}
+            {/* Mentor Info */}
             {assignedCounsellor ? (
               <div className="info-card counsellor-card">
-                <h3>👨‍🏫 Your Assigned Counsellor</h3>
+                <h3>👨‍🏫 Your Career Mentor</h3>
                 <div className="counsellor-info">
                   <div className="counsellor-avatar">👨‍🏫</div>
                   <div>
                     <p><strong>{assignedCounsellor.name}</strong></p>
-                    <p>{assignedCounsellor.specialization || 'General Guidance'}</p>
+                    <p>{assignedCounsellor.specialization || 'Career Guidance'}</p>
                     <button className="btn-secondary btn-small" onClick={() => setActiveTab('chat')}>
                       💬 Chat Now
                     </button>
@@ -333,8 +541,8 @@ function StudentDashboard() {
               </div>
             ) : (
               <div className="info-card">
-                <h3>⏳ Awaiting Counsellor Assignment</h3>
-                <p>Complete your assessment and our general counsellor will assign you to a specialist.</p>
+                <h3>⏳ Finding Your Career Mentor</h3>
+                <p>Complete your assessment and our team will match you with a specialist mentor.</p>
               </div>
             )}
 
@@ -360,14 +568,14 @@ function StudentDashboard() {
           </div>
         )}
 
-        {/* Waiting for Counsellor Assignment */}
+        {/* Waiting for Mentor Matching */}
         {activeTab === 'waiting' && (
           <div className="waiting-section">
             <div className="waiting-container">
               <div className="waiting-icon">⏳</div>
-              <h1>Awaiting Counsellor Assignment</h1>
-              <p>Great job! You've completed your assessment and meeting with our general counsellor.</p>
-              <p>We are now matching you with a specialized career counsellor based on your interests.</p>
+              <h1>Finding Your Perfect Match</h1>
+              <p>Great job! You've completed your assessment and initial consultation.</p>
+              <p>We are now matching you with a specialized career mentor based on your interests and goals.</p>
               
               <div className="waiting-progress">
                 <div className="progress-step completed">
@@ -376,16 +584,16 @@ function StudentDashboard() {
                 </div>
                 <div className="progress-step completed">
                   <span className="step-check">✓</span>
-                  <span>Meeting with General Counsellor</span>
+                  <span>Initial Consultation</span>
                 </div>
                 <div className="progress-step active">
                   <span className="step-spinner">⟳</span>
-                  <span>Counsellor Assignment in Progress</span>
+                  <span>Matching in Progress</span>
                 </div>
               </div>
 
               <div className="waiting-info">
-                <p>📧 You will be notified once a counsellor is assigned to you.</p>
+                <p>📧 You will be notified once your career mentor is assigned.</p>
                 <p>💬 Meanwhile, you can continue chatting if you have any questions.</p>
               </div>
 
@@ -440,7 +648,7 @@ function StudentDashboard() {
                 
                 <p className="assessment-desc">
                   This comprehensive assessment will analyze your interests, personality traits, and career preferences 
-                  to provide personalized recommendations and help match you with the right career counsellor.
+                  to provide personalized recommendations and help match you with the right career mentor.
                 </p>
                 
                 <div className="assessment-benefits">
@@ -450,7 +658,7 @@ function StudentDashboard() {
                     <li>✔ Dominant Career Areas</li>
                     <li>✔ Personality Traits Analysis</li>
                     <li>✔ Suggested Career Fields</li>
-                    <li>✔ Counsellor Recommendations</li>
+                    <li>✔ Mentor Matching</li>
                   </ul>
                 </div>
                 
@@ -505,30 +713,51 @@ function StudentDashboard() {
                 {/* Navigation */}
                 <div className="assessment-navigation">
                   <button 
-                    className="btn-secondary"
+                    className="nav-btn nav-btn-prev"
                     onClick={prevQuestion}
                     disabled={currentQuestion === 0}
                   >
                     ← Previous
                   </button>
                   
-                  <div className="section-dots">
-                    {interestAssessmentQuestions.map((_, i) => (
-                      <span 
-                        key={i}
-                        className={`dot ${i === currentQuestion ? 'active' : ''} ${answers[interestAssessmentQuestions[i].id]?.length > 0 ? 'answered' : ''}`}
-                        onClick={() => setCurrentQuestion(i)}
-                      ></span>
-                    ))}
+                  <div className="nav-center">
+                    <div className="section-dots">
+                      {interestAssessmentQuestions.map((_, i) => (
+                        <span 
+                          key={i}
+                          className={`dot ${i === currentQuestion ? 'active' : ''} ${answers[interestAssessmentQuestions[i].id]?.length > 0 ? 'answered' : ''}`}
+                          onClick={() => setCurrentQuestion(i)}
+                        ></span>
+                      ))}
+                    </div>
+                    <button 
+                      className="skip-assessment-btn"
+                      onClick={() => {
+                        if (window.confirm('Skip assessment? You can take it later from your dashboard.')) {
+                          setTestStarted(false);
+                          setActiveTab('chat');
+                        }
+                      }}
+                    >
+                      Skip for now →
+                    </button>
                   </div>
                   
-                  <button 
-                    className="btn-primary"
-                    onClick={nextQuestion}
-                    disabled={!(answers[interestAssessmentQuestions[currentQuestion].id]?.length > 0)}
-                  >
-                    {currentQuestion === interestAssessmentQuestions.length - 1 ? 'Submit Assessment' : 'Next →'}
-                  </button>
+                  {currentQuestion === interestAssessmentQuestions.length - 1 ? (
+                    <button 
+                      className="nav-btn nav-btn-submit"
+                      onClick={submitAssessment}
+                    >
+                      ✓ Submit Assessment
+                    </button>
+                  ) : (
+                    <button 
+                      className="nav-btn nav-btn-next"
+                      onClick={nextQuestion}
+                    >
+                      Next →
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -651,21 +880,23 @@ function StudentDashboard() {
         {/* Chat */}
         {activeTab === 'chat' && (
           <div className="chat-section">
-            <h1>Chat with {chatPartner?.role === 'general_counsellor' ? 'General Counsellor' : 'Counsellor'}</h1>
+            <h1>Chat with Your Mentor</h1>
             
             {!chatPartner ? (
               <div className="empty-state">
                 <span className="empty-icon">💬</span>
-                <p>Chat will be available once you are connected to a counsellor.</p>
+                <p>Chat will be available once you are connected to a mentor.</p>
               </div>
             ) : (
               <div className="chat-container">
                 <div className="chat-header">
                   <span className="chat-avatar">👨‍🏫</span>
                   <div className="chat-partner-info">
-                    <span className="partner-name">{chatPartner.name}</span>
+                    <span className="partner-name">
+                      {chatPartner.role === 'general_counsellor' ? 'Career Coordinator' : chatPartner.name}
+                    </span>
                     <span className="partner-role">
-                      {chatPartner.role === 'general_counsellor' ? 'General Counsellor' : chatPartner.specialization || 'Career Counsellor'}
+                      {chatPartner.role === 'general_counsellor' ? 'Assigns specialized mentors' : chatPartner.specialization || 'Career Mentor'}
                     </span>
                   </div>
                 </div>
@@ -715,7 +946,7 @@ function StudentDashboard() {
                 <div className="empty-state">
                   <span className="empty-icon">📅</span>
                   <p>No meetings scheduled yet.</p>
-                  <p className="hint">Your counsellor will schedule meetings with you.</p>
+                  <p className="hint">Your career mentor will schedule meetings with you.</p>
                 </div>
               ) : (
                 myMeetings.map((meeting, index) => (
@@ -735,6 +966,86 @@ function StudentDashboard() {
                   </div>
                 ))
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Skill Assessment */}
+        {activeTab === 'skills' && (
+          <div className="skills-section">
+            <h1>Skill Assessment</h1>
+            <p className="section-subtitle">Evaluate your technical and soft skills to get personalized improvement recommendations.</p>
+            
+            <div className="skills-grid">
+              <div className="skill-category-card">
+                <div className="skill-icon">💻</div>
+                <h3>Technical Skills</h3>
+                <p>Assess your programming, data analysis, and technical abilities</p>
+                <div className="skill-list">
+                  <span className="skill-tag">Programming</span>
+                  <span className="skill-tag">Data Analysis</span>
+                  <span className="skill-tag">Problem Solving</span>
+                  <span className="skill-tag">System Design</span>
+                </div>
+                <button className="btn-primary" onClick={() => showToast('Technical Skills Assessment coming soon!', 'info')}>
+                  Start Assessment
+                </button>
+              </div>
+              
+              <div className="skill-category-card">
+                <div className="skill-icon">🗣️</div>
+                <h3>Communication Skills</h3>
+                <p>Evaluate your verbal, written, and presentation skills</p>
+                <div className="skill-list">
+                  <span className="skill-tag">Public Speaking</span>
+                  <span className="skill-tag">Writing</span>
+                  <span className="skill-tag">Listening</span>
+                  <span className="skill-tag">Negotiation</span>
+                </div>
+                <button className="btn-primary" onClick={() => showToast('Communication Skills Assessment coming soon!', 'info')}>
+                  Start Assessment
+                </button>
+              </div>
+              
+              <div className="skill-category-card">
+                <div className="skill-icon">🤝</div>
+                <h3>Leadership Skills</h3>
+                <p>Assess your team management and leadership qualities</p>
+                <div className="skill-list">
+                  <span className="skill-tag">Team Building</span>
+                  <span className="skill-tag">Decision Making</span>
+                  <span className="skill-tag">Conflict Resolution</span>
+                  <span className="skill-tag">Mentoring</span>
+                </div>
+                <button className="btn-primary" onClick={() => showToast('Leadership Skills Assessment coming soon!', 'info')}>
+                  Start Assessment
+                </button>
+              </div>
+              
+              <div className="skill-category-card">
+                <div className="skill-icon">🧠</div>
+                <h3>Analytical Skills</h3>
+                <p>Test your critical thinking and analytical abilities</p>
+                <div className="skill-list">
+                  <span className="skill-tag">Critical Thinking</span>
+                  <span className="skill-tag">Research</span>
+                  <span className="skill-tag">Logic</span>
+                  <span className="skill-tag">Attention to Detail</span>
+                </div>
+                <button className="btn-primary" onClick={() => showToast('Analytical Skills Assessment coming soon!', 'info')}>
+                  Start Assessment
+                </button>
+              </div>
+            </div>
+            
+            <div className="skills-info-card">
+              <h3>📊 How Skill Assessment Works</h3>
+              <ol>
+                <li><strong>Choose a Category:</strong> Select the skill area you want to assess</li>
+                <li><strong>Answer Questions:</strong> Complete scenario-based questions</li>
+                <li><strong>Get Results:</strong> Receive a detailed skill report</li>
+                <li><strong>Improvement Plan:</strong> Get personalized recommendations from your mentor</li>
+              </ol>
             </div>
           </div>
         )}
@@ -777,14 +1088,48 @@ function StudentDashboard() {
                   <span>{student?.achievements || 'Not specified'}</span>
                 </div>
                 <div className="detail-item">
-                  <label>Assigned Counsellor</label>
-                  <span>{assignedCounsellor?.name || 'Pending assignment'}</span>
+                  <label>Your Career Mentor</label>
+                  <span>{assignedCounsellor?.name || 'Matching in progress'}</span>
                 </div>
               </div>
+
+              {/* Verification Notes from Evaluator */}
+              {student?.verificationNotes && (
+                <div className="profile-notes-section">
+                  <h3>📝 Evaluator Notes</h3>
+                  <div className="evaluator-note-box">
+                    <p>{student.verificationNotes}</p>
+                    <span className="note-meta">
+                      Verified on: {student.verifiedAt ? new Date(student.verifiedAt).toLocaleDateString() : 'N/A'}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Flag Status (if flagged by counsellor/admin) */}
+              {student?.flagged && (
+                <div className="profile-flag-section">
+                  <h3>🚩 Account Flag</h3>
+                  <div className="flag-notice-box">
+                    <p><strong>Reason:</strong> {student.flagReason || 'No reason provided'}</p>
+                    {student.flaggedAt && (
+                      <span className="note-meta">
+                        Flagged on: {new Date(student.flaggedAt).toLocaleDateString()}
+                      </span>
+                    )}
+                    <p className="flag-info">Your account has been flagged for review. Please contact your counsellor for more information.</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
       </main>
+      
+      {/* Mobile Logout Button */}
+      <button className="mobile-logout-btn" onClick={handleLogout} title="Logout">
+        🚪
+      </button>
     </div>
   );
 }

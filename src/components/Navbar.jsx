@@ -34,7 +34,7 @@ export default function Navbar() {
         }}>
           <a href="#features" style={{ color: "white" }}>Features</a>
           <a href="#careers" style={{ color: "white" }}>Careers</a>
-          <a href="#counsellors" style={{ color: "white" }}>Counsellors</a>
+          <a href="#mentors" style={{ color: "white" }}>Mentors</a>
           <a href="#about" style={{ color: "white" }}>About</a>
           
           <button style={{

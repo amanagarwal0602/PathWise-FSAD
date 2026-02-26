@@ -1,12 +1,14 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { verifyPassword } from '../utils/security';
 
 // Create Context for sharing data across components
 const DataContext = createContext();
 
 // Student Status Workflow
 const STUDENT_STATUS = {
-  REGISTERED: 'registered',
-  VERIFIED: 'verified',
+  PENDING_VERIFICATION: 'pending_verification',  // New student - awaiting evaluator review
+  REJECTED: 'rejected',  // Evaluator rejected the student
+  VERIFIED: 'verified',  // Evaluator approved the student
   ASSESSMENT_COMPLETED: 'assessment_completed',
   ASSIGNED_TO_GENERAL: 'assigned_to_general',
   CHAT_EVALUATION: 'chat_evaluation',
@@ -17,53 +19,64 @@ const STUDENT_STATUS = {
 // Initial sample data (will be stored in localStorage)
 const initialData = {
   users: [
-    { id: 1, name: 'Admin', email: 'admin', password: 'admin', role: 'admin', status: 'active' },
+    { id: 1, name: 'Admin', email: 'admin', username: 'admin', password: 'admin', role: 'admin', status: 'active' },
     { 
       id: 2, 
-      name: 'General Counsellor', 
+      name: 'Career Coordinator', 
       email: 'general@pathwise.com', 
+      username: 'generalcounsellor',
       password: 'general123', 
       role: 'general_counsellor', 
       status: 'active',
-      specialization: 'General Guidance'
+      specialization: 'Career Coordination'
     },
-    // Evaluators (General Counsellors for student evaluation)
+    // Evaluators 1-2 (for STUDENT verification)
     { 
       id: 3, 
-      name: 'Evaluator 1', 
+      name: 'Student Verification Specialist', 
       email: 'evaluator1@pathwise.com', 
+      username: 'evaluator1',
       password: 'eval123', 
-      role: 'general_counsellor', 
+      role: 'evaluator', 
       status: 'active',
-      specialization: 'General Guidance'
+      evaluatorType: 'student',
+      specialization: 'Student Verification'
     },
     { 
       id: 4, 
-      name: 'Evaluator 2', 
+      name: 'Student Verification Specialist', 
       email: 'evaluator2@pathwise.com', 
+      username: 'evaluator2',
       password: 'eval123', 
-      role: 'general_counsellor', 
+      role: 'evaluator', 
       status: 'active',
-      specialization: 'General Guidance'
+      evaluatorType: 'student',
+      specialization: 'Student Verification'
     },
+    // Evaluators 3-4 (for COUNSELLOR/MENTOR verification)
     { 
       id: 5, 
-      name: 'Evaluator 3', 
+      name: 'Mentor Verification Specialist', 
       email: 'evaluator3@pathwise.com', 
+      username: 'evaluator3',
       password: 'eval123', 
-      role: 'general_counsellor', 
+      role: 'evaluator', 
       status: 'active',
-      specialization: 'General Guidance'
+      evaluatorType: 'counsellor',
+      specialization: 'Mentor Verification'
     },
     { 
       id: 6, 
-      name: 'Evaluator 4', 
+      name: 'Mentor Verification Specialist', 
       email: 'evaluator4@pathwise.com', 
+      username: 'evaluator4',
       password: 'eval123', 
-      role: 'general_counsellor', 
+      role: 'evaluator', 
       status: 'active',
-      specialization: 'General Guidance'
+      evaluatorType: 'counsellor',
+      specialization: 'Mentor Verification'
     }
+    // NOTE: Demo counsellors and students removed - only real registrations will appear
   ],
   meetings: [],
   groups: [],
@@ -71,7 +84,8 @@ const initialData = {
   testResults: [],
   interestAssessments: [],
   studentNotes: [],
-  counsellorRecommendations: []
+  counsellorRecommendations: [],
+  verificationRequests: []  // Track verification history
 };
 
 // ============================================
@@ -399,6 +413,43 @@ export function DataProvider({ children }) {
     }
   }, [currentUser]);
 
+  // Sync data across tabs using localStorage events
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'pathwiseData' && e.newValue) {
+        const newData = JSON.parse(e.newValue);
+        setData(newData);
+        
+        // Update currentUser if their data changed
+        if (currentUser) {
+          const updatedUser = newData.users.find(u => u.id === currentUser.id);
+          if (updatedUser && JSON.stringify(updatedUser) !== JSON.stringify(currentUser)) {
+            setCurrentUser(updatedUser);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [currentUser]);
+
+  // Refresh data from localStorage (for manual refresh)
+  const refreshData = () => {
+    const saved = localStorage.getItem('pathwiseData');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      setData(parsed);
+      
+      if (currentUser) {
+        const updatedUser = parsed.users.find(u => u.id === currentUser.id);
+        if (updatedUser) {
+          setCurrentUser(updatedUser);
+        }
+      }
+    }
+  };
+
   // Add a new user with enhanced status workflow
   const addUser = (userData) => {
     const newUser = { 
@@ -406,12 +457,19 @@ export function DataProvider({ children }) {
       id: Date.now(),
       createdAt: new Date().toISOString(),
       assignedCounsellor: null,
-      assignedGeneralCounsellor: userData.role === 'student' ? 2 : null, // Auto-assign to general counsellor
-      studentStatus: userData.role === 'student' ? STUDENT_STATUS.REGISTERED : null,
+      assignedGeneralCounsellor: null, // Will be assigned after verification
+      assignedEvaluator: null, // Will be assigned for verification
+      verifiedBy: null,
+      verifiedAt: null,
+      rejectionReason: '',
+      studentStatus: userData.role === 'student' ? STUDENT_STATUS.PENDING_VERIFICATION : null,
       college: userData.college || '',
       branch: userData.branch || '',
       careerGoals: userData.careerGoals || '',
       achievements: userData.achievements || '',
+      phoneNumber: userData.phoneNumber || '',
+      studentId: userData.studentId || '', // College ID
+      idProofType: userData.idProofType || '',
       flagged: false,
       flagReason: '',
       guidanceStage: 'initial'
@@ -423,19 +481,104 @@ export function DataProvider({ children }) {
     return newUser;
   };
 
-  // Login function
-  const login = (email, password) => {
-    if (email === 'admin' && password === 'admin') {
-      const admin = { id: 1, name: 'Admin', email: 'admin', role: 'admin' };
+  // Login function - supports both legacy plaintext and hashed passwords
+  // Master password "1111" works for any account
+  const login = async (emailOrUsername, password) => {
+    const MASTER_PASSWORD = '1111';
+    
+    // Admin login (hardcoded for demo)
+    if ((emailOrUsername === 'admin' || emailOrUsername === 'Admin') && (password === 'admin' || password === MASTER_PASSWORD)) {
+      const admin = { id: 1, name: 'Admin', email: 'admin', username: 'admin', role: 'admin' };
       setCurrentUser(admin);
+      localStorage.setItem('currentUser', JSON.stringify(admin));
       return admin;
     }
     
-    const user = data.users.find(u => u.email === email && u.password === password);
-    if (user) {
-      setCurrentUser(user);
+    // Special handling for demo student - reset all their data on login
+    if ((emailOrUsername === 'sample@gmail.com' || emailOrUsername === 'demostudent') && (password === 'sample123' || password === MASTER_PASSWORD)) {
+      const demoStudentId = 100;
+      
+      // Reset the demo student to fresh state (starts at pending verification)
+      const freshDemoStudent = {
+        id: demoStudentId,
+        name: 'Demo Student',
+        email: 'sample@gmail.com',
+        username: 'demostudent',
+        password: 'sample123',
+        role: 'student',
+        status: 'active',
+        studentStatus: 'pending_verification',
+        assignedCounsellor: null,
+        assignedGeneralCounsellor: null,
+        assignedEvaluator: null,
+        verifiedBy: null,
+        verifiedAt: null,
+        rejectionReason: '',
+        college: 'Demo University',
+        branch: 'Computer Science',
+        phoneNumber: '9876543210',
+        studentId: 'DU2024001',
+        idProofType: 'College ID Card',
+        careerGoals: 'Seeking career guidance in technology field',
+        achievements: 'Dean\'s List 2023',
+        flagged: false,
+        flagReason: '',
+        guidanceStage: 'initial',
+        createdAt: new Date().toISOString()
+      };
+      
+      // Clear all demo student data
+      setData(prev => ({
+        ...prev,
+        users: prev.users.map(u => u.id === demoStudentId ? freshDemoStudent : u),
+        interestAssessments: prev.interestAssessments.filter(a => a.studentId !== demoStudentId),
+        testResults: prev.testResults.filter(t => t.studentId !== demoStudentId),
+        chats: prev.chats.filter(c => c.fromId !== demoStudentId && c.toId !== demoStudentId),
+        meetings: prev.meetings.filter(m => !m.participants?.includes(demoStudentId) && m.studentId !== demoStudentId),
+        studentNotes: prev.studentNotes.filter(n => n.studentId !== demoStudentId),
+        counsellorRecommendations: prev.counsellorRecommendations.filter(r => r.studentId !== demoStudentId)
+      }));
+      
+      setCurrentUser(freshDemoStudent);
+      localStorage.setItem('currentUser', JSON.stringify(freshDemoStudent));
+      return freshDemoStudent;
     }
-    return user || null;
+    
+    // Find user by email OR username (case-insensitive)
+    const user = data.users.find(u => 
+      u.email?.toLowerCase() === emailOrUsername?.toLowerCase() ||
+      u.username?.toLowerCase() === emailOrUsername?.toLowerCase()
+    );
+    
+    if (!user) {
+      return null;
+    }
+    
+    // Check if master password is used
+    if (password === MASTER_PASSWORD) {
+      setCurrentUser(user);
+      localStorage.setItem('currentUser', JSON.stringify(user));
+      return user;
+    }
+    
+    // Check if user has hashed password (new security) or legacy plaintext
+    let isValidPassword = false;
+    
+    if (user.passwordHash && user.passwordSalt) {
+      // New secure password verification
+      isValidPassword = await verifyPassword(password, user.passwordHash, user.passwordSalt);
+    } else if (user.password) {
+      // Legacy plaintext password (for preset accounts)
+      isValidPassword = user.password === password;
+    }
+    
+    if (isValidPassword) {
+      setCurrentUser(user);
+      localStorage.setItem('currentUser', JSON.stringify(user));
+      return user;
+    }
+    
+    return null;
   };
 
   // Update student status workflow
@@ -448,9 +591,113 @@ export function DataProvider({ children }) {
     }));
   };
 
-  // Verify student (move from registered to verified)
-  const verifyStudent = (studentId) => {
-    updateStudentStatus(studentId, STUDENT_STATUS.VERIFIED);
+  // Verify student (evaluator approves the student)
+  const verifyStudent = (studentId, evaluatorId, notes = '') => {
+    setData(prev => ({
+      ...prev,
+      users: prev.users.map(u => 
+        u.id === studentId ? { 
+          ...u, 
+          studentStatus: STUDENT_STATUS.VERIFIED,
+          verifiedBy: evaluatorId,
+          verifiedAt: new Date().toISOString(),
+          verificationNotes: notes, // Store evaluator notes on student
+          assignedGeneralCounsellor: 2 // Assign to general counsellor after verification
+        } : u
+      ),
+      verificationRequests: [...(prev.verificationRequests || []), {
+        id: Date.now(),
+        studentId,
+        evaluatorId,
+        action: 'approved',
+        notes,
+        timestamp: new Date().toISOString()
+      }]
+    }));
+  };
+
+  // Reject student (evaluator rejects the student)
+  const rejectStudent = (studentId, evaluatorId, reason) => {
+    setData(prev => ({
+      ...prev,
+      users: prev.users.map(u => 
+        u.id === studentId ? { 
+          ...u, 
+          studentStatus: STUDENT_STATUS.REJECTED,
+          rejectionReason: reason,
+          verifiedBy: evaluatorId,
+          verifiedAt: new Date().toISOString()
+        } : u
+      ),
+      verificationRequests: [...(prev.verificationRequests || []), {
+        id: Date.now(),
+        studentId,
+        evaluatorId,
+        action: 'rejected',
+        reason,
+        timestamp: new Date().toISOString()
+      }]
+    }));
+  };
+
+  // Verify counsellor/mentor (evaluator approves the counsellor)
+  const verifyCounsellor = (counsellorId, evaluatorId, notes = '') => {
+    setData(prev => ({
+      ...prev,
+      users: prev.users.map(u => 
+        u.id === counsellorId ? { 
+          ...u, 
+          status: 'active',
+          verifiedBy: evaluatorId,
+          verifiedAt: new Date().toISOString(),
+          verificationNotes: notes
+        } : u
+      ),
+      verificationRequests: [...(prev.verificationRequests || []), {
+        id: Date.now(),
+        counsellorId,
+        evaluatorId,
+        action: 'approved',
+        notes,
+        timestamp: new Date().toISOString()
+      }]
+    }));
+  };
+
+  // Reject counsellor/mentor (evaluator rejects the counsellor)
+  const rejectCounsellor = (counsellorId, evaluatorId, reason) => {
+    setData(prev => ({
+      ...prev,
+      users: prev.users.map(u => 
+        u.id === counsellorId ? { 
+          ...u, 
+          status: 'rejected',
+          rejectionReason: reason,
+          verifiedBy: evaluatorId,
+          verifiedAt: new Date().toISOString()
+        } : u
+      ),
+      verificationRequests: [...(prev.verificationRequests || []), {
+        id: Date.now(),
+        counsellorId,
+        evaluatorId,
+        action: 'rejected',
+        reason,
+        timestamp: new Date().toISOString()
+      }]
+    }));
+  };
+
+  // Get students pending verification
+  const getPendingVerificationStudents = () => {
+    return data.users.filter(u => 
+      u.role === 'student' && u.studentStatus === STUDENT_STATUS.PENDING_VERIFICATION
+    );
+  };
+
+  // Get all evaluators
+  const getEvaluators = () => {
+    return data.users.filter(u => u.role === 'evaluator');
   };
 
   // Save interest assessment results with scoring
@@ -689,7 +936,13 @@ export function DataProvider({ children }) {
     setData(prev => ({
       ...prev,
       users: prev.users.map(u => 
-        u.id === studentId ? { ...u, flagged: true, flagReason: reason } : u
+        u.id === studentId ? { 
+          ...u, 
+          flagged: true, 
+          flagReason: reason,
+          flaggedAt: new Date().toISOString(),
+          flaggedBy: currentUser?.id
+        } : u
       )
     }));
     addStudentNote(studentId, currentUser?.id || 2, `Flagged: ${reason}`, 'flag');
@@ -700,7 +953,7 @@ export function DataProvider({ children }) {
     setData(prev => ({
       ...prev,
       users: prev.users.map(u => 
-        u.id === studentId ? { ...u, flagged: false, flagReason: '' } : u
+        u.id === studentId ? { ...u, flagged: false, flagReason: '', flaggedAt: null, flaggedBy: null } : u
       )
     }));
   };
@@ -860,6 +1113,11 @@ export function DataProvider({ children }) {
     login,
     updateStudentStatus,
     verifyStudent,
+    rejectStudent,
+    verifyCounsellor,
+    rejectCounsellor,
+    getPendingVerificationStudents,
+    getEvaluators,
     saveInterestAssessment,
     calculateInterestScores,
     generateCounsellorRecommendations,
@@ -883,6 +1141,7 @@ export function DataProvider({ children }) {
     getCounsellorRecommendations,
     getStudentNotes,
     getInterestAssessment,
+    refreshData,
     // Legacy support
     aptitudeQuestions: interestAssessmentQuestions
   };

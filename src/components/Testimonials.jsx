@@ -12,7 +12,7 @@ const testimonials = [
   {
     name: "Rohan Das",
     class: "Graduate → UX Designer",
-    text: "I was stuck in a job I hated. My counsellor Dr. Anjali helped me realize my passion for design. Within 8 months of switching, I had a portfolio and a job at a top design studio.",
+    text: "I was stuck in a job I hated. My mentor Dr. Anjali helped me realize my passion for design. Within 8 months of switching, I had a portfolio and a job at a top design studio.",
     initials: "RD",
     color: "#7c3aed",
     rating: 5,

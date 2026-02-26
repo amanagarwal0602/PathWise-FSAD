@@ -13,7 +13,7 @@ const steps = [
   {
     number: "3",
     title: "Book Session",
-    description: "Schedule a session with an expert counsellor for detailed guidance."
+    description: "Schedule a session with an expert career mentor for detailed guidance."
   },
   {
     number: "4",

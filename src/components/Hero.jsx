@@ -25,7 +25,7 @@ export default function Hero() {
           margin: "0 auto 40px"
         }}>
           Take our career assessment, explore career options, and connect with 
-          expert counsellors to guide your future.
+          expert career mentors to guide your future.
         </p>
 
         {/* Call to Action Buttons */}
@@ -55,7 +55,7 @@ export default function Hero() {
           </div>
           <div>
             <div style={{ fontSize: "32px", fontWeight: "bold", color: "var(--primary)" }}>500+</div>
-            <div style={{ color: "var(--gray)" }}>Career Counsellors</div>
+            <div style={{ color: "var(--gray)" }}>Career Mentors</div>
           </div>
           <div>
             <div style={{ fontSize: "32px", fontWeight: "bold", color: "var(--primary)" }}>300+</div>

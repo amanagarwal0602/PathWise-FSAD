@@ -1,0 +1,426 @@
+================================================================================
+                    PATHWISE - COMPLETE TESTING WORKFLOW
+================================================================================
+
+This guide explains how to test the complete PathWise career guidance platform
+from start to finish.
+
+================================================================================
+                    PREPARATION / CLEARING DATA
+================================================================================
+
+Before starting fresh testing, you may want to clear old data:
+1. Open browser Developer Tools (F12)
+2. Go to Application tab → Local Storage
+3. Clear 'pathwiseData' and 'currentUser' entries
+4. Refresh the page
+
+================================================================================
+                    STEP 1: STUDENT REGISTRATION
+================================================================================
+
+1. Go to http://localhost:5173/register
+2. Fill in the registration form:
+   - Full Name: Test Student
+   - Email: teststudent@example.com
+   - Phone Number: 9876543210
+   - Role: Student
+   - College Name: ABC University
+   - Branch/Department: Computer Science
+   - Current Year: 3rd Year
+   - Student ID: ABC2024001
+   - ID Proof Type: College ID Card
+   - Password: test123
+   - Confirm Password: test123
+3. Click "Create Account"
+4. You will be redirected to login page
+
+================================================================================
+                    STEP 2: STUDENT LOGIN (PENDING VERIFICATION)
+================================================================================
+
+1. Go to http://localhost:5173/login
+2. Login with:
+   - Email: teststudent@example.com
+   - Password: test123
+3. You will see the "Verification Pending" screen
+4. Keep this tab open (it auto-refreshes every 5 seconds)
+
+================================================================================
+                    STEP 3: VERIFICATION SPECIALIST REVIEW
+================================================================================
+
+OPTION A: Open in new browser/incognito window to keep both sessions
+OPTION B: Or logout student and login as verification specialist
+
+1. Go to http://localhost:5173/login
+2. Login as Verification Specialist:
+   - Email: evaluator1@pathwise.com
+   - Password: eval123
+3. You will see the Verification Specialist Dashboard
+4. In "Pending Verification" tab, you will see the new student
+5. Click on the student to view their details
+6. Review their information:
+   - Personal Information
+   - Academic Details
+   - ID Proof Information
+7. Choose one action:
+   - Click "Approve Student" (with optional notes)
+   - OR Click "Reject Student" (with reason)
+8. Logout from verification specialist account
+
+================================================================================
+                    STEP 4: STUDENT TAKES ASSESSMENT
+================================================================================
+
+1. Go back to student's browser tab (or login again)
+   - The page should auto-refresh and show the assessment
+   - OR login as: teststudent@example.com / test123
+2. You will now see the "Interest Assessment" page
+3. Complete the assessment:
+   - Answer all 15 questions
+   - Questions cover career interests, technical/creative preferences, etc.
+   - Click "Next" after each question
+   - Click "Submit" on the last question
+4. You will see your assessment results:
+   - Career field recommendations
+   - Personality traits analysis
+   - Suggested career paths
+5. You will automatically be directed to Chat with General Counsellor
+
+================================================================================
+                    STEP 5: CHAT WITH CAREER COORDINATOR
+================================================================================
+
+1. After assessment, student can chat with career coordinator
+2. Send some messages in the chat:
+   - "Hello, I need career guidance"
+   - "I'm interested in technology careers"
+3. Keep this tab open for later
+
+================================================================================
+                    STEP 6: CAREER COORDINATOR REVIEW
+================================================================================
+
+1. Open new browser/tab
+2. Login as Career Coordinator:
+   - Email: general@pathwise.com
+   - Password: general123
+3. You will see the Career Coordinator Dashboard
+4. In "Inbox & Triage" or student list:
+   - Find the test student
+   - View their assessment results
+   - Read their chat messages
+5. Chat with the student:
+   - Respond to their messages
+   - Discuss their career interests
+6. Assign to Specialized Career Mentor:
+   - Go to "Assign" or "Students" section
+   - Select the student
+   - Choose a mentor based on their recommendation score
+   - Click "Assign Mentor"
+7. Logout
+
+================================================================================
+                    STEP 7: STUDENT WITH ASSIGNED MENTOR
+================================================================================
+
+1. Go back to student's tab (or login again)
+2. Refresh the page
+3. You will now see you have an assigned career mentor
+4. Full dashboard features are now available:
+   - Dashboard overview
+   - Chat with assigned mentor
+   - View assessment results
+   - Schedule meetings (if implemented)
+
+================================================================================
+                    ALTERNATIVE: DEMO STUDENT QUICK TEST
+================================================================================
+
+For quick testing without creating accounts:
+
+1. Login as Demo Student:
+   - Email: sample@gmail.com
+   - Password: sample123
+2. This account RESETS on every login - starts fresh
+3. You will see "Verification Pending" screen
+4. Then follow steps 3-7 above to verify and guide
+
+================================================================================
+                    ADMIN FEATURES
+================================================================================
+
+Login as Admin to manage the system:
+- Email: admin
+- Password: admin
+
+Admin can:
+- View all users
+- Add/remove counsellors
+- Manage student accounts
+- View system statistics
+
+================================================================================
+                    ALL LOGIN CREDENTIALS
+================================================================================
+
+ADMIN:
+  admin / admin
+
+CAREER COORDINATOR:
+  general@pathwise.com / general123
+
+STUDENT VERIFICATION SPECIALISTS (for student verification):
+  evaluator1@pathwise.com / eval123
+  evaluator2@pathwise.com / eval123
+
+MENTOR VERIFICATION SPECIALISTS (for career mentor verification):
+  evaluator3@pathwise.com / eval123
+  evaluator4@pathwise.com / eval123
+
+CAREER MENTORS (already verified):
+  health.mentor@pathwise.com / mentor123
+  arts.mentor@pathwise.com / mentor123
+
+CAREER MENTORS (pending verification - need evaluator3/4 approval):
+  tech.mentor@pathwise.com / mentor123
+  business.mentor@pathwise.com / mentor123
+
+DEMO STUDENT (resets on login):
+  sample@gmail.com / sample123
+
+================================================================================
+                    COMPLETE STUDENT JOURNEY SUMMARY
+================================================================================
+
+Registration → Pending Verification → [Specialist Approves] → Verified →
+Take Assessment → Assessment Complete → Chat with Career Coordinator →
+[Career Coordinator Reviews] → Mentor Assigned → Active Guidance
+
+Status Flow:
+1. pending_verification  - New student waiting for verification specialist
+2. verified              - Specialist approved, can take assessment
+3. assessment_completed  - Assessment done, chatting with career coordinator
+4. counsellor_assigned   - Specialized career mentor assigned
+5. active_guidance       - Ongoing career guidance
+
+================================================================================
+                    CAREER MENTOR REGISTRATION WORKFLOW
+================================================================================
+
+================================================================================
+                    STEP A: CAREER MENTOR REGISTRATION
+================================================================================
+
+1. Go to http://localhost:5173/register
+2. Fill in the registration form:
+   - Select Role: Career Mentor (click the 👨‍🏫 button)
+   - Full Name: Test Career Mentor
+   - Email: testmentor@example.com
+   - Specialization: Select one (e.g., "Engineering & Technology")
+   - Password: mentor123
+   - Confirm Password: mentor123
+3. Click "Create Account"
+4. You will be redirected to login page
+
+================================================================================
+                    STEP B: CAREER MENTOR LOGIN (PENDING VERIFICATION)
+================================================================================
+
+1. Go to http://localhost:5173/login
+2. Login with:
+   - Email: testmentor@example.com
+   - Password: mentor123
+3. You will see the "Verification Pending" screen
+4. Career Mentors must be verified before they can access the platform
+5. Keep this tab open (it auto-refreshes every 5 seconds)
+
+================================================================================
+                    STEP C: MENTOR VERIFICATION SPECIALIST REVIEW
+================================================================================
+
+NOTE: Evaluator3 and Evaluator4 are specifically for Career Mentor verification!
+      (Evaluator1 and Evaluator2 are for Student verification only)
+
+OPTION A: Open in new browser/incognito window to keep both sessions
+OPTION B: Or logout mentor and login as verification specialist
+
+1. Go to http://localhost:5173/login
+2. Login as Mentor Verification Specialist:
+   - Email: evaluator3@pathwise.com (or evaluator4@pathwise.com)
+   - Password: eval123
+3. You will see the Verification Specialist Dashboard
+4. The dashboard will show "Career Mentor" verification (not Students)
+5. In "Pending Verification" tab, you will see the new mentor
+6. Click on the mentor to view their details
+7. Review their information:
+   - Personal Information
+   - Specialization
+   - Qualifications (if provided)
+8. Choose one action:
+   - Click "Approve Career Mentor" (with optional notes)
+   - OR Click "Reject Career Mentor" (with reason)
+9. Logout from verification specialist account
+
+================================================================================
+                    STEP D: CAREER MENTOR ACCESSES DASHBOARD
+================================================================================
+
+1. Go back to mentor's browser tab (or login again)
+   - The page should auto-refresh and show the dashboard
+   - OR login as: testmentor@example.com / mentor123
+2. Once verified, you will see the Career Mentor Dashboard
+3. Dashboard features available:
+   - View assigned students
+   - Chat with students
+   - View student assessment results
+   - Provide career guidance
+
+================================================================================
+                    CAREER MENTOR CREDENTIALS (PRE-EXISTING)
+================================================================================
+
+PENDING VERIFICATION (need to be approved by evaluator3/4):
+  tech.mentor@pathwise.com / mentor123
+  business.mentor@pathwise.com / mentor123
+
+ALREADY VERIFIED (can login directly):
+  health.mentor@pathwise.com / mentor123
+  arts.mentor@pathwise.com / mentor123
+
+================================================================================
+                    MENTOR VERIFICATION SPECIALISTS
+================================================================================
+
+EVALUATOR 3 (Mentor Verification):
+  evaluator3@pathwise.com / eval123
+
+EVALUATOR 4 (Mentor Verification):
+  evaluator4@pathwise.com / eval123
+
+NOTE: evaluator1 and evaluator2 are for STUDENT verification only!
+
+================================================================================
+                    COMPLETE CAREER MENTOR JOURNEY SUMMARY
+================================================================================
+
+Registration → Pending Verification → [Specialist Approves (evaluator3/4)] → 
+Verified → Active Dashboard → Students Assigned by Career Coordinator →
+Active Mentoring
+
+Mentor Status Flow:
+1. pending_verification  - New mentor waiting for verification by evaluator3/4
+2. rejected              - Verification specialist rejected the application
+3. active                - Verified and can mentor students
+
+================================================================================
+                    TROUBLESHOOTING
+================================================================================
+
+Student not seeing verification update?
+- Click "Refresh Status" button
+- Or wait for auto-refresh (every 5 seconds)
+- Or log out and log back in
+
+Career Mentor not seeing verification update?
+- Same as above - wait for auto-refresh or re-login
+- Make sure you registered as "Career Mentor" not "Student"
+
+Wrong evaluator type?
+- Evaluator1 & Evaluator2 → Only see STUDENTS pending verification
+- Evaluator3 & Evaluator4 → Only see CAREER MENTORS pending verification
+
+Data not clearing between tests?
+- Clear localStorage in browser DevTools
+- Application tab → Local Storage → Delete pathwiseData
+
+Chats showing old messages?
+- Each user has separate chat history
+- Demo student (sample@gmail.com) resets on every login
+
+================================================================================
+                    SECURITY FEATURES IMPLEMENTED
+================================================================================
+
+PathWise includes several security enhancements to protect user data:
+
+PASSWORD SECURITY:
+1. SHA-256 Password Hashing
+   - All new user passwords are hashed with SHA-256
+   - Unique salt generated for each password
+   - Original passwords never stored
+   - Legacy accounts still work with plaintext (for demo)
+
+2. Strong Password Requirements
+   - Minimum 8 characters
+   - Must include uppercase letter (A-Z)
+   - Must include lowercase letter (a-z)
+   - Must include number (0-9)
+   - Special characters recommended (!@#$%^&*)
+   - Common passwords rejected
+
+3. Password Strength Indicator
+   - Real-time strength feedback during registration
+   - Visual progress bar (Very Weak → Very Strong)
+   - Specific improvement suggestions shown
+
+LOGIN SECURITY:
+1. Rate Limiting / Brute Force Protection
+   - Maximum 5 failed attempts per 15 minutes
+   - Account locks for 5 minutes after limit exceeded
+   - Countdown timer shows remaining lockout time
+   - Prevents password guessing attacks
+
+2. Secure Session Management
+   - Session tokens generated on login
+   - 24-hour session expiry
+   - Secure logout clears all session data
+
+INPUT VALIDATION:
+1. Email Validation
+   - Format verification
+   - Sanitization to prevent injection
+
+2. Phone Number Validation
+   - 10-15 digit requirement
+   - Invalid characters stripped
+
+3. XSS Protection
+   - All user inputs sanitized
+   - HTML entities escaped
+   - Prevents script injection attacks
+
+VERIFICATION WORKFLOW:
+1. Multi-level Access Control
+   - Students verified by Evaluator 1-2
+   - Mentors verified by Evaluator 3-4
+   - Prevents unauthorized platform access
+
+2. Status Tracking
+   - Pending, Verified, Rejected states
+   - Rejection reasons logged
+   - Verification timestamps recorded
+
+================================================================================
+                    TESTING SECURITY FEATURES
+================================================================================
+
+1. TEST PASSWORD STRENGTH:
+   - Go to /register
+   - Try weak passwords: "12345", "password", "abc123"
+   - See strength indicator turn red/orange
+   - Try strong password: "MySecure@Pass123"
+   - See strength indicator turn green
+
+2. TEST RATE LIMITING:
+   - Go to /login
+   - Enter wrong password 5 times quickly
+   - See lockout warning and countdown timer
+   - Wait 5 minutes or clear localStorage to reset
+
+3. TEST INPUT SANITIZATION:
+   - Try entering <script>alert('xss')</script> in name field
+   - HTML will be escaped and stored safely
+
+================================================================================
