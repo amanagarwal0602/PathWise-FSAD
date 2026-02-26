@@ -5,7 +5,7 @@ import { verifyPassword } from '../utils/security';
 const DataContext = createContext();
 
 // API Base URL - use backend server
-const API_BASE_URL = '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 // Student Status Workflow
 const STUDENT_STATUS = {
