@@ -251,32 +251,8 @@ const loginAttempts = new Map();
  * @returns {{isLimited: boolean, remainingTime: number, attempts: number}}
  */
 export function checkRateLimit(identifier) {
-  const now = Date.now();
-  const attempts = loginAttempts.get(identifier);
-  
-  if (!attempts) {
-    return { isLimited: false, remainingTime: 0, attempts: 0 };
-  }
-  
-  // Clear old attempts (older than 15 minutes)
-  const recentAttempts = attempts.filter(time => now - time < 15 * 60 * 1000);
-  loginAttempts.set(identifier, recentAttempts);
-  
-  // If more than 5 failed attempts in 15 minutes, rate limit for 5 minutes
-  if (recentAttempts.length >= 5) {
-    const oldestAttempt = recentAttempts[recentAttempts.length - 5];
-    const lockoutEnd = oldestAttempt + 5 * 60 * 1000;
-    
-    if (now < lockoutEnd) {
-      return {
-        isLimited: true,
-        remainingTime: Math.ceil((lockoutEnd - now) / 1000),
-        attempts: recentAttempts.length
-      };
-    }
-  }
-  
-  return { isLimited: false, remainingTime: 0, attempts: recentAttempts.length };
+  // Rate limiting disabled as per user request
+  return { isLimited: false, remainingTime: 0, attempts: 0 };
 }
 
 /**

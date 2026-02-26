@@ -1,3 +1,4 @@
+com\pathwise\controller\SyncController.class
 com\pathwise\dto\LoginResponse.class
 com\pathwise\entity\User$UserStatus.class
 com\pathwise\service\InterestAssessmentService.class
