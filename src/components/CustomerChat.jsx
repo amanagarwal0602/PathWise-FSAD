@@ -32,43 +32,43 @@ function CustomerChat() {
   // Auto-response system
   const getAutoResponse = (userMessage) => {
     const lowerMessage = userMessage.toLowerCase();
-    
+
     if (lowerMessage.includes('register') || lowerMessage.includes('sign up') || lowerMessage.includes('create account')) {
       return "To register on PathWise:\n\n1. Click 'Create Account' on the login page\n2. Fill in your details (name, email, password)\n3. Complete the registration form\n4. Wait for verification by our team\n5. Once verified, you can take the assessment and get matched with a career mentor!";
     }
-    
+
     if (lowerMessage.includes('what is pathwise') || lowerMessage.includes('about pathwise') || lowerMessage.includes('pathwise')) {
       return "PathWise is a comprehensive career guidance platform that helps students make informed career decisions.\n\n✨ Key Features:\n• Personalized career assessments\n• Expert career mentor matching\n• One-on-one guidance sessions\n• AI-powered recommendations\n\nOur mission is to empower students with the right guidance for their future!";
     }
-    
+
     if (lowerMessage.includes('contact') || lowerMessage.includes('support') || lowerMessage.includes('help')) {
       return "You can reach our support team through:\n\n📧 Email: support@pathwise.com\n📞 Phone: +1-800-PATHWISE\n💬 This chat (we'll respond soon!)\n\nOur support hours are Monday-Friday, 9 AM - 6 PM IST.";
     }
-    
+
     if (lowerMessage.includes('career guidance') || lowerMessage.includes('how does') || lowerMessage.includes('process')) {
       return "Here's how the career guidance process works:\n\n1️⃣ Register & Get Verified\n2️⃣ Complete Interest Assessment\n3️⃣ Chat with Career Coordinator\n4️⃣ Get Matched with Specialized Mentor\n5️⃣ Receive Ongoing Guidance\n\nEach step helps us understand you better and provide personalized recommendations!";
     }
-    
+
     if (lowerMessage.includes('login') || lowerMessage.includes('password') || lowerMessage.includes('forgot')) {
       return "Having login issues?\n\n• Make sure you're using the correct email/username\n• Check if Caps Lock is on\n• If you forgot your password, use the registered email\n• Contact support if you're still having trouble\n\nTip: You can login with either your email or username!";
     }
-    
+
     if (lowerMessage.includes('counsellor') || lowerMessage.includes('mentor') || lowerMessage.includes('counselor')) {
       return "Our career mentors are experienced professionals who:\n\n👨‍🏫 Provide personalized guidance\n📊 Help interpret your assessment results\n🎯 Suggest suitable career paths\n💬 Answer all your career questions\n\nYou'll be matched with a mentor based on your interests and goals!";
     }
-    
+
     if (lowerMessage.includes('assessment') || lowerMessage.includes('test') || lowerMessage.includes('quiz')) {
       return "The Interest Assessment is a key part of PathWise:\n\n📝 Takes about 10-15 minutes\n🎯 Covers multiple areas:\n  • Career interests\n  • Technical vs Creative inclination\n  • Leadership style\n  • Problem-solving approach\n\nYour responses help us match you with the right career path and mentor!";
     }
-    
+
     if (lowerMessage.includes('thank') || lowerMessage.includes('thanks')) {
       return "You're welcome! 😊 Is there anything else I can help you with? Feel free to ask any questions about PathWise or career guidance!";
     }
-    
+
     if (lowerMessage.includes('hi') || lowerMessage.includes('hello') || lowerMessage.includes('hey')) {
       return "Hello! 👋 Welcome to PathWise support! How can I assist you today?\n\nYou can ask me about:\n• Registration process\n• Career guidance\n• Assessment details\n• Mentor matching\n• Or anything else!";
     }
-    
+
     // Default response
     return "Thank you for your message! Our support team will review it shortly.\n\nIn the meantime, you can try asking about:\n• How to register\n• What PathWise does\n• The career guidance process\n• Assessment details\n\nOr click one of the quick reply options below!";
   };
@@ -136,7 +136,7 @@ function CustomerChat() {
   return (
     <>
       {/* Chat Button */}
-      <button 
+      <button
         className={`customer-chat-btn ${isOpen ? 'active' : ''}`}
         onClick={() => setIsOpen(!isOpen)}
         title="Chat with us"
@@ -172,8 +172,8 @@ function CustomerChat() {
           {/* Messages */}
           <div className="chat-messages-container">
             {messages.map(msg => (
-              <div 
-                key={msg.id} 
+              <div
+                key={msg.id}
                 className={`chat-message ${msg.from === 'user' ? 'user-message' : 'support-message'}`}
               >
                 <div className="message-bubble">
@@ -182,7 +182,7 @@ function CustomerChat() {
                 </div>
               </div>
             ))}
-            
+
             {isTyping && (
               <div className="chat-message support-message">
                 <div className="message-bubble typing">
@@ -200,8 +200,8 @@ function CustomerChat() {
           {/* Quick Replies */}
           <div className="quick-replies">
             {quickReplies.map((reply, index) => (
-              <button 
-                key={index} 
+              <button
+                key={index}
                 className="quick-reply-btn"
                 onClick={() => handleQuickReply(reply)}
               >
@@ -220,7 +220,7 @@ function CustomerChat() {
               placeholder="Type your message..."
               className="chat-input"
             />
-            <button 
+            <button
               className="chat-send-btn"
               onClick={handleSendMessage}
               disabled={!inputMessage.trim()}
@@ -552,7 +552,7 @@ function CustomerChat() {
           }
 
           .customer-chat-btn {
-            bottom: 16px;
+            bottom: 80px;
             right: 16px;
             width: 56px;
             height: 56px;

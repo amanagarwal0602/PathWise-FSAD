@@ -10,7 +10,7 @@ function StudentDashboard() {
     data, currentUser, interestAssessmentQuestions, careerMapping,
     saveTestResult, addChatMessage, saveInterestAssessment,
     calculateInterestScores, getInterestAssessment, STUDENT_STATUS,
-    updateStudentStatus, refreshData
+    updateStudentStatus, refreshData, syncStatus
   } = useData();
   const { showToast } = useToast();
   
@@ -394,6 +394,27 @@ function StudentDashboard() {
             </span>
           )}
         </div>
+        
+        {/* Sync Status Indicator */}
+        <button 
+          onClick={refreshData}
+          className="sync-btn"
+          style={{
+            margin: '10px 15px',
+            padding: '8px 15px',
+            background: syncStatus === 'synced' ? '#27ae60' : syncStatus === 'syncing' ? '#f39c12' : syncStatus === 'error' ? '#e74c3c' : '#3498db',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px'
+          }}
+        >
+          {syncStatus === 'syncing' ? '⏳ Syncing...' : syncStatus === 'synced' ? '✅ Synced' : syncStatus === 'error' ? '⚠️ Offline' : '🔄 Sync Data'}
+        </button>
         
         <nav className="sidebar-nav">
           <button 

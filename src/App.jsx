@@ -13,6 +13,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import GeneralCounsellorDashboard from './pages/GeneralCounsellorDashboard';
 import EvaluatorDashboard from './pages/EvaluatorDashboard';
 import Workflow from './pages/Workflow';
+import Database from './pages/Database';
 import HelpCenter from './components/HelpCenter';
 import MaintenanceMode from './components/MaintenanceMode';
 import CustomerChat from './components/CustomerChat';
@@ -79,6 +80,7 @@ function AppContent() {
             settings.features.registrationEnabled ? <Register /> : <Navigate to="/login" />
           } />
           <Route path="/workflow" element={<Workflow />} />
+          <Route path="/database" element={<Database />} />
           
           {/* Dashboard Routes */}
           <Route path="/student" element={<StudentDashboard />} />

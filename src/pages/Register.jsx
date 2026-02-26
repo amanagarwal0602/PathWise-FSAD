@@ -12,7 +12,12 @@ import {
 
 function Register() {
   const navigate = useNavigate();
-  const { addUser, data } = useData();
+  const { addUser, data, refreshData, syncStatus } = useData();
+  
+  // Sync with backend on mount
+  useEffect(() => {
+    refreshData();
+  }, []);
   
   // Multi-step form state
   const [currentStep, setCurrentStep] = useState(1);

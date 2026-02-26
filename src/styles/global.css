@@ -12469,3 +12469,505 @@ input[type="password"]:focus {
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================================
+   DATABASE VIEWER PAGE
+   ========================================= */
+
+.database-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  color: white;
+}
+
+.db-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.db-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.db-logo {
+  font-size: 36px;
+}
+
+.db-brand h1 {
+  font-size: 28px;
+  font-weight: 700;
+  background: linear-gradient(to right, #38bdf8, #818cf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+}
+
+.db-subtitle {
+  font-size: 14px;
+  color: #94a3b8;
+  padding: 4px 12px;
+  background: rgba(56, 189, 248, 0.2);
+  border-radius: 20px;
+}
+
+.db-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.db-actions .btn-primary,
+.db-actions .btn-secondary {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  width: auto;
+}
+
+.db-actions .btn-primary {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  color: white;
+  border: none;
+}
+
+.db-actions .btn-secondary {
+  background: transparent;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Stats Bar */
+.db-stats-bar {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  padding: 24px 20px;
+  background: rgba(59, 130, 246, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-wrap: wrap;
+}
+
+.db-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.db-stat-icon {
+  font-size: 28px;
+}
+
+.db-stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #38bdf8;
+}
+
+.db-stat-label {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+/* Navigation */
+.db-nav {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 20px;
+  background: rgba(0, 0, 0, 0.2);
+  flex-wrap: wrap;
+}
+
+.db-nav button {
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: white;
+  border-radius: 25px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.db-nav button:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.db-nav button.active {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  border-color: transparent;
+}
+
+/* Search */
+.db-search {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 0 20px;
+  position: relative;
+}
+
+.db-search input {
+  width: 100%;
+  padding: 14px 20px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 30px;
+  color: white;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.db-search input:focus {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: #3b82f6;
+}
+
+.db-search input::placeholder {
+  color: #64748b;
+}
+
+.clear-search {
+  position: absolute;
+  right: 35px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/* Content */
+.db-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.db-section h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Grid */
+.db-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+/* User Card */
+.db-user-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.db-user-card:hover {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.db-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+.db-avatar {
+  font-size: 36px;
+}
+
+.db-user-info {
+  flex: 1;
+}
+
+.db-user-info h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.db-email {
+  display: block;
+  font-size: 13px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.db-username {
+  display: block;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.db-status-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+}
+
+.db-card-details {
+  padding: 16px;
+}
+
+.db-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.db-detail-row:last-child {
+  border-bottom: none;
+}
+
+.db-label {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.db-value {
+  color: #e2e8f0;
+  font-size: 13px;
+  text-align: right;
+}
+
+.db-value.assessment-done {
+  color: #10b981;
+}
+
+.db-card-footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.2);
+  font-size: 11px;
+  color: #64748b;
+}
+
+/* Empty state */
+.db-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  color: #64748b;
+}
+
+.db-empty span {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 16px;
+}
+
+/* Modal */
+.db-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.db-modal {
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.db-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.db-modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.db-modal-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.db-modal-body {
+  padding: 24px;
+}
+
+.db-modal-section {
+  margin-bottom: 24px;
+}
+
+.db-modal-section:last-child {
+  margin-bottom: 0;
+}
+
+.db-modal-section h3 {
+  font-size: 16px;
+  margin: 0 0 12px 0;
+  color: #94a3b8;
+}
+
+.db-detail-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.db-detail-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.db-detail-table td:first-child {
+  color: #64748b;
+  width: 40%;
+}
+
+.db-detail-table td:last-child {
+  color: #e2e8f0;
+}
+
+.credentials-table code {
+  background: rgba(59, 130, 246, 0.2);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-family: 'Fira Code', monospace;
+  font-size: 13px;
+}
+
+.db-tip {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #94a3b8;
+  text-align: center;
+}
+
+.db-tip code {
+  background: rgba(251, 191, 36, 0.2);
+  color: #fbbf24;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* Footer */
+.db-footer {
+  text-align: center;
+  padding: 24px 20px;
+  background: rgba(0, 0, 0, 0.3);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.db-footer p {
+  margin: 4px 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+/* Database Responsive */
+@media (max-width: 768px) {
+  .db-header {
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+  }
+  
+  .db-brand {
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+  }
+  
+  .db-brand h1 {
+    font-size: 22px;
+  }
+  
+  .db-actions {
+    width: 100%;
+  }
+  
+  .db-actions button {
+    flex: 1;
+  }
+  
+  .db-stats-bar {
+    gap: 20px;
+    padding: 16px;
+  }
+  
+  .db-stat-value {
+    font-size: 24px;
+  }
+  
+  .db-nav {
+    padding: 12px;
+    gap: 6px;
+  }
+  
+  .db-nav button {
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+  
+  .db-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .db-modal {
+    max-height: 90vh;
+    border-radius: 16px 16px 0 0;
+  }
+  
+  .db-modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+}

@@ -11,13 +11,18 @@ import {
 
 function Login() {
   const navigate = useNavigate();
-  const { login } = useData();
+  const { login, refreshData, syncStatus } = useData();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [lockoutTime, setLockoutTime] = useState(0);
+
+  // Sync with backend on mount
+  useEffect(() => {
+    refreshData();
+  }, []);
 
   // Check if user is already logged in
   useEffect(() => {
@@ -142,6 +147,19 @@ function Login() {
             <div className="form-header">
               <h2>Sign In</h2>
               <p>Enter your credentials to access your account</p>
+              
+              {/* Sync Status */}
+              <div style={{
+                marginTop: '10px',
+                padding: '8px 12px',
+                background: syncStatus === 'synced' ? '#d4edda' : syncStatus === 'syncing' ? '#fff3cd' : syncStatus === 'error' ? '#f8d7da' : '#cce5ff',
+                color: syncStatus === 'synced' ? '#155724' : syncStatus === 'syncing' ? '#856404' : syncStatus === 'error' ? '#721c24' : '#004085',
+                borderRadius: '6px',
+                fontSize: '13px',
+                textAlign: 'center'
+              }}>
+                {syncStatus === 'syncing' ? '⏳ Syncing with server...' : syncStatus === 'synced' ? '✅ Data synced' : syncStatus === 'error' ? '⚠️ Offline mode (data from this device only)' : '🔄 Checking server...'}
+              </div>
             </div>
             
             {error && (

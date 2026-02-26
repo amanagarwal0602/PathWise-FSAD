@@ -1,8 +1,11 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { verifyPassword } from '../utils/security';
 
 // Create Context for sharing data across components
 const DataContext = createContext();
+
+// API Base URL - use backend server
+const API_BASE_URL = 'http://localhost:8080/api';
 
 // Student Status Workflow
 const STUDENT_STATUS = {
@@ -75,8 +78,61 @@ const initialData = {
       status: 'active',
       evaluatorType: 'counsellor',
       specialization: 'Mentor Verification'
+    },
+    // Sample Career Mentors (needing verification by Evaluator 3-4)
+    {
+      id: 201,
+      name: 'Rahul Sharma',
+      email: 'tech.mentor@pathwise.com',
+      username: 'techmentor',
+      password: 'mentor123',
+      role: 'counsellor',
+      status: 'pending_verification',
+      specialization: 'Technology',
+      qualifications: '10+ years in Software Development, Google certified, Former Tech Lead at TCS',
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 202,
+      name: 'Priya Patel',
+      email: 'business.mentor@pathwise.com',
+      username: 'businessmentor',
+      password: 'mentor123',
+      role: 'counsellor',
+      status: 'pending_verification',
+      specialization: 'Business',
+      qualifications: 'MBA from IIM, 8 years corporate experience, Startup founder',
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 203,
+      name: 'Dr. Anita Desai',
+      email: 'health.mentor@pathwise.com',
+      username: 'healthmentor',
+      password: 'mentor123',
+      role: 'counsellor',
+      status: 'active',
+      specialization: 'Healthcare',
+      qualifications: 'MBBS, MD, 15 years medical practice, Health counselor',
+      verifiedBy: 5,
+      verifiedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 204,
+      name: 'Vikram Singh',
+      email: 'arts.mentor@pathwise.com',
+      username: 'artsmentor',
+      password: 'mentor123',
+      role: 'counsellor',
+      status: 'active',
+      specialization: 'Arts & Design',
+      qualifications: 'NID Graduate, Award-winning designer, 12 years in creative industry',
+      verifiedBy: 6,
+      verifiedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString()
     }
-    // NOTE: Demo counsellors and students removed - only real registrations will appear
+    // NOTE: More counsellors and students will appear as they register
   ],
   meetings: [],
   groups: [],
@@ -374,6 +430,58 @@ const fieldToSpecialization = {
   'Any': 'General'
 };
 
+// Helper function to sync with backend
+const syncWithBackend = async (localData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/sync/merge`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(localData)
+    });
+    if (response.ok) {
+      const mergedData = await response.json();
+      console.log('✅ Data synced with server');
+      return mergedData;
+    }
+  } catch (error) {
+    console.log('⚠️ Backend sync failed (offline mode):', error.message);
+  }
+  return null;
+};
+
+// Helper function to upload data to backend
+const uploadToBackend = async (data) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/sync/upload`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (response.ok) {
+      console.log('✅ Data uploaded to server');
+      return true;
+    }
+  } catch (error) {
+    console.log('⚠️ Upload failed (offline mode):', error.message);
+  }
+  return false;
+};
+
+// Helper function to fetch data from backend
+const fetchFromBackend = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/sync/download`);
+    if (response.ok) {
+      const serverData = await response.json();
+      console.log('✅ Data fetched from server');
+      return serverData;
+    }
+  } catch (error) {
+    console.log('⚠️ Fetch failed (offline mode):', error.message);
+  }
+  return null;
+};
+
 // Data Provider Component
 export function DataProvider({ children }) {
   const [data, setData] = useState(() => {
@@ -402,9 +510,69 @@ export function DataProvider({ children }) {
     return saved ? JSON.parse(saved) : null;
   });
 
-  // Save to localStorage whenever data changes
+  const [syncStatus, setSyncStatus] = useState('idle'); // idle, syncing, synced, error
+
+  // Sync with backend on initial load
+  useEffect(() => {
+    const initSync = async () => {
+      setSyncStatus('syncing');
+      const localData = JSON.parse(localStorage.getItem('pathwiseData') || 'null');
+      
+      if (localData) {
+        // Try to merge local data with server
+        const mergedData = await syncWithBackend(localData);
+        if (mergedData && mergedData.users) {
+          // Ensure system users always exist
+          const systemUserEmails = initialData.users.map(u => u.email);
+          const nonSystemUsers = mergedData.users.filter(u => !systemUserEmails.includes(u.email));
+          const finalUsers = [...initialData.users, ...nonSystemUsers];
+          
+          const finalData = {
+            ...initialData,
+            ...mergedData,
+            users: finalUsers
+          };
+          
+          setData(finalData);
+          localStorage.setItem('pathwiseData', JSON.stringify(finalData));
+          setSyncStatus('synced');
+        } else {
+          setSyncStatus('error');
+        }
+      } else {
+        // No local data, fetch from server
+        const serverData = await fetchFromBackend();
+        if (serverData && serverData.users) {
+          const systemUserEmails = initialData.users.map(u => u.email);
+          const nonSystemUsers = serverData.users.filter(u => !systemUserEmails.includes(u.email));
+          const finalUsers = [...initialData.users, ...nonSystemUsers];
+          
+          const finalData = {
+            ...initialData,
+            ...serverData,
+            users: finalUsers
+          };
+          
+          setData(finalData);
+          localStorage.setItem('pathwiseData', JSON.stringify(finalData));
+          setSyncStatus('synced');
+        } else {
+          setSyncStatus('idle');
+        }
+      }
+    };
+    
+    initSync();
+  }, []);
+
+  // Save to localStorage AND sync to backend whenever data changes
   useEffect(() => {
     localStorage.setItem('pathwiseData', JSON.stringify(data));
+    // Upload to backend (debounced)
+    const timeout = setTimeout(() => {
+      uploadToBackend(data);
+    }, 1000);
+    return () => clearTimeout(timeout);
   }, [data]);
 
   useEffect(() => {
@@ -434,19 +602,53 @@ export function DataProvider({ children }) {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [currentUser]);
 
-  // Refresh data from localStorage (for manual refresh)
-  const refreshData = () => {
-    const saved = localStorage.getItem('pathwiseData');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setData(parsed);
+  // Refresh data from localStorage AND backend (for manual refresh)
+  const refreshData = async () => {
+    setSyncStatus('syncing');
+    const localData = JSON.parse(localStorage.getItem('pathwiseData') || 'null') || data;
+    
+    // Try to sync with backend
+    const mergedData = await syncWithBackend(localData);
+    
+    if (mergedData && mergedData.users) {
+      // Ensure system users always exist
+      const systemUserEmails = initialData.users.map(u => u.email);
+      const nonSystemUsers = mergedData.users.filter(u => !systemUserEmails.includes(u.email));
+      const finalUsers = [...initialData.users, ...nonSystemUsers];
+      
+      const finalData = {
+        ...initialData,
+        ...mergedData,
+        users: finalUsers
+      };
+      
+      setData(finalData);
+      localStorage.setItem('pathwiseData', JSON.stringify(finalData));
       
       if (currentUser) {
-        const updatedUser = parsed.users.find(u => u.id === currentUser.id);
+        const updatedUser = finalData.users.find(u => u.id === currentUser.id);
         if (updatedUser) {
           setCurrentUser(updatedUser);
         }
       }
+      setSyncStatus('synced');
+      console.log('🔄 Data refreshed from server');
+    } else {
+      // Fallback to localStorage only
+      const saved = localStorage.getItem('pathwiseData');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setData(parsed);
+        
+        if (currentUser) {
+          const updatedUser = parsed.users.find(u => u.id === currentUser.id);
+          if (updatedUser) {
+            setCurrentUser(updatedUser);
+          }
+        }
+      }
+      setSyncStatus('error');
+      console.log('🔄 Data refreshed from localStorage (offline)');
     }
   };
 
@@ -528,16 +730,23 @@ export function DataProvider({ children }) {
       };
       
       // Clear all demo student data
-      setData(prev => ({
-        ...prev,
-        users: prev.users.map(u => u.id === demoStudentId ? freshDemoStudent : u),
+      setData(prev => {
+        const userExists = prev.users.some(u => u.id === demoStudentId);
+        const newUsers = userExists 
+          ? prev.users.map(u => u.id === demoStudentId ? freshDemoStudent : u)
+          : [...prev.users, freshDemoStudent];
+          
+        return {
+          ...prev,
+          users: newUsers,
         interestAssessments: prev.interestAssessments.filter(a => a.studentId !== demoStudentId),
         testResults: prev.testResults.filter(t => t.studentId !== demoStudentId),
         chats: prev.chats.filter(c => c.fromId !== demoStudentId && c.toId !== demoStudentId),
         meetings: prev.meetings.filter(m => !m.participants?.includes(demoStudentId) && m.studentId !== demoStudentId),
         studentNotes: prev.studentNotes.filter(n => n.studentId !== demoStudentId),
         counsellorRecommendations: prev.counsellorRecommendations.filter(r => r.studentId !== demoStudentId)
-      }));
+      };
+      });
       
       setCurrentUser(freshDemoStudent);
       localStorage.setItem('currentUser', JSON.stringify(freshDemoStudent));
@@ -1142,6 +1351,7 @@ export function DataProvider({ children }) {
     getStudentNotes,
     getInterestAssessment,
     refreshData,
+    syncStatus,
     // Legacy support
     aptitudeQuestions: interestAssessmentQuestions
   };
