@@ -53,10 +53,10 @@ function Login() {
 
     // Rate limiting disabled
 
-    setIsLoading(true);
-
-    // Small delay for security (prevents timing attacks)
-    await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 200));
+    // Clear any existing session before trying to login
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('jwtToken');
+    localStorage.removeItem('pathwiseSession');
 
     const user = await login(sanitizedEmail, password);
 
@@ -126,18 +126,7 @@ function Login() {
               <h2>Sign In</h2>
               <p>Enter your credentials to access your account</p>
 
-              {/* Sync Status */}
-              <div style={{
-                marginTop: '10px',
-                padding: '8px 12px',
-                background: syncStatus === 'synced' ? '#d4edda' : syncStatus === 'syncing' ? '#fff3cd' : syncStatus === 'error' ? '#f8d7da' : '#cce5ff',
-                color: syncStatus === 'synced' ? '#155724' : syncStatus === 'syncing' ? '#856404' : syncStatus === 'error' ? '#721c24' : '#004085',
-                borderRadius: '6px',
-                fontSize: '13px',
-                textAlign: 'center'
-              }}>
-                {syncStatus === 'syncing' ? '⏳ Syncing with server...' : syncStatus === 'synced' ? '✅ Data synced' : syncStatus === 'error' ? '⚠️ Offline mode (data from this device only)' : '🔄 Checking server...'}
-              </div>
+
             </div>
 
             {error && (
@@ -149,7 +138,7 @@ function Login() {
 
 
 
-            <form onSubmit={handleLogin} className="login-form">
+            <form onSubmit={handleLogin} className="login-form" autoComplete="off">
               <div className="form-field">
                 <label htmlFor="email">Email or Username</label>
                 <input
@@ -158,7 +147,7 @@ function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter email or username"
-                  autoComplete="email"
+                  autoComplete="off"
                   required
                 />
               </div>
@@ -171,7 +160,7 @@ function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                   required
                 />
               </div>

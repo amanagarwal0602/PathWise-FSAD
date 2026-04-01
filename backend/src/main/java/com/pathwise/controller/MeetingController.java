@@ -45,8 +45,9 @@ public class MeetingController {
         String description = body.get("description") != null ? body.get("description").toString() : "";
         LocalDateTime scheduledTime = LocalDateTime.parse(body.get("scheduledTime").toString());
         Integer duration = body.get("duration") != null ? Integer.parseInt(body.get("duration").toString()) : 30;
+        String meetingLink = body.get("meetingLink") != null ? body.get("meetingLink").toString() : null;
         
-        return ResponseEntity.ok(meetingService.scheduleMeeting(studentId, counsellorId, title, description, scheduledTime, duration));
+        return ResponseEntity.ok(meetingService.scheduleMeeting(studentId, counsellorId, title, description, scheduledTime, duration, meetingLink));
     }
     
     @PutMapping("/{id}/status")

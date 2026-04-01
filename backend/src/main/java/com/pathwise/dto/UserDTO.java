@@ -21,6 +21,7 @@ public class UserDTO {
     private String guidanceStage;
     private Long assignedCounsellor;
     private Boolean assessmentCompleted;
+    private Boolean assessmentSkipped;
     private Boolean flagged;
     private String flagReason;
     private String specialization;
@@ -50,6 +51,7 @@ public class UserDTO {
         dto.setGuidanceStage(user.getGuidanceStage());
         dto.setAssignedCounsellor(user.getAssignedCounsellor());
         dto.setAssessmentCompleted(user.getAssessmentCompleted());
+        dto.setAssessmentSkipped(user.getAssessmentSkipped());
         dto.setFlagged(user.getFlagged());
         dto.setFlagReason(user.getFlagReason());
         dto.setSpecialization(user.getSpecialization());
@@ -111,6 +113,9 @@ public class UserDTO {
     
     public Boolean getAssessmentCompleted() { return assessmentCompleted; }
     public void setAssessmentCompleted(Boolean assessmentCompleted) { this.assessmentCompleted = assessmentCompleted; }
+    
+    public Boolean getAssessmentSkipped() { return assessmentSkipped; }
+    public void setAssessmentSkipped(Boolean assessmentSkipped) { this.assessmentSkipped = assessmentSkipped; }
     
     public Boolean getFlagged() { return flagged; }
     public void setFlagged(Boolean flagged) { this.flagged = flagged; }

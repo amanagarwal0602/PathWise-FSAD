@@ -39,7 +39,7 @@ function Register() {
     achievements: '',
     phone: '',
     studentId: '',
-    idProofType: ''
+    idProofType: 'College ID Card'
   });
   
   const [error, setError] = useState('');
@@ -165,10 +165,7 @@ function Register() {
             setError('Please enter your College/University ID');
             return false;
           }
-          if (!formData.idProofType) {
-            setError('Please select your ID proof type');
-            return false;
-          }
+
         }
         return true;
         
@@ -220,16 +217,12 @@ function Register() {
     setIsLoading(true);
 
     try {
-      const { hash, salt } = await hashPassword(formData.password);
-
       const userData = {
         name: sanitizeInput(formData.name),
         username: formData.username.toLowerCase(),
         email: formData.email.toLowerCase().trim(),
-        passwordHash: hash,
-        passwordSalt: salt,
+        password: formData.password, // Send raw password - backend hashes it server-side
         role: formData.role,
-        status: 'active'
       };
 
       if (formData.role === 'student') {
@@ -241,24 +234,19 @@ function Register() {
         userData.phoneNumber = formData.phone.replace(/[^\d+\-\s()]/g, '');
         userData.studentId = sanitizeInput(formData.studentId);
         userData.idProofType = formData.idProofType;
-        userData.guidanceStage = 'initial';
-        userData.assignedCounsellor = null;
-        userData.assessmentCompleted = false;
       }
 
       if (formData.role === 'counsellor') {
         userData.specialization = formData.specialization;
-        userData.assignedStudents = [];
-        userData.rating = 0;
-        userData.reviewCount = 0;
-        userData.status = 'pending_verification';
-        userData.verifiedBy = null;
-        userData.verifiedAt = null;
       }
 
-      addUser(userData);
+      const result = await addUser(userData);
       setRegistrationSuccess(true);
       setTimeout(() => {
+        // Clear any existing session so login page doesn't auto-redirect
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('pathwiseSession');
         navigate('/login');
       }, 2500);
     } catch (err) {
@@ -379,7 +367,7 @@ function Register() {
             )}
             
             {!registrationSuccess && (
-            <form onSubmit={handleSubmit} className="register-form step-form">
+            <form onSubmit={handleSubmit} className="register-form step-form" autoComplete="off">
               
               {/* STEP 1: Role, Username, Email */}
               {currentStep === 1 && (
@@ -586,23 +574,7 @@ function Register() {
                     <small className="field-hint">Your enrollment/registration number</small>
                   </div>
 
-                  <div className="form-field">
-                    <label htmlFor="idProofType">ID Proof Type <span className="required">*</span></label>
-                    <select
-                      id="idProofType"
-                      name="idProofType"
-                      value={formData.idProofType}
-                      onChange={handleChange}
-                      required
-                    >
-                      <option value="">Select ID Proof Type</option>
-                      <option value="College ID Card">College ID Card</option>
-                      <option value="University Enrollment Letter">University Enrollment Letter</option>
-                      <option value="Bonafide Certificate">Bonafide Certificate</option>
-                      <option value="Fee Receipt">Fee Receipt</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
+
 
                   <div className="form-field">
                     <label htmlFor="careerGoals">Career Goals (Optional)</label>
@@ -654,6 +626,7 @@ function Register() {
                       value={formData.password}
                       onChange={handleChange}
                       placeholder="Create a strong password"
+                      autoComplete="off"
                       required
                     />
                     {formData.password && (
@@ -693,6 +666,7 @@ function Register() {
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       placeholder="Confirm your password"
+                      autoComplete="off"
                       required
                     />
                     {formData.confirmPassword && formData.password === formData.confirmPassword && (

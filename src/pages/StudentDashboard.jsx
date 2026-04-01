@@ -10,7 +10,9 @@ function StudentDashboard() {
     data, currentUser, interestAssessmentQuestions, careerMapping,
     saveTestResult, addChatMessage, saveInterestAssessment,
     calculateInterestScores, getInterestAssessment, STUDENT_STATUS,
-    updateStudentStatus, refreshData, syncStatus
+    updateStudentStatus, refreshData, syncStatus, logout,
+    loadConversation,
+    skipInterestAssessment
   } = useData();
   const { showToast } = useToast();
   
@@ -24,12 +26,16 @@ function StudentDashboard() {
   const [chatMessage, setChatMessage] = useState('');
   const [currentSection, setCurrentSection] = useState('');
 
-  // Redirect to login if no user
+  // Protect route
   useEffect(() => {
-    if (!currentUser) {
-      navigate('/login');
+    if (!currentUser || currentUser.role !== 'student') {
+      navigate('/login', { replace: true });
     }
   }, [currentUser, navigate]);
+
+  if (!currentUser || currentUser.role !== 'student') {
+    return null;
+  }
 
   // Get current student data
   const student = data.users.find(u => u.id === currentUser?.id);
@@ -62,8 +68,8 @@ function StudentDashboard() {
     (m.counsellorId === generalCounsellor?.id || m.participants?.includes(generalCounsellor?.id))
   );
 
-  // Determine student journey stage
-  const hasAssessment = !!myAssessment;
+  // Determine student journey stage - check both local state AND backend flag
+  const hasAssessment = !!myAssessment || !!student?.assessmentCompleted || !!student?.assessmentSkipped;
   const hasCounsellor = !!assignedCounsellor;
   // Student can access dashboard if they have a counsellor assigned (simplified flow)
   const canAccessDashboard = hasAssessment && hasCounsellor;
@@ -81,10 +87,17 @@ function StudentDashboard() {
     }
   }, [student?.studentStatus, refreshData]);
 
+  // Load chat history from backend when chat partner is available
+  useEffect(() => {
+    if (currentUser && chatPartner) {
+      loadConversation(currentUser.id, chatPartner.id);
+    }
+  }, [currentUser?.id, chatPartner?.id]);
+
   // Handle logout
   const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    navigate('/login');
+    logout();
+    navigate('/login', { replace: true });
   };
 
   // Multiple select answer toggle
@@ -116,7 +129,7 @@ function StudentDashboard() {
       // Step 3: Counsellor assigned, can access full dashboard
       setActiveTab('dashboard');
     }
-  }, [hasAssessment, hasCounsellor, canAccessDashboard]);
+  }, [hasAssessment, hasCounsellor, canAccessDashboard, student?.assessmentCompleted]);
 
   // Next question
   const nextQuestion = () => {
@@ -755,7 +768,7 @@ function StudentDashboard() {
                       className="skip-assessment-btn"
                       onClick={() => {
                         if (window.confirm('Skip assessment? You can take it later from your dashboard.')) {
-                          setTestStarted(false);
+                          skipInterestAssessment(student.id);
                           setActiveTab('chat');
                         }
                       }}
@@ -1008,7 +1021,14 @@ function StudentDashboard() {
                   <span className="skill-tag">Problem Solving</span>
                   <span className="skill-tag">System Design</span>
                 </div>
-                <button className="btn-primary" onClick={() => showToast('Technical Skills Assessment coming soon!', 'info')}>
+                <button
+                  className="btn-primary"
+                  onClick={() => {
+                    setActiveTab('assessment');
+                    setTestStarted(true);
+                    setCurrentQuestion(0);
+                  }}
+                >
                   Start Assessment
                 </button>
               </div>
@@ -1023,7 +1043,14 @@ function StudentDashboard() {
                   <span className="skill-tag">Listening</span>
                   <span className="skill-tag">Negotiation</span>
                 </div>
-                <button className="btn-primary" onClick={() => showToast('Communication Skills Assessment coming soon!', 'info')}>
+                <button
+                  className="btn-primary"
+                  onClick={() => {
+                    setActiveTab('assessment');
+                    setTestStarted(true);
+                    setCurrentQuestion(0);
+                  }}
+                >
                   Start Assessment
                 </button>
               </div>
@@ -1038,7 +1065,14 @@ function StudentDashboard() {
                   <span className="skill-tag">Conflict Resolution</span>
                   <span className="skill-tag">Mentoring</span>
                 </div>
-                <button className="btn-primary" onClick={() => showToast('Leadership Skills Assessment coming soon!', 'info')}>
+                <button
+                  className="btn-primary"
+                  onClick={() => {
+                    setActiveTab('assessment');
+                    setTestStarted(true);
+                    setCurrentQuestion(0);
+                  }}
+                >
                   Start Assessment
                 </button>
               </div>
@@ -1053,7 +1087,14 @@ function StudentDashboard() {
                   <span className="skill-tag">Logic</span>
                   <span className="skill-tag">Attention to Detail</span>
                 </div>
-                <button className="btn-primary" onClick={() => showToast('Analytical Skills Assessment coming soon!', 'info')}>
+                <button
+                  className="btn-primary"
+                  onClick={() => {
+                    setActiveTab('assessment');
+                    setTestStarted(true);
+                    setCurrentQuestion(0);
+                  }}
+                >
                   Start Assessment
                 </button>
               </div>

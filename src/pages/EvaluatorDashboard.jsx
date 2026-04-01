@@ -8,12 +8,12 @@ export default function EvaluatorDashboard() {
   const navigate = useNavigate();
   const { 
     currentUser, 
-    setCurrentUser, 
     data, 
     verifyStudent, 
     rejectStudent,
     verifyCounsellor,
-    rejectCounsellor
+    rejectCounsellor,
+    logout
   } = useData();
   const { showToast } = useToast();
   
@@ -28,10 +28,8 @@ export default function EvaluatorDashboard() {
 
   // Redirect if not logged in or not an evaluator
   useEffect(() => {
-    if (!currentUser) {
-      navigate('/login');
-    } else if (currentUser.role !== 'evaluator') {
-      navigate('/login');
+    if (!currentUser || currentUser.role !== 'evaluator') {
+      navigate('/login', { replace: true });
     }
   }, [currentUser, navigate]);
 
@@ -50,24 +48,16 @@ export default function EvaluatorDashboard() {
     : data.users.filter(u => u.role === 'counsellor');
   
   // Get pending verification entities
-  const pendingEntities = allEntities.filter(e => 
-    isStudentEvaluator 
-      ? e.studentStatus === 'pending_verification'
-      : e.status === 'pending_verification'
-  );
+  const pendingEntities = allEntities.filter(e => e.status === 'pending_verification');
   
   // Get verified entities (by this evaluator)
   const verifiedEntities = allEntities.filter(e => 
-    e.verifiedBy === currentUser.id && 
-    (isStudentEvaluator 
-      ? e.studentStatus !== 'rejected' 
-      : e.status === 'active')
+    Number(e.verifiedBy) === Number(currentUser.id) && e.status === (isStudentEvaluator ? 'verified' : 'active')
   );
   
   // Get rejected entities (by this evaluator)
   const rejectedEntities = allEntities.filter(e => 
-    e.verifiedBy === currentUser.id && 
-    (isStudentEvaluator ? e.studentStatus === 'rejected' : e.status === 'rejected')
+    Number(e.verifiedBy) === Number(currentUser.id) && e.status === 'rejected'
   );
 
   // Get verification requests/history
@@ -84,42 +74,54 @@ export default function EvaluatorDashboard() {
   };
 
   const handleLogout = () => {
-    setCurrentUser(null);
-    localStorage.removeItem('currentUser');
-    navigate('/login');
+    logout();
+    navigate('/login', { replace: true });
   };
 
-  const handleApprove = (entity) => {
+  const handleApprove = async (entity) => {
     const confirmMsg = isStudentEvaluator
       ? `Are you sure you want to approve ${entity.name}? They will be able to access the platform.`
       : `Are you sure you want to approve ${entity.name}? They will be able to mentor students.`;
     
     if (window.confirm(confirmMsg)) {
+      let success = false;
       if (isStudentEvaluator) {
-        verifyStudent(entity.id, currentUser.id, verificationNotes);
+        success = await verifyStudent(entity.id, currentUser.id, verificationNotes);
       } else {
-        verifyCounsellor(entity.id, currentUser.id, verificationNotes);
+        success = await verifyCounsellor(entity.id, currentUser.id, verificationNotes);
       }
-      setSelectedEntity(null);
-      setVerificationNotes('');
-      showToast(`${entity.name} has been verified and approved!`, 'success');
+
+      if (success) {
+        setSelectedEntity(null);
+        setVerificationNotes('');
+        showToast(`${entity.name} has been verified and approved!`, 'success');
+      } else {
+        showToast('Failed to verify user. Please try again.', 'error');
+      }
     }
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!rejectionReason.trim()) {
       showToast('Please provide a reason for rejection.', 'error');
       return;
     }
+
+    let success = false;
     if (isStudentEvaluator) {
-      rejectStudent(selectedEntity.id, currentUser.id, rejectionReason);
+      success = await rejectStudent(selectedEntity.id, currentUser.id, rejectionReason);
     } else {
-      rejectCounsellor(selectedEntity.id, currentUser.id, rejectionReason);
+      success = await rejectCounsellor(selectedEntity.id, currentUser.id, rejectionReason);
     }
-    setShowRejectModal(false);
-    setSelectedEntity(null);
-    setRejectionReason('');
-    showToast(`${selectedEntity.name} has been rejected.`, 'warning');
+
+    if (success) {
+      setShowRejectModal(false);
+      setSelectedEntity(null);
+      setRejectionReason('');
+      showToast(`${selectedEntity.name} has been rejected.`, 'warning');
+    } else {
+      showToast('Failed to reject user. Please try again.', 'error');
+    }
   };
 
   const getFilteredEntities = () => {
@@ -163,11 +165,11 @@ export default function EvaluatorDashboard() {
         </div>
         
         <div className="ev-user-info">
-          <div className="ev-avatar">🔍</div>
+          <div className="ev-avatar">{(currentUser?.evaluatorType === 'mentor' || currentUser?.evaluatorType === 'mentor_verification') ? '👨‍🏫' : '🎓'}</div>
           <div>
             <h3>{currentUser.name}</h3>
             <span className="ev-role-badge">
-              {isStudentEvaluator ? 'Student Verifier' : 'Mentor Verifier'}
+              {isStudentEvaluator ? 'Student Verification Specialist' : 'Mentor Verification Specialist'}
             </span>
           </div>
         </div>

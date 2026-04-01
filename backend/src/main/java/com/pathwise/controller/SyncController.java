@@ -1,5 +1,6 @@
 package com.pathwise.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
@@ -41,26 +42,33 @@ public class SyncController {
         }
     }
 
+    @Autowired
+    private com.pathwise.repository.UserRepository userRepository;
+
     // Download/fetch all data from backend
     @GetMapping("/download")
     public ResponseEntity<?> downloadData() {
         try {
             File file = new File(DATA_FILE);
+            Map<String, Object> data;
+            
             if (file.exists()) {
-                Map<String, Object> data = objectMapper.readValue(file, Map.class);
-                return ResponseEntity.ok(data);
+                data = objectMapper.readValue(file, Map.class);
             } else {
-                // Return empty data structure if no file exists
-                Map<String, Object> emptyData = new HashMap<>();
-                emptyData.put("users", new ArrayList<>());
-                emptyData.put("meetings", new ArrayList<>());
-                emptyData.put("chats", new ArrayList<>());
-                emptyData.put("testResults", new ArrayList<>());
-                emptyData.put("interestAssessments", new ArrayList<>());
-                emptyData.put("studentNotes", new ArrayList<>());
-                emptyData.put("groups", new ArrayList<>());
-                return ResponseEntity.ok(emptyData);
+                data = new HashMap<>();
+                data.put("meetings", new ArrayList<>());
+                data.put("chats", new ArrayList<>());
+                data.put("testResults", new ArrayList<>());
+                data.put("interestAssessments", new ArrayList<>());
+                data.put("studentNotes", new ArrayList<>());
+                data.put("groups", new ArrayList<>());
             }
+            
+            // ALWAYS override users with real DB users
+            List<com.pathwise.entity.User> realUsers = userRepository.findAll();
+            data.put("users", realUsers.stream().map(com.pathwise.dto.UserDTO::fromEntity).toList());
+            
+            return ResponseEntity.ok(data);
         } catch (Exception e) {
             Map<String, Object> error = new HashMap<>();
             error.put("success", false);

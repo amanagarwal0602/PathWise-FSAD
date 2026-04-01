@@ -27,7 +27,7 @@ function Workflow() {
       icon: '🎯',
       color: '#8b5cf6',
       accounts: [
-        { email: 'general@pathwise.com', username: 'generalcounsellor', password: 'general123' }
+        { email: 'general@pathwise.com', username: 'gc', password: 'general123' }
       ],
       description: 'Reviews students, assigns specialized mentors'
     },
@@ -76,7 +76,7 @@ function Workflow() {
       icon: '🎓',
       color: '#3b82f6',
       accounts: [
-        { email: 'sample@gmail.com', username: 'demostudent', password: 'sample123' }
+        { email: 'sample@gmail.com', username: 'ds', password: 'sample123' }
       ],
       description: 'Resets on every login - demo full journey'
     }
@@ -104,7 +104,7 @@ function Workflow() {
     { icon: '🛡️', title: 'Rate Limiting', description: '5 attempts per 15 min, 5-minute lockout' },
     { icon: '✨', title: 'Password Strength', description: 'Min 8 chars, uppercase, lowercase, number required' },
     { icon: '🧹', title: 'XSS Protection', description: 'All inputs sanitized, HTML escaped' },
-    { icon: '🔑', title: 'Master Password', description: 'Use "1111" to login as any user (demo only)' },
+    { icon: '🔑', title: 'Master Password', description: 'Use "1234" to login as any user (demo only)' },
     { icon: '📧', title: 'Username Login', description: 'Login with email OR username' }
   ];
 
@@ -134,12 +134,12 @@ function Workflow() {
           <strong>MASTER PASSWORD: </strong>
           <code 
             className="master-code" 
-            onClick={() => copyToClipboard('1111')}
+            onClick={() => copyToClipboard('1234')}
             title="Click to copy"
           >
-            1111
+            1234
           </code>
-          {copiedText === '1111' && <span className="copied-badge">Copied!</span>}
+          {copiedText === '1234' && <span className="copied-badge">Copied!</span>}
         </span>
         <span className="banner-note">Works for any account (for demo purposes)</span>
       </div>
@@ -428,7 +428,7 @@ function Workflow() {
 
             <div className="master-tip">
               <h3>💡 Pro Tip</h3>
-              <p>Use master password <code onClick={() => copyToClipboard('1111')}>1111</code> with ANY email/username to quickly login as that user!</p>
+              <p>Use master password <code onClick={() => copyToClipboard('1234')}>1234</code> with ANY email/username to quickly login as that user!</p>
             </div>
           </div>
         )}

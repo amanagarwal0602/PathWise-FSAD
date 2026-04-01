@@ -35,6 +35,8 @@ public class User {
     
     private String college;
     private String branch;
+    
+    @Column(name = "study_year")
     private String year;
     private String careerGoals;
     private String achievements;
@@ -47,6 +49,7 @@ public class User {
     private Long assignedCounsellor;
     
     private Boolean assessmentCompleted = false;
+    private Boolean assessmentSkipped = false;
     private Boolean flagged = false;
     private String flagReason;
     
@@ -150,6 +153,9 @@ public class User {
     
     public Boolean getAssessmentCompleted() { return assessmentCompleted; }
     public void setAssessmentCompleted(Boolean assessmentCompleted) { this.assessmentCompleted = assessmentCompleted; }
+    
+    public Boolean getAssessmentSkipped() { return assessmentSkipped; }
+    public void setAssessmentSkipped(Boolean assessmentSkipped) { this.assessmentSkipped = assessmentSkipped; }
     
     public Boolean getFlagged() { return flagged; }
     public void setFlagged(Boolean flagged) { this.flagged = flagged; }

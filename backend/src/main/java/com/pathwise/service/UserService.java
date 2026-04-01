@@ -94,6 +94,22 @@ public class UserService {
         if (userDTO.getGuidanceStage() != null) user.setGuidanceStage(userDTO.getGuidanceStage());
         if (userDTO.getSpecialization() != null) user.setSpecialization(userDTO.getSpecialization());
         if (userDTO.getAssessmentCompleted() != null) user.setAssessmentCompleted(userDTO.getAssessmentCompleted());
+        if (userDTO.getAssessmentSkipped() != null) user.setAssessmentSkipped(userDTO.getAssessmentSkipped());
+        if (userDTO.getAssignedCounsellor() != null) user.setAssignedCounsellor(userDTO.getAssignedCounsellor());
+        
+        // Handle role update if authorized (Admin only in frontend)
+        if (userDTO.getRole() != null) {
+            try {
+                user.setRole(User.Role.valueOf(userDTO.getRole().toUpperCase()));
+            } catch (Exception e) { /* ignore invalid role */ }
+        }
+        
+        // Handle status update
+        if (userDTO.getStatus() != null) {
+            try {
+                user.setStatus(User.UserStatus.valueOf(userDTO.getStatus().toUpperCase()));
+            } catch (Exception e) { /* ignore invalid status */ }
+        }
         
         User savedUser = userRepository.save(user);
         return ApiResponse.success("User updated", UserDTO.fromEntity(savedUser));

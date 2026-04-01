@@ -1,11 +1,12 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { verifyPassword } from '../utils/security';
+import { apiFetch } from '../utils/api';
 
 // Create Context for sharing data across components
 const DataContext = createContext();
 
 // API Base URL - use backend server
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9090/api';
 
 // Student Status Workflow
 const STUDENT_STATUS = {
@@ -19,121 +20,9 @@ const STUDENT_STATUS = {
   ACTIVE_GUIDANCE: 'active_guidance'
 };
 
-// Initial sample data (will be stored in localStorage)
+// Initial state
 const initialData = {
-  users: [
-    { id: 1, name: 'Admin', email: 'admin', username: 'admin', password: 'admin', role: 'admin', status: 'active' },
-    {
-      id: 2,
-      name: 'Career Coordinator',
-      email: 'general@pathwise.com',
-      username: 'generalcounsellor',
-      password: 'general123',
-      role: 'general_counsellor',
-      status: 'active',
-      specialization: 'Career Coordination'
-    },
-    // Evaluators 1-2 (for STUDENT verification)
-    {
-      id: 3,
-      name: 'Student Verification Specialist',
-      email: 'evaluator1@pathwise.com',
-      username: 'evaluator1',
-      password: 'eval123',
-      role: 'evaluator',
-      status: 'active',
-      evaluatorType: 'student',
-      specialization: 'Student Verification'
-    },
-    {
-      id: 4,
-      name: 'Student Verification Specialist',
-      email: 'evaluator2@pathwise.com',
-      username: 'evaluator2',
-      password: 'eval123',
-      role: 'evaluator',
-      status: 'active',
-      evaluatorType: 'student',
-      specialization: 'Student Verification'
-    },
-    // Evaluators 3-4 (for COUNSELLOR/MENTOR verification)
-    {
-      id: 5,
-      name: 'Mentor Verification Specialist',
-      email: 'evaluator3@pathwise.com',
-      username: 'evaluator3',
-      password: 'eval123',
-      role: 'evaluator',
-      status: 'active',
-      evaluatorType: 'counsellor',
-      specialization: 'Mentor Verification'
-    },
-    {
-      id: 6,
-      name: 'Mentor Verification Specialist',
-      email: 'evaluator4@pathwise.com',
-      username: 'evaluator4',
-      password: 'eval123',
-      role: 'evaluator',
-      status: 'active',
-      evaluatorType: 'counsellor',
-      specialization: 'Mentor Verification'
-    },
-    // Sample Career Mentors (needing verification by Evaluator 3-4)
-    {
-      id: 201,
-      name: 'Rahul Sharma',
-      email: 'tech.mentor@pathwise.com',
-      username: 'techmentor',
-      password: 'mentor123',
-      role: 'counsellor',
-      status: 'pending_verification',
-      specialization: 'Technology',
-      qualifications: '10+ years in Software Development, Google certified, Former Tech Lead at TCS',
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 202,
-      name: 'Priya Patel',
-      email: 'business.mentor@pathwise.com',
-      username: 'businessmentor',
-      password: 'mentor123',
-      role: 'counsellor',
-      status: 'pending_verification',
-      specialization: 'Business',
-      qualifications: 'MBA from IIM, 8 years corporate experience, Startup founder',
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 203,
-      name: 'Dr. Anita Desai',
-      email: 'health.mentor@pathwise.com',
-      username: 'healthmentor',
-      password: 'mentor123',
-      role: 'counsellor',
-      status: 'active',
-      specialization: 'Healthcare',
-      qualifications: 'MBBS, MD, 15 years medical practice, Health counselor',
-      verifiedBy: 5,
-      verifiedAt: new Date().toISOString(),
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 204,
-      name: 'Vikram Singh',
-      email: 'arts.mentor@pathwise.com',
-      username: 'artsmentor',
-      password: 'mentor123',
-      role: 'counsellor',
-      status: 'active',
-      specialization: 'Arts & Design',
-      qualifications: 'NID Graduate, Award-winning designer, 12 years in creative industry',
-      verifiedBy: 6,
-      verifiedAt: new Date().toISOString(),
-      createdAt: new Date().toISOString()
-    }
-    // NOTE: More counsellors and students will appear as they register
-  ],
+  users: [],
   meetings: [],
   groups: [],
   chats: [],
@@ -141,7 +30,7 @@ const initialData = {
   interestAssessments: [],
   studentNotes: [],
   counsellorRecommendations: [],
-  verificationRequests: []  // Track verification history
+  verificationRequests: []
 };
 
 // ============================================
@@ -153,240 +42,240 @@ const interestAssessmentQuestions = [
   {
     id: 1,
     section: 'Career Interests',
-    question: "Which career paths appeal to you the most?",
+    question: 'Which career paths appeal to you the most?',
     options: [
-      "Technology & Software Development",
-      "Healthcare & Medicine",
-      "Business & Entrepreneurship",
-      "Arts & Creative Design",
-      "Science & Research",
-      "Education & Training",
-      "Law & Public Service"
+      'Technology & Software Development',
+      'Healthcare & Medicine',
+      'Business & Entrepreneurship',
+      'Arts & Creative Design',
+      'Science & Research',
+      'Education & Training',
+      'Law & Public Service'
     ],
-    optionTraits: ["technical", "social", "analytical", "creative", "analytical", "social", "analytical"],
-    optionFields: ["IT", "Healthcare", "Business", "Design", "Research", "Education", "Law"]
+    optionTraits: ['technical', 'social', 'analytical', 'creative', 'analytical', 'social', 'analytical'],
+    optionFields: ['IT', 'Healthcare', 'Business', 'Design', 'Research', 'Education', 'Law']
   },
   {
     id: 2,
     section: 'Career Interests',
-    question: "What type of work outcomes motivate you?",
+    question: 'What type of work outcomes motivate you?',
     options: [
-      "Creating innovative products",
-      "Helping people directly",
-      "Achieving financial success",
-      "Expressing creativity",
-      "Discovering new knowledge",
-      "Making societal impact"
+      'Creating innovative products',
+      'Helping people directly',
+      'Achieving financial success',
+      'Expressing creativity',
+      'Discovering new knowledge',
+      'Making societal impact'
     ],
-    optionTraits: ["technical", "social", "analytical", "creative", "analytical", "social"],
-    optionFields: ["IT", "Healthcare", "Business", "Design", "Research", "Social Work"]
+    optionTraits: ['technical', 'social', 'analytical', 'creative', 'analytical', 'social'],
+    optionFields: ['IT', 'Healthcare', 'Business', 'Design', 'Research', 'Social Work']
   },
 
   // Section 2: Technical vs Creative Inclination
   {
     id: 3,
     section: 'Technical vs Creative',
-    question: "Which activities do you enjoy more?",
+    question: 'Which activities do you enjoy more?',
     options: [
-      "Writing code or solving logical puzzles",
-      "Designing graphics or visual content",
-      "Analyzing data and numbers",
-      "Writing stories or content",
-      "Building or fixing physical things",
-      "Performing or presenting"
+      'Writing code or solving logical puzzles',
+      'Designing graphics or visual content',
+      'Analyzing data and numbers',
+      'Writing stories or content',
+      'Building or fixing physical things',
+      'Performing or presenting'
     ],
-    optionTraits: ["technical", "creative", "analytical", "creative", "technical", "creative"],
-    optionFields: ["IT", "Design", "Data Science", "Media", "Engineering", "Media"]
+    optionTraits: ['technical', 'creative', 'analytical', 'creative', 'technical', 'creative'],
+    optionFields: ['IT', 'Design', 'Data Science', 'Media', 'Engineering', 'Media']
   },
   {
     id: 4,
     section: 'Technical vs Creative',
-    question: "How do you prefer to solve problems?",
+    question: 'How do you prefer to solve problems?',
     options: [
-      "Using systematic, step-by-step approaches",
-      "Thinking outside the box creatively",
-      "Analyzing all available data first",
-      "Brainstorming with others",
-      "Trial and error experimentation",
-      "Relying on intuition and experience"
+      'Using systematic, step-by-step approaches',
+      'Thinking outside the box creatively',
+      'Analyzing all available data first',
+      'Brainstorming with others',
+      'Trial and error experimentation',
+      'Relying on intuition and experience'
     ],
-    optionTraits: ["technical", "creative", "analytical", "social", "technical", "creative"],
-    optionFields: ["IT", "Design", "Data Science", "Business", "Engineering", "Arts"]
+    optionTraits: ['technical', 'creative', 'analytical', 'social', 'technical', 'creative'],
+    optionFields: ['IT', 'Design', 'Data Science', 'Business', 'Engineering', 'Arts']
   },
 
   // Section 3: Leadership & Teamwork Preference
   {
     id: 5,
     section: 'Leadership & Teamwork',
-    question: "What role do you prefer in a team?",
+    question: 'What role do you prefer in a team?',
     options: [
-      "Leading and directing the team",
-      "Contributing as a team member",
-      "Working independently with minimal interaction",
-      "Coordinating between team members",
-      "Mentoring and guiding others",
-      "Supporting and assisting others"
+      'Leading and directing the team',
+      'Contributing as a team member',
+      'Working independently with minimal interaction',
+      'Coordinating between team members',
+      'Mentoring and guiding others',
+      'Supporting and assisting others'
     ],
-    optionTraits: ["leadership", "teamwork", "independent", "leadership", "social", "teamwork"],
-    optionFields: ["Management", "Any", "Research", "Management", "Education", "Healthcare"]
+    optionTraits: ['leadership', 'teamwork', 'independent', 'leadership', 'social', 'teamwork'],
+    optionFields: ['Management', 'Any', 'Research', 'Management', 'Education', 'Healthcare']
   },
   {
     id: 6,
     section: 'Leadership & Teamwork',
-    question: "How do you handle group decisions?",
+    question: 'How do you handle group decisions?',
     options: [
-      "Take charge and make final decisions",
-      "Seek consensus from everyone",
-      "Contribute ideas but let others decide",
-      "Analyze options and present recommendations",
-      "Go with the majority opinion",
-      "Prefer to work on individual tasks"
+      'Take charge and make final decisions',
+      'Seek consensus from everyone',
+      'Contribute ideas but let others decide',
+      'Analyze options and present recommendations',
+      'Go with the majority opinion',
+      'Prefer to work on individual tasks'
     ],
-    optionTraits: ["leadership", "teamwork", "teamwork", "analytical", "teamwork", "independent"],
-    optionFields: ["Management", "HR", "Any", "Consulting", "Any", "Research"]
+    optionTraits: ['leadership', 'teamwork', 'teamwork', 'analytical', 'teamwork', 'independent'],
+    optionFields: ['Management', 'HR', 'Any', 'Consulting', 'Any', 'Research']
   },
 
   // Section 4: Risk-Taking Ability
   {
     id: 7,
     section: 'Risk-Taking Ability',
-    question: "How comfortable are you with uncertainty?",
+    question: 'How comfortable are you with uncertainty?',
     options: [
-      "Very comfortable - I thrive on challenges",
-      "Somewhat comfortable with calculated risks",
-      "Prefer stability with occasional risks",
-      "Prefer stable and predictable situations",
-      "Only take risks when necessary",
-      "Avoid risks whenever possible"
+      'Very comfortable - I thrive on challenges',
+      'Somewhat comfortable with calculated risks',
+      'Prefer stability with occasional risks',
+      'Prefer stable and predictable situations',
+      'Only take risks when necessary',
+      'Avoid risks whenever possible'
     ],
-    optionTraits: ["risk_taker", "risk_taker", "balanced", "risk_averse", "balanced", "risk_averse"],
-    optionFields: ["Entrepreneurship", "Business", "Corporate", "Government", "Corporate", "Government"]
+    optionTraits: ['risk_taker', 'risk_taker', 'balanced', 'risk_averse', 'balanced', 'risk_averse'],
+    optionFields: ['Entrepreneurship', 'Business', 'Corporate', 'Government', 'Corporate', 'Government']
   },
   {
     id: 8,
     section: 'Risk-Taking Ability',
-    question: "Which career path appeals to you more?",
+    question: 'Which career path appeals to you more?',
     options: [
-      "Starting my own business/startup",
-      "Working in an innovative company",
-      "Stable corporate job with growth",
-      "Government or public sector job",
-      "Freelancing and consulting",
-      "Academic or research position"
+      'Starting my own business/startup',
+      'Working in an innovative company',
+      'Stable corporate job with growth',
+      'Government or public sector job',
+      'Freelancing and consulting',
+      'Academic or research position'
     ],
-    optionTraits: ["risk_taker", "risk_taker", "balanced", "risk_averse", "risk_taker", "balanced"],
-    optionFields: ["Entrepreneurship", "IT", "Corporate", "Government", "Consulting", "Research"]
+    optionTraits: ['risk_taker', 'risk_taker', 'balanced', 'risk_averse', 'risk_taker', 'balanced'],
+    optionFields: ['Entrepreneurship', 'IT', 'Corporate', 'Government', 'Consulting', 'Research']
   },
 
   // Section 5: Problem-Solving Style
   {
     id: 9,
     section: 'Problem-Solving Style',
-    question: "How do you approach complex problems?",
+    question: 'How do you approach complex problems?',
     options: [
-      "Break down into smaller parts systematically",
-      "Look for patterns and connections",
-      "Research how others have solved similar problems",
-      "Experiment with different approaches",
-      "Discuss with others to get perspectives",
-      "Trust my gut feeling and experience"
+      'Break down into smaller parts systematically',
+      'Look for patterns and connections',
+      'Research how others have solved similar problems',
+      'Experiment with different approaches',
+      'Discuss with others to get perspectives',
+      'Trust my gut feeling and experience'
     ],
-    optionTraits: ["analytical", "analytical", "technical", "creative", "social", "creative"],
-    optionFields: ["Engineering", "Data Science", "IT", "Design", "HR", "Arts"]
+    optionTraits: ['analytical', 'analytical', 'technical', 'creative', 'social', 'creative'],
+    optionFields: ['Engineering', 'Data Science', 'IT', 'Design', 'HR', 'Arts']
   },
   {
     id: 10,
     section: 'Problem-Solving Style',
-    question: "What tools do you prefer for problem-solving?",
+    question: 'What tools do you prefer for problem-solving?',
     options: [
-      "Spreadsheets and data analysis tools",
-      "Design and visualization software",
-      "Programming and technical tools",
-      "Writing and documentation",
-      "Meetings and discussions",
-      "Research papers and case studies"
+      'Spreadsheets and data analysis tools',
+      'Design and visualization software',
+      'Programming and technical tools',
+      'Writing and documentation',
+      'Meetings and discussions',
+      'Research papers and case studies'
     ],
-    optionTraits: ["analytical", "creative", "technical", "creative", "social", "analytical"],
-    optionFields: ["Data Science", "Design", "IT", "Media", "Management", "Research"]
+    optionTraits: ['analytical', 'creative', 'technical', 'creative', 'social', 'analytical'],
+    optionFields: ['Data Science', 'Design', 'IT', 'Media', 'Management', 'Research']
   },
 
   // Section 6: Communication Preference
   {
     id: 11,
     section: 'Communication Preference',
-    question: "How do you prefer to communicate?",
+    question: 'How do you prefer to communicate?',
     options: [
-      "Written communication (emails, reports)",
-      "Verbal communication (calls, meetings)",
-      "Visual presentations",
-      "One-on-one discussions",
-      "Group presentations",
-      "Technical documentation"
+      'Written communication (emails, reports)',
+      'Verbal communication (calls, meetings)',
+      'Visual presentations',
+      'One-on-one discussions',
+      'Group presentations',
+      'Technical documentation'
     ],
-    optionTraits: ["analytical", "social", "creative", "social", "leadership", "technical"],
-    optionFields: ["Any", "Sales", "Marketing", "Counselling", "Management", "IT"]
+    optionTraits: ['analytical', 'social', 'creative', 'social', 'leadership', 'technical'],
+    optionFields: ['Any', 'Sales', 'Marketing', 'Counselling', 'Management', 'IT']
   },
   {
     id: 12,
     section: 'Communication Preference',
-    question: "What type of interaction energizes you?",
+    question: 'What type of interaction energizes you?',
     options: [
-      "Deep conversations with individuals",
-      "Presenting to large audiences",
-      "Online/remote communication",
-      "Collaborative team discussions",
-      "Teaching and explaining concepts",
-      "Minimal interaction, focused work"
+      'Deep conversations with individuals',
+      'Presenting to large audiences',
+      'Online/remote communication',
+      'Collaborative team discussions',
+      'Teaching and explaining concepts',
+      'Minimal interaction, focused work'
     ],
-    optionTraits: ["social", "leadership", "independent", "teamwork", "social", "independent"],
-    optionFields: ["Counselling", "Marketing", "IT", "Any", "Education", "Research"]
+    optionTraits: ['social', 'leadership', 'independent', 'teamwork', 'social', 'independent'],
+    optionFields: ['Counselling', 'Marketing', 'IT', 'Any', 'Education', 'Research']
   },
 
   // Section 7: Work Environment Preference
   {
     id: 13,
     section: 'Work Environment',
-    question: "What work environment suits you best?",
+    question: 'What work environment suits you best?',
     options: [
-      "Modern tech office with flexibility",
-      "Traditional corporate setting",
-      "Healthcare/hospital environment",
-      "Creative studio or agency",
-      "Academic institution",
-      "Remote/work from home"
+      'Modern tech office with flexibility',
+      'Traditional corporate setting',
+      'Healthcare/hospital environment',
+      'Creative studio or agency',
+      'Academic institution',
+      'Remote/work from home'
     ],
-    optionTraits: ["technical", "analytical", "social", "creative", "analytical", "independent"],
-    optionFields: ["IT", "Corporate", "Healthcare", "Design", "Education", "IT"]
+    optionTraits: ['technical', 'analytical', 'social', 'creative', 'analytical', 'independent'],
+    optionFields: ['IT', 'Corporate', 'Healthcare', 'Design', 'Education', 'IT']
   },
   {
     id: 14,
     section: 'Work Environment',
-    question: "What schedule preference do you have?",
+    question: 'What schedule preference do you have?',
     options: [
-      "Flexible hours, outcome-based",
-      "Fixed 9-5 schedule",
-      "Shift work (rotational)",
-      "Project-based with deadlines",
-      "Teaching/academic schedule",
-      "Freelance/self-managed time"
+      'Flexible hours, outcome-based',
+      'Fixed 9-5 schedule',
+      'Shift work (rotational)',
+      'Project-based with deadlines',
+      'Teaching/academic schedule',
+      'Freelance/self-managed time'
     ],
-    optionTraits: ["risk_taker", "risk_averse", "teamwork", "technical", "social", "risk_taker"],
-    optionFields: ["IT", "Government", "Healthcare", "IT", "Education", "Consulting"]
+    optionTraits: ['risk_taker', 'risk_averse', 'teamwork', 'technical', 'social', 'risk_taker'],
+    optionFields: ['IT', 'Government', 'Healthcare', 'IT', 'Education', 'Consulting']
   },
   {
     id: 15,
     section: 'Work Environment',
-    question: "What motivates you to go to work?",
+    question: 'What motivates you to go to work?',
     options: [
-      "Solving challenging problems",
-      "Helping and serving others",
-      "Financial rewards and growth",
-      "Creative expression",
-      "Learning and development",
-      "Job security and stability"
+      'Solving challenging problems',
+      'Helping and serving others',
+      'Financial rewards and growth',
+      'Creative expression',
+      'Learning and development',
+      'Job security and stability'
     ],
-    optionTraits: ["technical", "social", "analytical", "creative", "analytical", "risk_averse"],
-    optionFields: ["Engineering", "Healthcare", "Business", "Arts", "Research", "Government"]
+    optionTraits: ['technical', 'social', 'analytical', 'creative', 'analytical', 'risk_averse'],
+    optionFields: ['Engineering', 'Healthcare', 'Business', 'Arts', 'Research', 'Government']
   }
 ];
 
@@ -430,31 +319,15 @@ const fieldToSpecialization = {
   'Any': 'General'
 };
 
-// Helper function to sync with backend
-const syncWithBackend = async (localData) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/sync/merge`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(localData)
-    });
-    if (response.ok) {
-      const mergedData = await response.json();
-      console.log('✅ Data synced with server');
-      return mergedData;
-    }
-  } catch (error) {
-    console.log('⚠️ Backend sync failed (offline mode):', error);
-  }
-  return null;
-};
-
 // Helper function to upload data to backend
 const uploadToBackend = async (data) => {
   try {
+    const token = localStorage.getItem('jwtToken');
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
     const response = await fetch(`${API_BASE_URL}/sync/upload`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(data)
     });
     if (response.ok) {
@@ -470,16 +343,53 @@ const uploadToBackend = async (data) => {
 // Helper function to fetch data from backend
 const fetchFromBackend = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/sync/download`);
+    const token = localStorage.getItem('jwtToken');
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const response = await fetch(`${API_BASE_URL}/sync/download`, { headers });
     if (response.ok) {
       const serverData = await response.json();
       console.log('✅ Data fetched from server');
       return serverData;
     }
   } catch (error) {
-    console.log('⚠️ Fetch failed (offline mode):', error);
+    console.log('⚠️ Fetch failed:', error);
   }
   return null;
+};
+
+// Normalize chat message shape from backend
+const normalizeChatMessage = (msg) => ({
+  id: msg.id,
+  fromId: msg.senderId,
+  toId: msg.receiverId,
+  message: msg.message,
+  timestamp: msg.timestamp,
+  isRead: msg.isRead
+});
+
+// Normalize meeting object from backend
+const normalizeMeeting = (meeting) => {
+  const scheduled = meeting.scheduledTime || meeting.scheduled_time || null;
+  let date = meeting.date || null;
+  let time = meeting.time || null;
+
+  if (scheduled && (!date || !time)) {
+    try {
+      const [d, t] = scheduled.split('T');
+      date = date || d;
+      time = time || (t ? t.substring(0, 5) : null);
+    } catch (e) {
+      console.warn('Failed to parse scheduledTime for meeting', meeting, e);
+    }
+  }
+
+  return {
+    ...meeting,
+    date,
+    time,
+    status: meeting.status?.toLowerCase()
+  };
 };
 
 // Data Provider Component
@@ -487,20 +397,7 @@ export function DataProvider({ children }) {
   const [data, setData] = useState(() => {
     const saved = localStorage.getItem('pathwiseData');
     if (saved) {
-      const parsed = JSON.parse(saved);
-      // Merge system users (admin, evaluators) with saved users to ensure they always exist
-      const systemUserEmails = initialData.users.map(u => u.email);
-      const savedNonSystemUsers = parsed.users?.filter(u => !systemUserEmails.includes(u.email)) || [];
-      const mergedUsers = [...initialData.users, ...savedNonSystemUsers];
-
-      return {
-        ...initialData,
-        ...parsed,
-        users: mergedUsers, // Use merged users
-        interestAssessments: parsed.interestAssessments || [],
-        studentNotes: parsed.studentNotes || [],
-        counsellorRecommendations: parsed.counsellorRecommendations || []
-      };
+      return { ...initialData, ...JSON.parse(saved) };
     }
     return initialData;
   });
@@ -510,62 +407,48 @@ export function DataProvider({ children }) {
     return saved ? JSON.parse(saved) : null;
   });
 
-  const [syncStatus, setSyncStatus] = useState('idle'); // idle, syncing, synced, error
+  const [syncStatus, setSyncStatus] = useState('idle');
 
-  // Sync with backend on initial load
-  useEffect(() => {
-    const initSync = async () => {
-      setSyncStatus('syncing');
-      const localData = JSON.parse(localStorage.getItem('pathwiseData') || 'null');
-
-      if (localData) {
-        // Try to merge local data with server
-        const mergedData = await syncWithBackend(localData);
-        if (mergedData && mergedData.users) {
-          // Ensure system users always exist
-          const systemUserEmails = initialData.users.map(u => u.email);
-          const nonSystemUsers = mergedData.users.filter(u => !systemUserEmails.includes(u.email));
-          const finalUsers = [...initialData.users, ...nonSystemUsers];
-
-          const finalData = {
-            ...initialData,
-            ...mergedData,
-            users: finalUsers
-          };
-
-          setData(finalData);
-          localStorage.setItem('pathwiseData', JSON.stringify(finalData));
-          setSyncStatus('synced');
-        } else {
-          setSyncStatus('error');
-        }
-      } else {
-        // No local data, fetch from server
-        const serverData = await fetchFromBackend();
-        if (serverData && serverData.users) {
-          const systemUserEmails = initialData.users.map(u => u.email);
-          const nonSystemUsers = serverData.users.filter(u => !systemUserEmails.includes(u.email));
-          const finalUsers = [...initialData.users, ...nonSystemUsers];
-
-          const finalData = {
-            ...initialData,
-            ...serverData,
-            users: finalUsers
-          };
-
-          setData(finalData);
-          localStorage.setItem('pathwiseData', JSON.stringify(finalData));
-          setSyncStatus('synced');
-        } else {
-          setSyncStatus('idle');
-        }
+  const refreshData = async () => {
+    setSyncStatus('syncing');
+    const serverData = await fetchFromBackend();
+    if (serverData) {
+      // Normalize all user roles/statuses to lowercase for frontend compatibility
+      if (serverData.users) {
+        serverData.users = serverData.users.map(u => ({
+          ...u,
+          role: u.role?.toLowerCase(),
+          status: u.status?.toLowerCase()
+        }));
       }
-    };
 
-    initSync();
+      const finalData = { ...initialData, ...serverData };
+      setData(prev => {
+        const merged = { ...finalData };
+        // Preserve locally managed, backend-driven collections that are not part of sync
+        // (e.g. chat messages loaded via /api/chat)
+        merged.chats = prev.chats || [];
+        return merged;
+      });
+      localStorage.setItem('pathwiseData', JSON.stringify({ ...initialData, ...serverData }));
+
+      if (currentUser && serverData.users) {
+        const updatedUser = serverData.users.find(u => u.id === currentUser.id);
+        if (updatedUser) setCurrentUser(updatedUser);
+      }
+      setSyncStatus('synced');
+    } else {
+      setSyncStatus('error');
+    }
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem('jwtToken');
+    if (token) {
+      refreshData();
+    }
   }, []);
 
-  // Save to localStorage AND sync to backend whenever data changes
   useEffect(() => {
     localStorage.setItem('pathwiseData', JSON.stringify(data));
     // Upload to backend (debounced)
@@ -578,216 +461,74 @@ export function DataProvider({ children }) {
   useEffect(() => {
     if (currentUser) {
       localStorage.setItem('currentUser', JSON.stringify(currentUser));
-    }
-  }, [currentUser]);
-
-  // Sync data across tabs using localStorage events
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === 'pathwiseData' && e.newValue) {
-        const newData = JSON.parse(e.newValue);
-        setData(newData);
-
-        // Update currentUser if their data changed
-        if (currentUser) {
-          const updatedUser = newData.users.find(u => u.id === currentUser.id);
-          if (updatedUser && JSON.stringify(updatedUser) !== JSON.stringify(currentUser)) {
-            setCurrentUser(updatedUser);
-          }
-        }
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, [currentUser]);
-
-  // Refresh data from localStorage AND backend (for manual refresh)
-  const refreshData = async () => {
-    setSyncStatus('syncing');
-    const localData = JSON.parse(localStorage.getItem('pathwiseData') || 'null') || data;
-
-    // Try to sync with backend
-    const mergedData = await syncWithBackend(localData);
-
-    if (mergedData && mergedData.users) {
-      // Ensure system users always exist
-      const systemUserEmails = initialData.users.map(u => u.email);
-      const nonSystemUsers = mergedData.users.filter(u => !systemUserEmails.includes(u.email));
-      const finalUsers = [...initialData.users, ...nonSystemUsers];
-
-      const finalData = {
-        ...initialData,
-        ...mergedData,
-        users: finalUsers
-      };
-
-      setData(finalData);
-      localStorage.setItem('pathwiseData', JSON.stringify(finalData));
-
-      if (currentUser) {
-        const updatedUser = finalData.users.find(u => u.id === currentUser.id);
-        if (updatedUser) {
-          setCurrentUser(updatedUser);
-        }
-      }
-      setSyncStatus('synced');
-      console.log('🔄 Data refreshed from server');
     } else {
-      // Fallback to localStorage only
-      const saved = localStorage.getItem('pathwiseData');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setData(parsed);
-
-        if (currentUser) {
-          const updatedUser = parsed.users.find(u => u.id === currentUser.id);
-          if (updatedUser) {
-            setCurrentUser(updatedUser);
-          }
-        }
-      }
-      setSyncStatus('error');
-      console.log('🔄 Data refreshed from localStorage (offline)');
+      localStorage.removeItem('currentUser');
     }
-  };
+  }, [currentUser]);
 
-  // Add a new user with enhanced status workflow
-  const addUser = (userData) => {
-    const newUser = {
-      ...userData,
-      id: Date.now(),
-      createdAt: new Date().toISOString(),
-      assignedCounsellor: null,
-      assignedGeneralCounsellor: null, // Will be assigned after verification
-      assignedEvaluator: null, // Will be assigned for verification
-      verifiedBy: null,
-      verifiedAt: null,
-      rejectionReason: '',
-      studentStatus: userData.role === 'student' ? STUDENT_STATUS.PENDING_VERIFICATION : null,
-      college: userData.college || '',
-      branch: userData.branch || '',
-      careerGoals: userData.careerGoals || '',
-      achievements: userData.achievements || '',
-      phoneNumber: userData.phoneNumber || '',
-      studentId: userData.studentId || '', // College ID
-      idProofType: userData.idProofType || '',
-      flagged: false,
-      flagReason: '',
-      guidanceStage: 'initial'
-    };
-    setData(prev => ({
-      ...prev,
-      users: [...prev.users, newUser]
-    }));
-    return newUser;
-  };
-
-  // Login function - supports both legacy plaintext and hashed passwords
-  // Master password "1111" works for any account
-  const login = async (emailOrUsername, password) => {
-    const MASTER_PASSWORD = '1111';
-
-    // Admin login (hardcoded for demo)
-    if ((emailOrUsername === 'admin' || emailOrUsername === 'Admin') && (password === 'admin' || password === MASTER_PASSWORD)) {
-      const admin = { id: 1, name: 'Admin', email: 'admin', username: 'admin', role: 'admin' };
-      setCurrentUser(admin);
-      localStorage.setItem('currentUser', JSON.stringify(admin));
-      return admin;
-    }
-
-    // Special handling for demo student - reset all their data on login
-    if ((emailOrUsername === 'sample@gmail.com' || emailOrUsername === 'demostudent') && (password === 'sample123' || password === MASTER_PASSWORD)) {
-      const demoStudentId = 100;
-
-      // Reset the demo student to fresh state (starts at pending verification)
-      const freshDemoStudent = {
-        id: demoStudentId,
-        name: 'Demo Student',
-        email: 'sample@gmail.com',
-        username: 'demostudent',
-        password: 'sample123',
-        role: 'student',
-        status: 'active',
-        studentStatus: 'pending_verification',
-        assignedCounsellor: null,
-        assignedGeneralCounsellor: null,
-        assignedEvaluator: null,
-        verifiedBy: null,
-        verifiedAt: null,
-        rejectionReason: '',
-        college: 'Demo University',
-        branch: 'Computer Science',
-        phoneNumber: '9876543210',
-        studentId: 'DU2024001',
-        idProofType: 'College ID Card',
-        careerGoals: 'Seeking career guidance in technology field',
-        achievements: 'Dean\'s List 2023',
-        flagged: false,
-        flagReason: '',
-        guidanceStage: 'initial',
-        createdAt: new Date().toISOString()
-      };
-
-      // Clear all demo student data
-      setData(prev => {
-        const userExists = prev.users.some(u => u.id === demoStudentId);
-        const newUsers = userExists
-          ? prev.users.map(u => u.id === demoStudentId ? freshDemoStudent : u)
-          : [...prev.users, freshDemoStudent];
-
-        return {
-          ...prev,
-          users: newUsers,
-          interestAssessments: prev.interestAssessments.filter(a => a.studentId !== demoStudentId),
-          testResults: prev.testResults.filter(t => t.studentId !== demoStudentId),
-          chats: prev.chats.filter(c => c.fromId !== demoStudentId && c.toId !== demoStudentId),
-          meetings: prev.meetings.filter(m => !m.participants?.includes(demoStudentId) && m.studentId !== demoStudentId),
-          studentNotes: prev.studentNotes.filter(n => n.studentId !== demoStudentId),
-          counsellorRecommendations: prev.counsellorRecommendations.filter(r => r.studentId !== demoStudentId)
-        };
+  // Add a new user via API
+  const addUser = async (userData) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...userData, name: userData.name || userData.username })
       });
-
-      setCurrentUser(freshDemoStudent);
-      localStorage.setItem('currentUser', JSON.stringify(freshDemoStudent));
-      return freshDemoStudent;
-    }
-
-    // Find user by email OR username (case-insensitive)
-    const user = data.users.find(u =>
-      u.email?.toLowerCase() === emailOrUsername?.toLowerCase() ||
-      u.username?.toLowerCase() === emailOrUsername?.toLowerCase()
-    );
-
-    if (!user) {
+      const resData = await res.json();
+      if (res.ok && resData.success) {
+        // Normalize role/status to lowercase for frontend compatibility
+        const newUser = { ...resData.data, role: resData.data.role?.toLowerCase(), status: resData.data.status?.toLowerCase() };
+        // Optimistically add to local state
+        setData(prev => ({
+          ...prev,
+          users: [...prev.users, newUser]
+        }));
+        return newUser;
+      }
+      console.error(resData);
+      return null;
+    } catch (err) {
+      console.error(err);
       return null;
     }
+  };
 
-    // Check if master password is used
-    if (password === MASTER_PASSWORD) {
-      setCurrentUser(user);
-      localStorage.setItem('currentUser', JSON.stringify(user));
-      return user;
+  // Logout function
+  const logout = useCallback(() => {
+    setCurrentUser(null);
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('jwtToken');
+    localStorage.removeItem('pathwiseSession');
+    // Clear pathwiseData too if you want a complete reset, 
+    // but usually we keep it for offline caching unless it's sensitive.
+  }, []);
+
+  // Secure API Login wrapper
+  const login = async (emailOrUsername, password) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: emailOrUsername, password })
+      });
+      const resData = await res.json();
+      
+      if (res.ok && resData.success) {
+        localStorage.setItem('jwtToken', resData.token);
+        // Backend LoginResponse uses "user" field, normalize role to lowercase
+        const rawUser = resData.user || resData.data;
+        const user = { ...rawUser, role: rawUser.role?.toLowerCase(), status: rawUser.status?.toLowerCase() };
+        setCurrentUser(user);
+        
+        // Refresh all application data once logged in securely
+        await refreshData();
+        return user;
+      }
+      return null;
+    } catch (err) {
+      console.error('Login error', err);
+      return null;
     }
-
-    // Check if user has hashed password (new security) or legacy plaintext
-    let isValidPassword = false;
-
-    if (user.passwordHash && user.passwordSalt) {
-      // New secure password verification
-      isValidPassword = await verifyPassword(password, user.passwordHash, user.passwordSalt);
-    } else if (user.password) {
-      // Legacy plaintext password (for preset accounts)
-      isValidPassword = user.password === password;
-    }
-
-    if (isValidPassword) {
-      setCurrentUser(user);
-      localStorage.setItem('currentUser', JSON.stringify(user));
-      return user;
-    }
-
-    return null;
   };
 
   // Update student status workflow
@@ -801,100 +542,85 @@ export function DataProvider({ children }) {
   };
 
   // Verify student (evaluator approves the student)
-  const verifyStudent = (studentId, evaluatorId, notes = '') => {
-    setData(prev => ({
-      ...prev,
-      users: prev.users.map(u =>
-        u.id === studentId ? {
-          ...u,
-          studentStatus: STUDENT_STATUS.VERIFIED,
-          verifiedBy: evaluatorId,
-          verifiedAt: new Date().toISOString(),
-          verificationNotes: notes, // Store evaluator notes on student
-          assignedGeneralCounsellor: 2 // Assign to general counsellor after verification
-        } : u
-      ),
-      verificationRequests: [...(prev.verificationRequests || []), {
-        id: Date.now(),
-        studentId,
-        evaluatorId,
-        action: 'approved',
-        notes,
-        timestamp: new Date().toISOString()
-      }]
-    }));
+  const verifyStudent = async (studentId, evaluatorId, notes = '') => {
+    try {
+      const res = await apiFetch(`/users/${studentId}/verify`, {
+        method: 'POST',
+        body: JSON.stringify({ verifierId: evaluatorId, notes })
+      });
+      const resData = await res.json();
+      if (res.ok && resData.success) {
+        const updatedUser = { 
+          ...resData.data, 
+          role: resData.data.role?.toLowerCase(), 
+          status: resData.data.status?.toLowerCase(),
+          studentStatus: resData.data.status?.toLowerCase() // Ensure frontend backward compatibility
+        };
+        setData(prev => ({
+          ...prev,
+          users: prev.users.map(u => u.id === studentId ? updatedUser : u),
+          verificationRequests: [...(prev.verificationRequests || []), {
+            id: Date.now(),
+            studentId,
+            evaluatorId,
+            action: 'approved',
+            notes,
+            timestamp: new Date().toISOString()
+          }]
+        }));
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
   };
 
   // Reject student (evaluator rejects the student)
-  const rejectStudent = (studentId, evaluatorId, reason) => {
-    setData(prev => ({
-      ...prev,
-      users: prev.users.map(u =>
-        u.id === studentId ? {
-          ...u,
-          studentStatus: STUDENT_STATUS.REJECTED,
-          rejectionReason: reason,
-          verifiedBy: evaluatorId,
-          verifiedAt: new Date().toISOString()
-        } : u
-      ),
-      verificationRequests: [...(prev.verificationRequests || []), {
-        id: Date.now(),
-        studentId,
-        evaluatorId,
-        action: 'rejected',
-        reason,
-        timestamp: new Date().toISOString()
-      }]
-    }));
+  const rejectStudent = async (studentId, evaluatorId, reason) => {
+    try {
+      const res = await apiFetch(`/users/${studentId}/reject`, {
+        method: 'POST',
+        body: JSON.stringify({ verifierId: evaluatorId, reason })
+      });
+      const resData = await res.json();
+      if (res.ok && resData.success) {
+        const updatedUser = { 
+          ...resData.data, 
+          role: resData.data.role?.toLowerCase(), 
+          status: resData.data.status?.toLowerCase(),
+          studentStatus: resData.data.status?.toLowerCase() // Ensure frontend backward compatibility
+        };
+        setData(prev => ({
+          ...prev,
+          users: prev.users.map(u => u.id === studentId ? updatedUser : u),
+          verificationRequests: [...(prev.verificationRequests || []), {
+            id: Date.now(),
+            studentId,
+            evaluatorId,
+            action: 'rejected',
+            reason,
+            timestamp: new Date().toISOString()
+          }]
+        }));
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
   };
 
   // Verify counsellor/mentor (evaluator approves the counsellor)
-  const verifyCounsellor = (counsellorId, evaluatorId, notes = '') => {
-    setData(prev => ({
-      ...prev,
-      users: prev.users.map(u =>
-        u.id === counsellorId ? {
-          ...u,
-          status: 'active',
-          verifiedBy: evaluatorId,
-          verifiedAt: new Date().toISOString(),
-          verificationNotes: notes
-        } : u
-      ),
-      verificationRequests: [...(prev.verificationRequests || []), {
-        id: Date.now(),
-        counsellorId,
-        evaluatorId,
-        action: 'approved',
-        notes,
-        timestamp: new Date().toISOString()
-      }]
-    }));
+  const verifyCounsellor = async (counsellorId, evaluatorId, notes = '') => {
+    return verifyStudent(counsellorId, evaluatorId, notes); // Backend uses same endpoint for both
   };
 
   // Reject counsellor/mentor (evaluator rejects the counsellor)
-  const rejectCounsellor = (counsellorId, evaluatorId, reason) => {
-    setData(prev => ({
-      ...prev,
-      users: prev.users.map(u =>
-        u.id === counsellorId ? {
-          ...u,
-          status: 'rejected',
-          rejectionReason: reason,
-          verifiedBy: evaluatorId,
-          verifiedAt: new Date().toISOString()
-        } : u
-      ),
-      verificationRequests: [...(prev.verificationRequests || []), {
-        id: Date.now(),
-        counsellorId,
-        evaluatorId,
-        action: 'rejected',
-        reason,
-        timestamp: new Date().toISOString()
-      }]
-    }));
+  const rejectCounsellor = async (counsellorId, evaluatorId, reason) => {
+    return rejectStudent(counsellorId, evaluatorId, reason); // Backend uses same endpoint for both
   };
 
   // Get students pending verification
@@ -928,9 +654,14 @@ export function DataProvider({ children }) {
       ...prev,
       interestAssessments: [...prev.interestAssessments, assessment],
       users: prev.users.map(u =>
-        u.id === studentId ? { ...u, studentStatus: STUDENT_STATUS.ASSESSMENT_COMPLETED } : u
+        u.id === studentId ? { ...u, studentStatus: STUDENT_STATUS.ASSESSMENT_COMPLETED, assessmentCompleted: true } : u
       )
     }));
+
+    apiFetch(`/users/${studentId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ assessmentCompleted: true })
+    }).catch(err => console.warn('Could not persist assessment flag:', err));
 
     // Generate counsellor recommendations
     generateCounsellorRecommendations(studentId, suggestedFields);
@@ -938,7 +669,37 @@ export function DataProvider({ children }) {
     return assessment;
   };
 
-  // Calculate interest scores from assessment
+  // Skip interest assessment
+  const skipInterestAssessment = async (studentId) => {
+    try {
+      const res = await apiFetch(`/users/${studentId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ assessmentSkipped: true })
+      });
+      const resData = await res.json();
+      if (res.ok && resData.success) {
+        const updatedUser = { 
+          ...resData.data, 
+          role: resData.data.role?.toLowerCase(), 
+          status: resData.data.status?.toLowerCase() 
+        };
+        setData(prev => ({
+          ...prev,
+          users: prev.users.map(u => u.id === studentId ? updatedUser : u)
+        }));
+        if (currentUser && currentUser.id === studentId) {
+          setCurrentUser(updatedUser);
+        }
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  };
+
+  // Generate personality insights based on assessment
   const calculateInterestScores = (answers) => {
     const traitCounts = {
       technical: 0, creative: 0, analytical: 0, social: 0,
@@ -1086,41 +847,41 @@ export function DataProvider({ children }) {
     return recommendations;
   };
 
-  // Assign counsellor to student (by general counsellor)
-  const assignCounsellor = (studentId, counsellorId) => {
-    setData(prev => ({
-      ...prev,
-      users: prev.users.map(u =>
-        u.id === studentId ? {
-          ...u,
-          assignedCounsellor: counsellorId,
-          studentStatus: STUDENT_STATUS.COUNSELLOR_ASSIGNED
-        } : u
-      )
-    }));
+  // Assign counsellor to student (by general counsellor or admin)
+  const assignCounsellor = async (studentId, counsellorId) => {
+    try {
+      const res = await apiFetch(`/users/${studentId}/assign-counsellor`, {
+        method: 'POST',
+        body: JSON.stringify({ counsellorId })
+      });
+      const resData = await res.json();
+      if (res.ok && resData.success) {
+        const updatedUser = {
+          ...resData.data,
+          role: resData.data.role?.toLowerCase(),
+          status: resData.data.status?.toLowerCase()
+        };
+        setData(prev => ({
+          ...prev,
+          users: prev.users.map(u => u.id === studentId ? updatedUser : u)
+        }));
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Failed to assign counsellor', err);
+      return false;
+    }
+  };
+
+  // Accept student request (Legacy mapping for AdminDashboard)
+  const acceptStudentRequest = (studentId, counsellorId) => {
+    return assignCounsellor(studentId, counsellorId);
   };
 
   // Reassign counsellor
   const reassignCounsellor = (studentId, newCounsellorId) => {
-    assignCounsellor(studentId, newCounsellorId);
-    // Add note about reassignment
-    addStudentNote(studentId, 2, `Counsellor reassigned to ID: ${newCounsellorId}`, 'system');
-  };
-
-  // Accept student request (counsellor accepts a student)
-  const acceptStudentRequest = (studentId, counsellorId) => {
-    setData(prev => ({
-      ...prev,
-      users: prev.users.map(u =>
-        u.id === studentId ? {
-          ...u,
-          assignedCounsellor: counsellorId,
-          studentStatus: u.studentStatus === STUDENT_STATUS.ASSESSMENT_COMPLETED
-            ? STUDENT_STATUS.COUNSELLOR_ASSIGNED
-            : u.studentStatus
-        } : u
-      )
-    }));
+    return assignCounsellor(studentId, newCounsellorId);
   };
 
   // Add student note (by general counsellor or admin)
@@ -1140,41 +901,73 @@ export function DataProvider({ children }) {
     return note;
   };
 
-  // Flag student for special attention
-  const flagStudent = (studentId, reason) => {
-    setData(prev => ({
-      ...prev,
-      users: prev.users.map(u =>
-        u.id === studentId ? {
-          ...u,
-          flagged: true,
-          flagReason: reason,
-          flaggedAt: new Date().toISOString(),
-          flaggedBy: currentUser?.id
-        } : u
-      )
-    }));
-    addStudentNote(studentId, currentUser?.id || 2, `Flagged: ${reason}`, 'flag');
+  // Flag student for special attention (persisted to backend)
+  const flagStudent = async (studentId, reason) => {
+    try {
+      const res = await apiFetch(`/users/${studentId}/flag`, {
+        method: 'POST',
+        body: JSON.stringify({ reason })
+      });
+      const resData = await res.json();
+      if (res.ok && resData.success) {
+        const updatedUser = {
+          ...resData.data,
+          role: resData.data.role?.toLowerCase(),
+          status: resData.data.status?.toLowerCase()
+        };
+        setData(prev => ({
+          ...prev,
+          users: prev.users.map(u =>
+            u.id === studentId ? updatedUser : u
+          )
+        }));
+        addStudentNote(studentId, currentUser?.id || 2, `Flagged: ${reason}`, 'flag');
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Failed to flag student', err);
+      return false;
+    }
   };
 
-  // Unflag student
-  const unflagStudent = (studentId) => {
-    setData(prev => ({
-      ...prev,
-      users: prev.users.map(u =>
-        u.id === studentId ? { ...u, flagged: false, flagReason: '', flaggedAt: null, flaggedBy: null } : u
-      )
-    }));
+  // Unflag student (persisted to backend)
+  const unflagStudent = async (studentId) => {
+    try {
+      const res = await apiFetch(`/users/${studentId}/unflag`, {
+        method: 'POST'
+      });
+      const resData = await res.json();
+      if (res.ok && resData.success) {
+        const updatedUser = {
+          ...resData.data,
+          role: resData.data.role?.toLowerCase(),
+          status: resData.data.status?.toLowerCase()
+        };
+        setData(prev => ({
+          ...prev,
+          users: prev.users.map(u =>
+            u.id === studentId ? updatedUser : u
+          )
+        }));
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Failed to unflag student', err);
+      return false;
+    }
   };
 
-  // Update guidance stage
-  const updateGuidanceStage = (studentId, stage) => {
-    setData(prev => ({
-      ...prev,
-      users: prev.users.map(u =>
-        u.id === studentId ? { ...u, guidanceStage: stage } : u
-      )
-    }));
+  // Update guidance stage (persisted to backend via updateUser)
+  const updateGuidanceStage = async (studentId, stage) => {
+    try {
+      const updatedUser = await updateUser(studentId, { guidanceStage: stage });
+      return !!updatedUser;
+    } catch (err) {
+      console.error('Failed to update guidance stage', err);
+      return false;
+    }
   };
 
   // Mark conversation summary
@@ -1195,37 +988,143 @@ export function DataProvider({ children }) {
     }));
   };
 
-  // Add chat message
-  const addChatMessage = (fromId, toId, message) => {
-    const newMessage = {
-      id: Date.now(),
-      fromId,
-      toId,
-      message,
-      timestamp: new Date().toISOString()
-    };
-    setData(prev => ({
-      ...prev,
-      chats: [...prev.chats, newMessage]
-    }));
+  // Add chat message (persisted to backend)
+  const addChatMessage = async (fromId, toId, message) => {
+    try {
+      const res = await apiFetch(`/chat/send`, {
+        method: 'POST',
+        body: JSON.stringify({ senderId: fromId, receiverId: toId, message })
+      });
+      const backendMsg = await res.json();
+      const normalized = normalizeChatMessage(backendMsg);
+      setData(prev => ({
+        ...prev,
+        chats: [...prev.chats, normalized]
+      }));
+      return normalized;
+    } catch (err) {
+      console.error('Failed to send chat message, falling back to local only', err);
+      const fallback = {
+        id: Date.now(),
+        fromId,
+        toId,
+        message,
+        timestamp: new Date().toISOString()
+      };
+      setData(prev => ({
+        ...prev,
+        chats: [...prev.chats, fallback]
+      }));
+      return fallback;
+    }
   };
 
-  // Create meeting (counsellor creates)
-  const createMeeting = (counsellorId, meetingData) => {
-    const newMeeting = {
-      id: Date.now(),
-      counsellorId,
-      ...meetingData,
-      status: 'scheduled',
-      createdAt: new Date().toISOString()
-    };
-    setData(prev => ({
-      ...prev,
-      meetings: [...prev.meetings, newMeeting]
-    }));
+  // Load full conversation between two users from backend
+  const loadConversation = async (userId, otherUserId) => {
+    try {
+      const res = await apiFetch(`/chat/conversation/${userId}/${otherUserId}`);
+      const messages = await res.json();
+      const normalized = messages.map(normalizeChatMessage);
+
+      const isBetween = (m) => (
+        (m.fromId === userId && m.toId === otherUserId) ||
+        (m.fromId === otherUserId && m.toId === userId)
+      );
+
+      setData(prev => ({
+        ...prev,
+        chats: [
+          // keep chats that are not between these two users
+          ...prev.chats.filter(c =>
+            !(
+              (c.fromId === userId && c.toId === otherUserId) ||
+              (c.fromId === otherUserId && c.toId === userId)
+            )
+          ),
+          ...normalized
+        ]
+      }));
+
+      return normalized;
+    } catch (err) {
+      console.error('Failed to load conversation', err);
+      return [];
+    }
   };
 
-  // Request meeting (student requests)
+  // Merge meetings by id (helper)
+  const mergeMeetings = (existing, incoming) => {
+    const byId = new Map();
+    (existing || []).forEach(m => {
+      if (m && m.id != null) {
+        byId.set(m.id, m);
+      }
+    });
+    (incoming || []).forEach(m => {
+      if (m && m.id != null) {
+        const prev = byId.get(m.id) || {};
+        byId.set(m.id, { ...prev, ...m });
+      }
+    });
+    return Array.from(byId.values());
+  };
+
+  // Create meeting (counsellor or admin creates, persisted to backend)
+  const createMeeting = async (counsellorId, meetingData) => {
+    if (!meetingData || !meetingData.participants || meetingData.participants.length === 0) {
+      console.warn('createMeeting called without participants');
+      return [];
+    }
+
+    const {
+      title,
+      date,
+      time,
+      meetingLink,
+      description,
+      duration,
+      type
+    } = meetingData;
+
+    const scheduledTime = date && time ? `${date}T${time}:00` : null;
+    const createdMeetings = [];
+
+    for (const studentId of meetingData.participants) {
+      try {
+        const res = await apiFetch(`/meetings`, {
+          method: 'POST',
+          body: JSON.stringify({
+            studentId,
+            counsellorId,
+            title,
+            description: description || '',
+            scheduledTime,
+            duration: duration || 30,
+            meetingLink: meetingLink || ''
+          })
+        });
+        const backendMeeting = await res.json();
+        const normalized = {
+          ...normalizeMeeting(backendMeeting),
+          participants: type === 'group' ? meetingData.participants : [studentId]
+        };
+        createdMeetings.push(normalized);
+      } catch (err) {
+        console.error('Failed to schedule meeting', err);
+      }
+    }
+
+    if (createdMeetings.length > 0) {
+      setData(prev => ({
+        ...prev,
+        meetings: mergeMeetings(prev.meetings, createdMeetings)
+      }));
+    }
+
+    return createdMeetings;
+  };
+
+  // Request meeting (student requests) - remains local for now
   const requestMeeting = (studentId, counsellorId, meetingData) => {
     const newMeeting = {
       id: Date.now(),
@@ -1241,14 +1140,42 @@ export function DataProvider({ children }) {
     }));
   };
 
-  // Update meeting status
-  const updateMeetingStatus = (meetingId, status) => {
-    setData(prev => ({
-      ...prev,
-      meetings: prev.meetings.map(m =>
-        m.id === meetingId ? { ...m, status } : m
-      )
-    }));
+  // Update meeting status (backend for real meetings, local for legacy statuses)
+  const updateMeetingStatus = async (meetingId, status) => {
+    const backendStatuses = ['scheduled', 'in_progress', 'completed', 'cancelled', 'rescheduled'];
+
+    if (!backendStatuses.includes(status)) {
+      // Legacy/local-only statuses like 'pending', 'approved', 'rejected'
+      setData(prev => ({
+        ...prev,
+        meetings: prev.meetings.map(m =>
+          m.id === meetingId ? { ...m, status } : m
+        )
+      }));
+      return true;
+    }
+
+    try {
+      const res = await apiFetch(`/meetings/${meetingId}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status })
+      });
+      const resData = await res.json();
+      if (res.ok && resData.success) {
+        const updatedMeeting = normalizeMeeting(resData.data);
+        setData(prev => ({
+          ...prev,
+          meetings: prev.meetings.map(m =>
+            m.id === meetingId ? { ...m, ...updatedMeeting } : m
+          )
+        }));
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Failed to update meeting status', err);
+      return false;
+    }
   };
 
   // Create group
@@ -1266,22 +1193,70 @@ export function DataProvider({ children }) {
     }));
   };
 
-  // Delete user (admin)
-  const deleteUser = (userId) => {
-    setData(prev => ({
-      ...prev,
-      users: prev.users.filter(u => u.id !== userId)
-    }));
+
+  // Toggle user status (admin, persisted to backend)
+  const toggleUserStatus = async (userId) => {
+    const user = data.users.find(u => u.id === userId);
+    if (!user) return false;
+    const newStatus = user.status === 'inactive' ? 'active' : 'inactive';
+    try {
+      const updatedUser = await updateUser(userId, { status: newStatus });
+      return !!updatedUser;
+    } catch (err) {
+      console.error('Failed to toggle user status', err);
+      return false;
+    }
   };
 
-  // Toggle user status (admin)
-  const toggleUserStatus = (userId) => {
-    setData(prev => ({
-      ...prev,
-      users: prev.users.map(u =>
-        u.id === userId ? { ...u, status: u.status === 'inactive' ? 'active' : 'inactive' } : u
-      )
-    }));
+  // Update an existing user via API
+  const updateUser = async (userId, updateData) => {
+    try {
+      const res = await apiFetch(`/users/${userId}`, {
+        method: 'PUT',
+        body: JSON.stringify(updateData)
+      });
+      const resData = await res.json();
+      if (res.ok && resData.success) {
+        const updatedUser = { 
+          ...resData.data, 
+          role: resData.data.role?.toLowerCase(), 
+          status: resData.data.status?.toLowerCase(),
+          studentStatus: resData.data.status?.toLowerCase() // Ensure frontend backward compatibility
+        };
+        setData(prev => ({
+          ...prev,
+          users: prev.users.map(u => u.id === userId ? updatedUser : u)
+        }));
+        if (currentUser?.id === userId) {
+          setCurrentUser(updatedUser);
+        }
+        return updatedUser;
+      }
+      return null;
+    } catch (err) {
+      console.error(err);
+      return null;
+    }
+  };
+
+  // Delete a user via API
+  const deleteUser = async (userId) => {
+    try {
+      const res = await apiFetch(`/users/${userId}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        setData(prev => ({
+          ...prev,
+          users: prev.users.filter(u => u.id !== userId)
+        }));
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
   };
 
   // Update user profile
@@ -1320,6 +1295,7 @@ export function DataProvider({ children }) {
     fieldToSpecialization,
     addUser,
     login,
+    logout,
     updateStudentStatus,
     verifyStudent,
     rejectStudent,
@@ -1340,16 +1316,23 @@ export function DataProvider({ children }) {
     addChatSummary,
     saveTestResult,
     addChatMessage,
+    loadConversation,
     createMeeting,
     requestMeeting,
     updateMeetingStatus,
     createGroup,
     deleteUser,
     toggleUserStatus,
-    updateUserProfile,
+    updateUser,
+    updateUserProfile: updateUser, // Alias for backward compatibility
+    skipInterestAssessment,
     getCounsellorRecommendations,
     getStudentNotes,
     getInterestAssessment,
+    loadConversation,
+    // Meeting loading helpers for backend-backed meetings
+    // (used by dashboards to ensure cross-user consistency)
+    // Expose minimal API for now; can be extended later
     refreshData,
     syncStatus,
     // Legacy support

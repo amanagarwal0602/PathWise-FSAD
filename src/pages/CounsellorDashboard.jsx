@@ -7,10 +7,11 @@ import { useToast } from '../context/ToastContext';
 function CounsellorDashboard() {
   const navigate = useNavigate();
   const { 
-    data, currentUser, addChatMessage, 
+    data, currentUser, logout, addChatMessage, 
     createMeeting, updateMeetingStatus, createGroup,
     getStudentNotes, getInterestAssessment, addStudentNote,
-    refreshData
+    refreshData,
+    loadConversation
   } = useData();
   const { showToast } = useToast();
   
@@ -46,6 +47,17 @@ function CounsellorDashboard() {
     }
   }, [counsellor?.status, refreshData]);
 
+  // Protect route
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== 'counsellor') {
+      navigate('/login', { replace: true });
+    }
+  }, [currentUser, navigate]);
+
+  if (!currentUser || currentUser.role !== 'counsellor') {
+    return null;
+  }
+
   // Check if counsellor is pending verification
   if (counsellor && counsellor.status === 'pending_verification') {
     return (
@@ -80,10 +92,13 @@ function CounsellorDashboard() {
             <button onClick={() => window.location.reload()} className="refresh-btn">
               🔄 Refresh Status
             </button>
-            <button onClick={() => {
-              localStorage.removeItem('currentUser');
-              navigate('/login');
-            }} className="logout-btn">
+            <button
+              onClick={() => {
+                logout();
+                navigate('/login', { replace: true });
+              }}
+              className="logout-btn"
+            >
               Logout
             </button>
           </div>
@@ -140,8 +155,8 @@ function CounsellorDashboard() {
 
   // Handle logout
   const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    navigate('/login');
+    logout();
+    navigate('/login', { replace: true });
   };
 
   // Get chat messages with selected student
@@ -152,6 +167,13 @@ function CounsellorDashboard() {
       (c.fromId === selectedStudent.id && c.toId === currentUser?.id)
     ).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
   };
+
+  // Load chat history when switching to chat tab or selecting a student
+  useEffect(() => {
+    if (activeTab === 'chat' && currentUser && selectedStudent) {
+      loadConversation(currentUser.id, selectedStudent.id);
+    }
+  }, [activeTab, currentUser?.id, selectedStudent?.id]);
 
   // Send chat message
   const sendMessage = () => {

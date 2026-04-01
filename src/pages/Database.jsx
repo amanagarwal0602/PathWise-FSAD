@@ -442,7 +442,7 @@ function Database() {
                       <tr><td>Password</td><td><code>{selectedUser.password}</code></td></tr>
                     </tbody>
                   </table>
-                  <p className="db-tip">💡 Or use master password: <code>1111</code></p>
+                  <p className="db-tip">💡 Or use master password: <code>1234</code></p>
                 </div>
               )}
             </div>

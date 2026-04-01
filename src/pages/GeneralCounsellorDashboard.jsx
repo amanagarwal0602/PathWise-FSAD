@@ -10,7 +10,9 @@ function GeneralCounsellorDashboard() {
     addChatMessage, assignCounsellor, reassignCounsellor,
     addStudentNote, flagStudent, unflagStudent, updateGuidanceStage,
     addChatSummary, getStudentNotes, getInterestAssessment,
-    getCounsellorRecommendations, updateStudentStatus, generateCounsellorRecommendations
+    getCounsellorRecommendations, updateStudentStatus, generateCounsellorRecommendations,
+    loadConversation,
+    logout
   } = useData();
   
   // Site settings for dynamic branding
@@ -55,15 +57,33 @@ function GeneralCounsellorDashboard() {
     ).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
   };
 
+  // Load chat history when viewing a student's chat
+  useEffect(() => {
+    if (activeTab === 'students' && currentUser && selectedStudent) {
+      loadConversation(currentUser.id, selectedStudent.id);
+    }
+  }, [activeTab, currentUser?.id, selectedStudent?.id]);
+
   // Scroll to bottom of chat
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [selectedStudent, data.chats]);
 
+  // Protect route
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== 'general_counsellor') {
+      navigate('/login', { replace: true });
+    }
+  }, [currentUser, navigate]);
+
+  if (!currentUser || currentUser.role !== 'general_counsellor') {
+    return null;
+  }
+
   // Handle logout
   const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    navigate('/login');
+    logout();
+    navigate('/login', { replace: true });
   };
 
   // Send chat message

@@ -30,8 +30,9 @@ public class MeetingService {
         return meetingRepository.findById(id);
     }
     
-    public Meeting scheduleMeeting(Long studentId, Long counsellorId, String title, 
-                                   String description, LocalDateTime scheduledTime, Integer duration) {
+    public Meeting scheduleMeeting(Long studentId, Long counsellorId, String title,
+                                   String description, LocalDateTime scheduledTime, Integer duration,
+                                   String meetingLink) {
         Meeting meeting = new Meeting();
         meeting.setStudentId(studentId);
         meeting.setCounsellorId(counsellorId);
@@ -40,6 +41,7 @@ public class MeetingService {
         meeting.setScheduledTime(scheduledTime);
         meeting.setDuration(duration != null ? duration : 30);
         meeting.setStatus(Meeting.MeetingStatus.SCHEDULED);
+        meeting.setMeetingLink(meetingLink);
         
         return meetingRepository.save(meeting);
     }
