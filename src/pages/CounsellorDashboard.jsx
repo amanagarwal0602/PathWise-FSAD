@@ -1043,13 +1043,16 @@ function CounsellorDashboard() {
                       return student?.name || 'Unknown';
                     }).join(', ');
 
+                    // Only allow joining/sharing while meeting is upcoming or active
+                    const canInteract = ['scheduled', 'in_progress', 'rescheduled'].includes(meeting.status);
+
                     return (
                       <div key={meeting.id} className={`meeting-card status-${meeting.status}`}>
                         <div className="meeting-info">
                           <h4>{meeting.title || meeting.topic}</h4>
                           <p>👥 {participantNames || 'No participants'}</p>
                           <p>📅 {meeting.date} at {formatTime(meeting.time)}</p>
-                          {meeting.meetingLink && (
+                          {meeting.meetingLink && canInteract && (
                             <p>
                               🔗 <a href={normalizeMeetingLink(meeting.meetingLink)} target="_blank" rel="noopener noreferrer">
                                 Join Meeting
@@ -1060,7 +1063,7 @@ function CounsellorDashboard() {
                             {meeting.status}
                           </span>
                         </div>
-                        {meeting.meetingLink && (
+                        {meeting.meetingLink && canInteract && (
                           <button 
                             className="btn-secondary btn-small"
                             onClick={() => shareMeetingLink(meeting)}

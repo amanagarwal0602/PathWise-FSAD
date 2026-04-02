@@ -1488,12 +1488,14 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 }
 
 .chat-container {
-  /* Flatter, integrated chat panel (no big white card) */
+  /* Simple flow layout, no big outer box */
   background: transparent;
   border-radius: 0;
+  border: none;
   box-shadow: none;
-  overflow: hidden;
-  height: calc(100vh - 220px);
+  overflow: visible;
+  height: auto;
+  max-height: calc(100vh - 160px);
   display: flex;
   flex-direction: column;
 }
@@ -1538,10 +1540,19 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 }
 
 .chat-messages {
-  flex: 1;
-  padding: 20px;
+  /* Compact scrollable chat window for student & counsellor */
+  flex: 0 0 auto;
+  max-height: 340px;
+  padding: 16px 20px 0;
   overflow-y: auto;
-  background: #e5e7eb;
+  /* Inherit the container background so chat + input
+     feel like a single block */
+  background: transparent;
+}
+
+/* Almost no gap before the typing area */
+.chat-messages .chat-bubble:last-child {
+  margin-bottom: 0;
 }
 
 .no-messages {
@@ -1613,17 +1624,18 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   display: flex;
   align-items: center;
   gap: 10px;
-  /* Minimal bar: no big container box */
-  padding: 10px 4px 12px;
-  background: transparent;
-  border-top: 1px solid rgba(148, 163, 184, 0.6);
+  /* Shared student & counsellor chat input row - slim bottom bar like messaging apps */
+  justify-content: flex-start;
+  padding: 0 16px 8px;
+  background: #f9fafb;
+  border-top: 1px solid var(--border);
 }
 
 .chat-input input {
   flex: 1;
   padding: 8px 12px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 999px;
   font-size: 14px;
 }
 
@@ -1636,8 +1648,8 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   padding: 0;
   background: var(--primary);
   color: var(--white);
@@ -1657,15 +1669,19 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 .chat-layout {
   display: flex;
   gap: 20px;
-  height: calc(100vh - 200px);
+  /* Let chat shrink to content like student chat */
+  height: auto;
+  max-height: calc(100vh - 160px);
 }
 
 .chat-sidebar {
-  width: 280px;
-  background: #f9fafb;
-  border-radius: 12px;
+  width: 260px;
+  /* Match flatter student chat: remove big sidebar card */
+  background: transparent;
+  border-radius: 0;
   box-shadow: none;
-  padding: 20px;
+  border-right: 1px solid var(--border);
+  padding: 0 16px 0 0;
   overflow-y: auto;
 }
 
@@ -1699,12 +1715,14 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 
 .chat-main {
   flex: 1;
-  background: #f9fafb;
-  border-radius: 12px;
+  /* Match student chat: no big outer box */
+  background: transparent;
+  border-radius: 0;
   box-shadow: none;
+  border: none;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .no-selection {
@@ -2534,7 +2552,7 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   }
   
   .chat-main {
-    min-height: 400px;
+    min-height: auto;
   }
 }
 
@@ -6798,10 +6816,6 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 }
 
 /* Inline Chat Styles */
-.chat-section {
-  margin-top: 16px;
-}
-
 .chat-container-inline {
   background: transparent;
   border-radius: var(--radius);
@@ -11474,11 +11488,11 @@ input[type="password"]:focus {
   
   .chat-main {
     flex: 1;
-    min-height: 350px;
+    min-height: auto;
   }
   
   .chat-messages {
-    max-height: 300px;
+    max-height: none;
   }
   
   .chat-input-area {
@@ -11818,7 +11832,7 @@ input[type="password"]:focus {
   
   /* Chat */
   .chat-messages {
-    max-height: 250px;
+    max-height: none;
   }
   
   .chat-input-area {
