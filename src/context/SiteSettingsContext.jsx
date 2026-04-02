@@ -129,7 +129,11 @@ const defaultSettings = {
   integrations: {
     googleAnalyticsId: '',
     googleMeetEnabled: false,
-    zoomEnabled: false
+    zoomEnabled: false,
+    // External meeting configuration (used only for link formatting / defaults)
+    videoProvider: 'generic', // generic, google_meet, zoom, custom
+    customVideoBaseUrl: '',
+    videoRoomPrefix: 'pathwise-'
   },
   
   // Last Updated

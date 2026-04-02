@@ -3,6 +3,8 @@
    Clean & Modern CSS
 ======================================== */
 
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
 /* Reset & Base */
 * {
   box-sizing: border-box;
@@ -13,8 +15,6 @@
 html, #root {
   height: 100%;
 }
-
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap');
 
 :root {
   --primary: #6366f1; /* Indigo 500 */
@@ -34,7 +34,8 @@ html, #root {
   --border: #e2e8f0; /* Slate 200 */
   --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
   --shadow-lg: 0 10px 25px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.4);
+  /* Softer glow for a more professional look */
+  --shadow-glow: 0 0 12px rgba(15, 23, 42, 0.12);
   
   --radius: 16px;
   --radius-sm: 10px;
@@ -46,11 +47,22 @@ html, #root {
 
 body {
   font-family: 'Outfit', 'Inter', system-ui, sans-serif;
-  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+  /* Light theme default page background */
+  background: #f3f4f6;
   color: var(--dark);
   line-height: 1.6;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Base button styling so all buttons look consistent */
+button {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  padding: 9px 18px;
 }
 
 button, .card, .dashboard-card, .btn-submit, .login-btn {
@@ -930,7 +942,8 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   font-weight: 500;
   text-align: center;
   margin-bottom: 12px;
-  animation: blink 2s infinite;
+  /* Static indicator (no blinking animation) for a calmer UI */
+  animation: none;
 }
 
 @keyframes blink {
@@ -1104,16 +1117,17 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 }
 
 .action-buttons {
-  display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
-  gap: 16px !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
   width: 100% !important;
+  justify-content: flex-end !important;
 }
 
 .action-buttons .btn-primary,
 .action-buttons .btn-secondary {
-  padding: 14px 20px !important;
-  border-radius: 12px !important;
+  padding: 10px 18px !important;
+  border-radius: var(--radius-full) !important;
   font-size: 14px !important;
   font-weight: 600 !important;
   display: flex !important;
@@ -1121,8 +1135,7 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   justify-content: center !important;
   gap: 8px !important;
   white-space: nowrap !important;
-  width: 100% !important;
-  min-width: 0 !important;
+  min-width: 120px !important;
   border: none !important;
   transition: all 0.3s ease !important;
 }
@@ -1176,10 +1189,11 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 }
 
 .test-intro {
-  background: var(--white);
-  padding: 40px;
+  /* Softer panel for assessment intro */
+  background: #f9fafb;
+  padding: 32px;
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: none;
   text-align: center;
 }
 
@@ -1206,10 +1220,10 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 }
 
 .test-question-card {
-  background: var(--white);
-  padding: 32px;
+  background: #f9fafb;
+  padding: 28px;
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: none;
 }
 
 .progress-container {
@@ -1260,7 +1274,7 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   align-items: center;
   gap: 12px;
   padding: 16px;
-  background: var(--light);
+  background: #f3f4f6;
   border: 2px solid transparent;
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -1300,9 +1314,9 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 .empty-state {
   text-align: center;
   padding: 60px 20px;
-  background: var(--white);
+  background: #f9fafb;
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: none;
 }
 
 .empty-icon {
@@ -1322,10 +1336,10 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 }
 
 .result-card {
-  background: var(--white);
+  background: #f9fafb;
   padding: 24px;
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: none;
   margin-bottom: 20px;
 }
 
@@ -1474,18 +1488,20 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 }
 
 .chat-container {
-  background: var(--white);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  /* Flatter, integrated chat panel (no big white card) */
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
   overflow: hidden;
-  height: calc(100vh - 200px);
+  height: calc(100vh - 220px);
   display: flex;
   flex-direction: column;
 }
 
 .chat-header {
   padding: 16px 20px;
-  background: var(--primary);
+  /* Calmer, darker header instead of bright bar */
+  background: #0f172a;
   color: var(--white);
   display: flex;
   align-items: center;
@@ -1493,11 +1509,39 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   font-weight: 500;
 }
 
+.chat-partner-info .partner-name {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.chat-partner-info .partner-role {
+  display: block;
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.chat-avatar {
+  font-size: 26px;
+}
+
+.chat-actions {
+  display: flex;
+  gap: 10px;
+  padding: 10px 20px 0;
+  background: #f3f4f6;
+  border-bottom: 1px solid var(--border);
+}
+
+.chat-actions .btn-small {
+  border-radius: 999px;
+}
+
 .chat-messages {
   flex: 1;
   padding: 20px;
   overflow-y: auto;
-  background: #f8fafc;
+  background: #e5e7eb;
 }
 
 .no-messages {
@@ -1516,18 +1560,18 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 .chat-bubble.sent {
   background: var(--primary);
   color: var(--white);
-  margin-right: auto;
-  margin-left: 0;
-  border-bottom-left-radius: 4px;
-}
-
-.chat-bubble.received {
-  background: var(--white);
-  color: var(--dark);
   margin-left: auto;
   margin-right: 0;
   border-bottom-right-radius: 4px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.chat-bubble.received {
+  background: #ffffff;
+  color: var(--dark);
+  margin-left: 0;
+  margin-right: auto;
+  border-bottom-left-radius: 4px;
+  box-shadow: none;
 }
 
 .chat-time {
@@ -1537,20 +1581,50 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   opacity: 0.7;
 }
 
+/* Inline meeting request actions inside chat bubbles */
+.chat-meeting-actions {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(148, 163, 184, 0.6);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chat-meeting-actions .btn-small {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 999px;
+}
+
+.chat-meeting-actions .btn-success {
+  background: var(--success);
+  color: white;
+  border: none;
+}
+
+.chat-meeting-actions .btn-danger {
+  background: var(--danger);
+  color: white;
+  border: none;
+}
+
 .chat-input {
   display: flex;
-  gap: 12px;
-  padding: 16px 20px;
-  background: var(--white);
-  border-top: 1px solid var(--border);
+  align-items: center;
+  gap: 10px;
+  /* Minimal bar: no big container box */
+  padding: 10px 4px 12px;
+  background: transparent;
+  border-top: 1px solid rgba(148, 163, 184, 0.6);
 }
 
 .chat-input input {
   flex: 1;
-  padding: 12px 16px;
-  border: 2px solid var(--border);
-  border-radius: 24px;
-  font-size: 15px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 14px;
 }
 
 .chat-input input:focus {
@@ -1559,12 +1633,18 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 }
 
 .btn-send {
-  padding: 12px 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
   background: var(--primary);
   color: var(--white);
   border: none;
-  border-radius: 24px;
-  font-weight: 600;
+  border-radius: 999px;
+  font-size: 18px;
+  font-weight: 500;
   cursor: pointer;
   transition: background 0.2s;
 }
@@ -1582,9 +1662,9 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 
 .chat-sidebar {
   width: 280px;
-  background: var(--white);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  background: #f9fafb;
+  border-radius: 12px;
+  box-shadow: none;
   padding: 20px;
   overflow-y: auto;
 }
@@ -1619,9 +1699,9 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 
 .chat-main {
   flex: 1;
-  background: var(--white);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  background: #f9fafb;
+  border-radius: 12px;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1648,10 +1728,11 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 .meeting-request-form,
 .create-meeting-form,
 .create-group-form {
-  background: var(--white);
-  padding: 24px;
+  background: #f9fafb;
+  padding: 20px 22px;
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: none;
+  border: 1px solid var(--border);
   margin-bottom: 24px;
 }
 
@@ -1703,10 +1784,10 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 }
 
 .meeting-card {
-  background: var(--white);
+  background: #f9fafb;
   padding: 20px;
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: none;
   border-left: 4px solid var(--gray);
 }
 
@@ -1731,6 +1812,27 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 .meeting-info p {
   color: var(--gray);
   font-size: 14px;
+}
+
+.meeting-footer {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+.meeting-footer .status-badge {
+  flex-shrink: 0;
+  padding: 8px 18px;
+  border-radius: var(--radius-full);
+  font-size: 13px;
+}
+
+.meeting-footer .btn-primary {
+  padding: 8px 18px;
+  border-radius: var(--radius-full);
+  font-size: 13px;
 }
 
 .status-badge {
@@ -1863,7 +1965,24 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 
 .student-actions {
   display: flex;
-  gap: 8px;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.student-actions button {
+  flex: 1;
+  border-radius: 999px;
+  font-size: 13px;
+  padding: 10px 0;
+}
+
+.student-actions .btn-outline {
+  border-width: 1px;
+}
+
+.student-actions .btn-primary,
+.student-actions .btn-secondary {
+  box-shadow: var(--shadow);
 }
 
 /* ========================================
@@ -1981,10 +2100,12 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 }
 
 .meeting-request-card {
-  background: var(--white);
-  padding: 20px;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  /* Softer inline meeting card inside chat */
+  background: #f9fafb;
+  padding: 16px 18px;
+  border-radius: 12px;
+  box-shadow: none;
+  border: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -2268,20 +2389,23 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 ======================================== */
 
 .btn-primary {
-  display: inline-block;
-  padding: 12px 24px;
-  background: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 22px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: var(--white);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: 15px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  box-shadow: var(--shadow);
 }
 
 .btn-primary:hover {
-  background: var(--primary-dark);
+  background: linear-gradient(135deg, var(--primary-dark), #3730a3);
 }
 
 .btn-primary:disabled {
@@ -2292,32 +2416,37 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 }
 
 .btn-secondary {
-  display: inline-block;
-  padding: 12px 24px;
-  background: var(--light);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 22px;
+  background: #f1f5f9;
   color: var(--dark);
-  border: 2px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-size: 15px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
 }
 
 .btn-secondary:hover {
-  border-color: var(--primary);
+  border-color: var(--primary-light);
+  background: #e0e7ff;
   color: var(--primary);
 }
 
 .btn-success {
-  padding: 8px 16px;
-  background: var(--secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 20px;
+  background: var(--success);
   color: var(--white);
-  border: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
 }
 
 .btn-success:hover {
@@ -2325,14 +2454,17 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 }
 
 .btn-danger {
-  padding: 8px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 20px;
   background: var(--danger);
   color: var(--white);
-  border: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
 }
 
 .btn-danger:hover {
@@ -2340,8 +2472,8 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 }
 
 .btn-small {
-  padding: 8px 14px;
-  font-size: 13px;
+  padding: 6px 14px;
+  font-size: 12px;
 }
 
 /* ========================================
@@ -2497,8 +2629,9 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 .modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 24px;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
   border-top: 1px solid var(--border);
   background: var(--light);
 }
@@ -2707,6 +2840,11 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   text-decoration: underline;
 }
 
+/* Ensure primary button links inside meeting cards keep white text */
+.meeting-card a.btn-primary {
+	color: var(--white);
+}
+
 /* Admin Badge */
 .admin-badge small {
   display: block;
@@ -2824,6 +2962,27 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   font-size: 14px;
 }
 
+/* Reusable profile section header row (title + actions) */
+.profile-section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.profile-section-header-row h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--dark);
+}
+
+.profile-section-header-row .btn-small {
+  border-radius: 999px;
+  padding-inline: 16px;
+}
+
 /* ========================================
    SKILL ASSESSMENT SECTION
 ======================================== */
@@ -2846,11 +3005,11 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 }
 
 .skill-category-card {
-  background: white;
+  background: #f9fafb;
   border-radius: 12px;
   padding: 24px;
   border: 1px solid #e5e7eb;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: none;
   transition: all 0.2s ease;
 }
 
@@ -2941,9 +3100,11 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 }
 
 .profile-section {
-  background: var(--white);
+  /* Softer profile/summary blocks (student & admin) */
+  background: #f9fafb;
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
+  border: 1px solid var(--border);
   padding: 20px 24px;
   margin-bottom: 20px;
 }
@@ -3672,6 +3833,7 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   border-radius: 25px;
   font-size: 14px;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .trait-badge small {
@@ -5383,9 +5545,9 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 
 /* Assessment UI */
 .assessment-container {
-  background: white;
+  background: #f9fafb;
   border-radius: 16px;
-  box-shadow: var(--shadow-lg);
+  box-shadow: none;
   overflow: hidden;
   max-width: 800px;
   margin: 0 auto;
@@ -5634,10 +5796,10 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 }
 
 .assessment-sections {
-  background: var(--white);
+  background: #f9fafb;
   padding: 24px;
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: none;
   margin-bottom: 24px;
 }
 
@@ -6366,7 +6528,8 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 .waiting-icon {
   font-size: 64px;
   margin-bottom: 24px;
-  animation: pulse 2s ease-in-out infinite;
+  /* Remove continuous pulsing to keep visuals calm */
+  animation: none;
 }
 
 @keyframes pulse {
@@ -6640,7 +6803,7 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 }
 
 .chat-container-inline {
-  background: var(--light);
+  background: transparent;
   border-radius: var(--radius);
   overflow: hidden;
 }
@@ -6670,18 +6833,18 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 .chat-bubble.sent {
   background: var(--primary);
   color: white;
-  margin-right: auto;
-  margin-left: 0;
-  border-bottom-left-radius: 4px;
-}
-
-.chat-bubble.received {
-  background: white;
-  color: var(--dark);
-  border: 1px solid var(--border);
   margin-left: auto;
   margin-right: 0;
   border-bottom-right-radius: 4px;
+}
+
+.chat-bubble.received {
+  background: #ffffff;
+  color: var(--dark);
+  border: 1px solid var(--border);
+  margin-left: 0;
+  margin-right: auto;
+  border-bottom-left-radius: 4px;
 }
 
 .chat-time {
@@ -6691,19 +6854,36 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   margin-top: 4px;
 }
 
+/* Ensure alignment: my (sent) messages blue on right, others white on left */
+.chat-messages .chat-bubble.sent,
+.chat-messages-inline .chat-bubble.sent {
+  background: var(--primary);
+  color: var(--white);
+  margin-left: auto;
+  margin-right: 0;
+}
+
+.chat-messages .chat-bubble.received,
+.chat-messages-inline .chat-bubble.received {
+  background: #ffffff;
+  color: var(--dark);
+  margin-left: 0;
+  margin-right: auto;
+}
+
 .chat-input-inline {
   display: flex;
   gap: 8px;
-  padding: 12px 16px;
-  background: white;
-  border-top: 1px solid var(--border);
+  padding: 10px 4px 12px;
+  background: transparent;
+  border-top: 1px solid rgba(148, 163, 184, 0.6);
 }
 
 .chat-input-inline input {
   flex: 1;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border: 1px solid var(--border);
-  border-radius: 20px;
+  border-radius: 12px;
   font-size: 14px;
 }
 
@@ -7928,6 +8108,128 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   padding: 20px;
 }
 
+/* ========================= */
+/* Admin Support Inbox       */
+/* ========================= */
+
+.support-section .support-layout {
+  display: grid;
+  grid-template-columns: 1.1fr 2fr;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.support-list {
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 16px;
+}
+
+.support-list h3 {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+}
+
+.support-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.support-list-item {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  margin-bottom: 8px;
+  background: #ffffff;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.support-list-item:hover {
+  background: #f3f4f6;
+}
+
+.support-list-item.active {
+  border-color: #4f46e5;
+  background: #eef2ff;
+}
+
+.support-list-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.support-list-title {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.support-list-snippet {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.support-list-snippet .snippet-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.support-list-snippet .snippet-time {
+  white-space: nowrap;
+}
+
+.support-detail {
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 16px;
+}
+
+.support-detail h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.support-chat-history {
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.support-reply-box {
+  margin-top: 16px;
+}
+
+.support-reply-box textarea {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  padding: 8px 10px;
+  font-size: 13px;
+  resize: vertical;
+}
+
+.support-actions-row {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 900px) {
+  .support-section .support-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 .export-buttons {
   display: flex;
   gap: 12px;
@@ -8866,7 +9168,8 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 .verification-icon {
   font-size: 72px;
   margin-bottom: 24px;
-  animation: pulse 2s ease-in-out infinite;
+  /* Static state icon (no pulse) to avoid playful motion */
+  animation: none;
 }
 
 .verification-icon.pending {
@@ -9000,7 +9303,8 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 
 .verification-actions {
   display: flex;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
   justify-content: center;
   margin-bottom: 24px;
 }
@@ -9056,23 +9360,23 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  background: var(--primary);
   color: white;
   border: none;
   font-size: 24px;
   font-weight: bold;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(79, 70, 229, 0.4);
+  box-shadow: var(--shadow-lg);
   z-index: 9999;
-  transition: all 0.3s ease;
+  transition: box-shadow 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .help-center-btn:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 25px rgba(79, 70, 229, 0.5);
+  /* Slight emphasis on hover without scaling */
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.22);
 }
 
 /* Help Center Panel */
@@ -9646,7 +9950,8 @@ input[type="password"]:focus {
   border-radius: 20px;
   font-size: 0.8rem;
   font-weight: 600;
-  animation: pulse 2s infinite;
+  /* Remove pulsing effect for a quieter status badge */
+  animation: none;
 }
 
 @keyframes pulse {
@@ -10062,49 +10367,6 @@ input[type="password"]:focus {
   background: #fef2f2;
 }
 
-.btn-primary {
-  background: #4f46e5;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-primary:hover {
-  background: #4338ca;
-}
-
-.btn-secondary {
-  background: #64748b;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  display: inline-block;
-  transition: background 0.2s;
-}
-
-.btn-secondary:hover {
-  background: #475569;
-}
-
-.btn-danger {
-  background: #ef4444;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-danger:hover {
-  background: #dc2626;
-}
-
 .error-text {
   color: #ef4444;
   font-size: 0.85rem;
@@ -10379,7 +10641,8 @@ input[type="password"]:focus {
 .maintenance-icon {
   font-size: 5rem;
   margin-bottom: 24px;
-  animation: bounce 2s infinite;
+  /* No bouncing animation for a more professional look */
+  animation: none;
 }
 
 @keyframes bounce {
@@ -10424,35 +10687,33 @@ input[type="password"]:focus {
 ======================================== */
 
 .dashboard-card {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s, box-shadow 0.2s;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.2s ease;
 }
 
 .dashboard-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  /* Slight emphasis on hover without exaggerated lift */
+  box-shadow: var(--shadow-lg);
 }
 
 .stat-card {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  color: white;
-  border-radius: 16px;
-  padding: 24px;
+  background: #ffffff;
+  color: var(--dark);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
   position: relative;
   overflow: hidden;
 }
 
 .stat-card::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  right: -50%;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  /* Remove decorative radial highlight for a cleaner card */
+  content: none;
 }
 
 .stat-card .stat-icon {
@@ -10472,15 +10733,15 @@ input[type="password"]:focus {
 
 /* Ensure stat card text is visible on gradient background */
 .stat-card h3 {
-  color: white !important;
-  font-size: 2rem;
-  font-weight: 700;
-  line-height: 1;
+  color: var(--dark) !important;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.1;
 }
 
 .stat-card p {
-  color: rgba(255, 255, 255, 0.9) !important;
-  font-size: 0.9rem;
+  color: var(--gray) !important;
+  font-size: 0.85rem;
   margin-top: 4px;
 }
 
@@ -10523,9 +10784,10 @@ input[type="password"]:focus {
 
 /* Welcome Banner */
 .welcome-banner {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%);
-  border-radius: 20px;
-  padding: 32px;
+  /* Simpler, toned-down banner for a professional hero section */
+  background: #111827;
+  border-radius: 16px;
+  padding: 28px;
   color: white;
   margin-bottom: 24px;
   position: relative;
@@ -10533,13 +10795,8 @@ input[type="password"]:focus {
 }
 
 .welcome-banner::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 300px;
-  height: 100%;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='80' cy='20' r='40' fill='rgba(255,255,255,0.1)'/%3E%3Ccircle cx='90' cy='80' r='30' fill='rgba(255,255,255,0.05)'/%3E%3C/svg%3E") no-repeat;
+  /* Remove decorative SVG overlay */
+  content: none;
 }
 
 .welcome-banner h2 {
@@ -10555,19 +10812,19 @@ input[type="password"]:focus {
 
 /* Welcome Banner Variants */
 .welcome-banner.counsellor-banner {
-  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%);
+  background: #0f172a;
 }
 
 .welcome-banner.coordinator-banner {
-  background: linear-gradient(135deg, #059669 0%, #047857 50%, #065f46 100%);
+  background: #064e3b;
 }
 
 .welcome-banner.admin-banner {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%);
+  background: #7f1d1d;
 }
 
 .welcome-banner.evaluator-banner {
-  background: linear-gradient(135deg, #d97706 0%, #b45309 50%, #92400e 100%);
+  background: #78350f;
 }
 
 /* Activity Timeline */
@@ -11788,6 +12045,91 @@ input[type="password"]:focus {
   }
 }
 
+/* ========================================
+   INCOMING CALL POPUP
+======================================== */
+
+.incoming-call-banner {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+}
+
+.incoming-call-content {
+  background: var(--white);
+  border-radius: 20px;
+  padding: 24px 28px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-width: 320px;
+  max-width: 420px;
+}
+
+.incoming-call-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  color: var(--white);
+}
+
+.incoming-call-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.incoming-call-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--dark);
+}
+
+.incoming-call-from {
+  font-size: 14px;
+  color: var(--gray);
+}
+
+.incoming-call-meta {
+  font-size: 13px;
+  color: var(--gray-light);
+}
+
+.incoming-call-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.incoming-call-actions .btn-small {
+  width: 120px;
+  border-radius: 999px;
+}
+
+@media (max-width: 480px) {
+  .incoming-call-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .incoming-call-actions {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+
 /* Results Display Mobile */
 @media (max-width: 768px) {
   .results-container {
@@ -11914,13 +12256,15 @@ input[type="password"]:focus {
 
 .workflow-actions {
   display: flex;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
 }
 
 .workflow-actions .btn-primary,
 .workflow-actions .btn-secondary {
-  padding: 10px 20px;
-  border-radius: 8px;
+  padding: 9px 18px;
+  border-radius: var(--radius-full);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;

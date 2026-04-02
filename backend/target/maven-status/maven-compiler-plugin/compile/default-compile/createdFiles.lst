@@ -1,6 +1,7 @@
 com\pathwise\controller\SyncController.class
 com\pathwise\dto\LoginResponse.class
 com\pathwise\entity\User$UserStatus.class
+com\pathwise\websocket\SignalingWebSocketHandler.class
 com\pathwise\service\InterestAssessmentService.class
 com\pathwise\config\CorsConfig.class
 com\pathwise\repository\MeetingRepository.class
@@ -27,6 +28,7 @@ com\pathwise\entity\TestResult.class
 com\pathwise\dto\RegisterRequest.class
 com\pathwise\controller\AuthController.class
 com\pathwise\repository\StudentGroupRepository.class
+com\pathwise\config\WebSocketConfig.class
 com\pathwise\controller\HealthController.class
 com\pathwise\repository\TestResultRepository.class
 com\pathwise\entity\User.class

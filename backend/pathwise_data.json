@@ -416,55 +416,58 @@
     "evaluatorType" : null,
     "createdAt" : "2026-04-01T23:17:29"
   } ],
-  "meetings" : [ ],
-  "groups" : [ ],
-  "chats" : [ {
-    "id" : 1774981715994,
-    "fromId" : 13,
-    "toId" : 3,
-    "message" : "hii",
-    "timestamp" : "2026-03-31T18:28:35.994Z"
+  "meetings" : [ {
+    "id" : 1775154676474,
+    "studentId" : 14,
+    "counsellorId" : 8,
+    "topic" : "first meeting",
+    "date" : "2026-04-04",
+    "time" : "05:45",
+    "status" : "approved",
+    "createdAt" : "2026-04-02T18:31:16.474Z"
   }, {
-    "id" : 1775040806995,
-    "fromId" : 18,
-    "toId" : 3,
-    "message" : "hello",
-    "timestamp" : "2026-04-01T10:53:26.995Z"
+    "id" : 11,
+    "studentId" : 14,
+    "counsellorId" : 8,
+    "title" : "for 1",
+    "description" : "Title: for 1\nDate: 2026-04-04\nTime: 10:30 AM\nLink: meeting.com\nPlatform: zoom\nMeeting ID: 1234567\nPassword: abra ka dabra",
+    "scheduledTime" : "2026-04-04T10:30:00",
+    "duration" : 30,
+    "status" : "scheduled",
+    "meetingLink" : "meeting.com",
+    "notes" : null,
+    "createdAt" : "2026-04-03T00:19:44.520089",
+    "updatedAt" : "2026-04-03T00:19:44.520089",
+    "date" : "2026-04-04",
+    "time" : "10:30",
+    "participants" : [ 14 ]
   }, {
-    "id" : 1775040951168,
-    "fromId" : 3,
-    "toId" : 18,
-    "message" : "hello prateek sharma",
-    "timestamp" : "2026-04-01T10:55:51.168Z"
+    "id" : 1775157544367,
+    "studentId" : 14,
+    "counsellorId" : 8,
+    "topic" : "i need consultation",
+    "date" : "2026-04-04",
+    "time" : "12:00",
+    "status" : "approved",
+    "createdAt" : "2026-04-02T19:19:04.367Z"
   }, {
-    "id" : 1,
-    "fromId" : 8,
-    "toId" : 14,
-    "message" : "hello sir",
-    "timestamp" : "2026-04-02T00:08:24",
-    "isRead" : false
-  }, {
-    "id" : 2,
-    "fromId" : 8,
-    "toId" : 14,
-    "message" : "hello student how are you",
-    "timestamp" : "2026-04-02T00:13:51",
-    "isRead" : false
-  }, {
-    "id" : 3,
-    "fromId" : 14,
-    "toId" : 8,
-    "message" : "hi",
-    "timestamp" : "2026-04-02T00:20:49",
-    "isRead" : false
-  }, {
-    "id" : 4,
-    "fromId" : 8,
-    "toId" : 14,
-    "message" : "okay",
-    "timestamp" : "2026-04-02T00:21:10.0020133",
-    "isRead" : false
+    "id" : 12,
+    "studentId" : 14,
+    "counsellorId" : 8,
+    "title" : "i need consultation",
+    "description" : "Title: i need consultation\nDate: 2026-04-04\nTime: 12:00 PM\nLink: https://jhm\nPlatform: ljk\nMeeting ID: 86541\nPassword: 98645",
+    "scheduledTime" : "2026-04-04T12:00:00",
+    "duration" : 30,
+    "status" : "scheduled",
+    "meetingLink" : "https://jhm",
+    "notes" : null,
+    "createdAt" : "2026-04-03T01:02:24.6489285",
+    "updatedAt" : "2026-04-03T01:02:24.6489285",
+    "date" : "2026-04-04",
+    "time" : "12:00",
+    "participants" : [ 14 ]
   } ],
+  "groups" : [ ],
   "testResults" : [ {
     "id" : 1775067713795,
     "studentId" : 14,
@@ -650,5 +653,19 @@
     "action" : "approved",
     "notes" : "",
     "timestamp" : "2026-04-01T18:43:32.850Z"
+  }, {
+    "id" : 1775104393250,
+    "studentId" : 8,
+    "evaluatorId" : 7,
+    "action" : "approved",
+    "notes" : "",
+    "timestamp" : "2026-04-02T04:33:13.250Z"
+  }, {
+    "id" : 1775154750335,
+    "studentId" : 8,
+    "evaluatorId" : 7,
+    "action" : "approved",
+    "notes" : "u are verified",
+    "timestamp" : "2026-04-02T18:32:30.335Z"
   } ]
 }

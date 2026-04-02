@@ -26,6 +26,7 @@ const initialData = {
   meetings: [],
   groups: [],
   chats: [],
+  supportConversations: [],
   testResults: [],
   interestAssessments: [],
   studentNotes: [],
@@ -322,13 +323,15 @@ const fieldToSpecialization = {
 // Helper function to upload data to backend
 const uploadToBackend = async (data) => {
   try {
+    // Exclude local-only collections from sync payload
+    const { chats, supportConversations, ...syncPayload } = data || {};
     const token = localStorage.getItem('jwtToken');
     const headers = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
     const response = await fetch(`${API_BASE_URL}/sync/upload`, {
       method: 'POST',
       headers,
-      body: JSON.stringify(data)
+      body: JSON.stringify(syncPayload)
     });
     if (response.ok) {
       console.log('✅ Data uploaded to server');
@@ -428,6 +431,7 @@ export function DataProvider({ children }) {
         // Preserve locally managed, backend-driven collections that are not part of sync
         // (e.g. chat messages loaded via /api/chat)
         merged.chats = prev.chats || [];
+        merged.supportConversations = prev.supportConversations || [];
         return merged;
       });
       localStorage.setItem('pathwiseData', JSON.stringify({ ...initialData, ...serverData }));
@@ -988,6 +992,98 @@ export function DataProvider({ children }) {
     }));
   };
 
+  // ============================================
+  // SUPPORT CONVERSATIONS (Customer Chat → Admin)
+  // ============================================
+
+  const addSupportMessage = ({ from, sessionId, conversationId, text, userId }) => {
+    if (!text) return null;
+
+    let createdConversationId = null;
+
+    setData(prev => {
+      const now = new Date().toISOString();
+      const existingList = prev.supportConversations || [];
+
+      let targetConversation = null;
+
+      if (conversationId != null) {
+        targetConversation = existingList.find(c => c.id === conversationId);
+      } else if (userId != null) {
+        targetConversation = existingList.find(
+          c => c.userId === userId && c.status !== 'closed'
+        );
+      } else if (sessionId) {
+        targetConversation = existingList.find(
+          c => c.sessionId === sessionId && c.status !== 'closed'
+        );
+      }
+
+      let conversations = existingList;
+
+      if (!targetConversation) {
+        const newId = Date.now();
+        createdConversationId = newId;
+        targetConversation = {
+          id: newId,
+          sessionId: sessionId || `session_${newId}`,
+          userId: userId != null ? userId : null,
+          createdAt: now,
+          lastUpdatedAt: now,
+          status: 'open',
+          messages: []
+        };
+        conversations = [...conversations, targetConversation];
+      } else {
+        createdConversationId = targetConversation.id;
+      }
+
+      const newMessage = {
+        id: Date.now(),
+        from,
+        text,
+        timestamp: now
+      };
+
+      const updatedConversation = {
+        ...targetConversation,
+        messages: [...(targetConversation.messages || []), newMessage],
+        lastUpdatedAt: now
+      };
+
+      const updatedList = conversations.map(c =>
+        c.id === updatedConversation.id ? updatedConversation : c
+      );
+
+      return {
+        ...prev,
+        supportConversations: updatedList
+      };
+    });
+
+    return createdConversationId;
+  };
+
+  const addSupportMessageFromVisitor = (sessionId, text) => {
+    const userId = currentUser?.id != null ? currentUser.id : null;
+    return addSupportMessage({ from: 'user', sessionId, text, userId });
+  };
+
+  const addSupportMessageFromAdmin = (conversationId, text) => {
+    return addSupportMessage({ from: 'admin', conversationId, text });
+  };
+
+  const closeSupportConversation = (conversationId) => {
+    setData(prev => ({
+      ...prev,
+      supportConversations: (prev.supportConversations || []).map(c =>
+        c.id === conversationId
+          ? { ...c, status: 'closed', closedAt: new Date().toISOString() }
+          : c
+      )
+    }));
+  };
+
   // Add chat message (persisted to backend)
   const addChatMessage = async (fromId, toId, message) => {
     try {
@@ -1016,6 +1112,26 @@ export function DataProvider({ children }) {
         chats: [...prev.chats, fallback]
       }));
       return fallback;
+    }
+  };
+
+  // Delete all chat messages for a specific user (admin use)
+  const deleteChatHistoryForUser = async (userId) => {
+    try {
+      const res = await apiFetch(`/chat/user/${userId}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        setData(prev => ({
+          ...prev,
+          chats: prev.chats.filter(c => c.fromId !== userId && c.toId !== userId)
+        }));
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Failed to delete chat history for user', err);
+      return false;
     }
   };
 
@@ -1316,7 +1432,7 @@ export function DataProvider({ children }) {
     addChatSummary,
     saveTestResult,
     addChatMessage,
-    loadConversation,
+    deleteChatHistoryForUser,
     createMeeting,
     requestMeeting,
     updateMeetingStatus,
@@ -1330,6 +1446,11 @@ export function DataProvider({ children }) {
     getStudentNotes,
     getInterestAssessment,
     loadConversation,
+    // Support conversations (CustomerChat -> Admin)
+    supportConversations: data.supportConversations || [],
+    addSupportMessageFromVisitor,
+    addSupportMessageFromAdmin,
+    closeSupportConversation,
     // Meeting loading helpers for backend-backed meetings
     // (used by dashboards to ensure cross-user consistency)
     // Expose minimal API for now; can be extended later

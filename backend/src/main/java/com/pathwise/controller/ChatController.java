@@ -62,4 +62,18 @@ public class ChatController {
     public ResponseEntity<List<Long>> getChatParticipants(@PathVariable Long userId) {
         return ResponseEntity.ok(chatService.getChatParticipants(userId));
     }
+
+    @DeleteMapping("/conversation/{userId}/{otherUserId}")
+    public ResponseEntity<Void> deleteConversation(
+            @PathVariable Long userId,
+            @PathVariable Long otherUserId) {
+        chatService.deleteConversation(userId, otherUserId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/user/{userId}")
+    public ResponseEntity<Void> deleteAllMessagesForUser(@PathVariable Long userId) {
+        chatService.deleteAllMessagesForUser(userId);
+        return ResponseEntity.noContent().build();
+    }
 }

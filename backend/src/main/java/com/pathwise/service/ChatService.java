@@ -3,6 +3,7 @@ package com.pathwise.service;
 import com.pathwise.entity.ChatMessage;
 import com.pathwise.repository.ChatMessageRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -58,5 +59,15 @@ public class ChatService {
     
     public List<Long> getChatParticipants(Long userId) {
         return chatMessageRepository.findAllChatParticipants(userId);
+    }
+
+    @Transactional
+    public void deleteConversation(Long userId, Long otherUserId) {
+        chatMessageRepository.deleteConversation(userId, otherUserId);
+    }
+
+    @Transactional
+    public void deleteAllMessagesForUser(Long userId) {
+        chatMessageRepository.deleteAllByUser(userId);
     }
 }

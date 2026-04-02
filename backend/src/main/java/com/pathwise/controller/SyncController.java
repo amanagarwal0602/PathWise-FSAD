@@ -27,12 +27,11 @@ public class SyncController {
         try {
             // Save to file
             objectMapper.writeValue(new File(DATA_FILE), data);
-            
+
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Data synced successfully");
             response.put("timestamp", System.currentTimeMillis());
-            
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, Object> error = new HashMap<>();
@@ -67,6 +66,51 @@ public class SyncController {
             // ALWAYS override users with real DB users
             List<com.pathwise.entity.User> realUsers = userRepository.findAll();
             data.put("users", realUsers.stream().map(com.pathwise.dto.UserDTO::fromEntity).toList());
+
+            // Strip legacy in-app video call data before sending to frontend
+            Object meetingsObj = data.get("meetings");
+            if (meetingsObj instanceof List) {
+                List<?> rawList = (List<?>) meetingsObj;
+                List<Map<String, Object>> cleanedMeetings = new ArrayList<>();
+                for (Object o : rawList) {
+                    if (o instanceof Map) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> m = (Map<String, Object>) o;
+                        Object titleObj = m.get("title");
+                        Object topicObj = m.get("topic");
+                        Object linkObj = m.get("meetingLink");
+                        String title = titleObj != null ? titleObj.toString().toLowerCase() : "";
+                        String topic = topicObj != null ? topicObj.toString().toLowerCase() : "";
+                        String link = linkObj != null ? linkObj.toString() : "";
+                        boolean isLegacyVideo = title.contains("instant video call")
+                            || topic.contains("instant video call")
+                            || link.startsWith("/call/pathwise");
+                        if (!isLegacyVideo) {
+                            cleanedMeetings.add(m);
+                        }
+                    }
+                }
+                data.put("meetings", cleanedMeetings);
+            }
+
+            Object chatsObj = data.get("chats");
+            if (chatsObj instanceof List) {
+                List<?> rawList = (List<?>) chatsObj;
+                List<Map<String, Object>> cleanedChats = new ArrayList<>();
+                for (Object o : rawList) {
+                    if (o instanceof Map) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> c = (Map<String, Object>) o;
+                        Object msgObj = c.get("message");
+                        String msg = msgObj != null ? msgObj.toString().toLowerCase() : "";
+                        boolean isLegacyVideoMsg = msg.contains("instant video call") || msg.contains("/call/pathwise");
+                        if (!isLegacyVideoMsg) {
+                            cleanedChats.add(c);
+                        }
+                    }
+                }
+                data.put("chats", cleanedChats);
+            }
             
             return ResponseEntity.ok(data);
         } catch (Exception e) {

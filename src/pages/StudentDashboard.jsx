@@ -11,20 +11,47 @@ function StudentDashboard() {
     saveTestResult, addChatMessage, saveInterestAssessment,
     calculateInterestScores, getInterestAssessment, STUDENT_STATUS,
     updateStudentStatus, refreshData, syncStatus, logout,
-    loadConversation,
-    skipInterestAssessment
+    loadConversation, requestMeeting, skipInterestAssessment
   } = useData();
   const { showToast } = useToast();
   
   // Site settings for dynamic branding
   const { settings } = useSiteSettings();
+
+  const sanitizeChatMessage = (message) => {
+    if (!message) return '';
+    const lower = message.toLowerCase();
+    if (lower.includes('instant video call') || message.includes('/call/pathwise')) {
+      return 'Note: This is an old automatic meeting message from an earlier version. Please use the latest scheduled meeting details and external meeting link shared by your mentor.';
+    }
+    return message;
+  };
+
+  // Ensure meeting links open as proper external URLs (not localhost routes)
+  const getExternalMeetingUrl = (raw) => {
+    if (!raw) return '';
+    const trimmed = raw.trim();
+    if (!trimmed) return '';
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    // Strip leading slashes like "/meeting.com" then prefix https
+    return `https://${trimmed.replace(/^\/+/, '')}`;
+  };
   
-  const [activeTab, setActiveTab] = useState('assessment'); // Start with assessment
+  const [activeTab, setActiveTab] = useState(() => {
+    const saved = localStorage.getItem('studentActiveTab');
+    return saved || 'assessment';
+  }); // Start with saved tab or assessment
   const [testStarted, setTestStarted] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
   const [chatMessage, setChatMessage] = useState('');
   const [currentSection, setCurrentSection] = useState('');
+  const [meetingRequestForm, setMeetingRequestForm] = useState({
+    topic: '',
+    date: '',
+    time: ''
+  });
+  const [showMeetingRequestForm, setShowMeetingRequestForm] = useState(false);
 
   // Protect route
   useEffect(() => {
@@ -36,6 +63,13 @@ function StudentDashboard() {
   if (!currentUser || currentUser.role !== 'student') {
     return null;
   }
+
+  // Persist active tab so refresh returns to the same section
+  useEffect(() => {
+    if (currentUser && currentUser.role === 'student') {
+      localStorage.setItem('studentActiveTab', activeTab);
+    }
+  }, [activeTab, currentUser?.id]);
 
   // Get current student data
   const student = data.users.find(u => u.id === currentUser?.id);
@@ -59,7 +93,13 @@ function StudentDashboard() {
       ).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
     : [];
   const myMeetings = data.meetings.filter(m => 
-    m.participants?.includes(currentUser?.id) || m.studentId === currentUser?.id
+    (m.participants?.includes(currentUser?.id) || m.studentId === currentUser?.id) &&
+    m.meetingLink &&
+    !(
+      (m.title && m.title.toLowerCase().includes('instant video call')) ||
+      (m.topic && m.topic.toLowerCase().includes('instant video call')) ||
+      (m.meetingLink && m.meetingLink.startsWith('/call/pathwise'))
+    )
   );
 
   // Check if student has had a meeting with general counsellor (completed)
@@ -94,6 +134,24 @@ function StudentDashboard() {
     }
   }, [currentUser?.id, chatPartner?.id]);
 
+  // Lightweight polling to keep chat updated in real time
+  useEffect(() => {
+    if (!currentUser || !chatPartner) return;
+    const interval = setInterval(() => {
+      loadConversation(currentUser.id, chatPartner.id);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [currentUser?.id, chatPartner?.id]);
+
+  // Lightweight polling to keep meetings (and chats) in sync
+  useEffect(() => {
+    if (!currentUser) return;
+    const interval = setInterval(() => {
+      refreshData();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [currentUser?.id, refreshData]);
+
   // Handle logout
   const handleLogout = () => {
     logout();
@@ -119,17 +177,29 @@ function StudentDashboard() {
 
   // Auto-navigate based on student progress
   useEffect(() => {
+    const hasSavedTab = !!localStorage.getItem('studentActiveTab');
+
     if (!hasAssessment) {
-      // Step 1: If assessment not completed, go to assessment
-      setActiveTab('assessment');
-    } else if (hasAssessment && !hasCounsellor) {
-      // Step 2: Assessment done, waiting for counsellor assignment - can chat meanwhile
-      setActiveTab('chat');
-    } else if (canAccessDashboard && (activeTab === 'assessment' || activeTab === 'waiting')) {
-      // Step 3: Counsellor assigned, can access full dashboard
+      // If assessment not completed, force assessment tab
+      if (activeTab !== 'assessment') {
+        setActiveTab('assessment');
+      }
+      return;
+    }
+
+    if (hasAssessment && !hasCounsellor) {
+      // Assessment done but no counsellor yet - avoid landing on locked dashboard
+      if (activeTab === 'dashboard') {
+        setActiveTab('chat');
+      }
+      return;
+    }
+
+    if (canAccessDashboard && !hasSavedTab && (activeTab === 'assessment' || activeTab === 'waiting')) {
+      // First time after full access is granted, default to dashboard
       setActiveTab('dashboard');
     }
-  }, [hasAssessment, hasCounsellor, canAccessDashboard, student?.assessmentCompleted]);
+  }, [hasAssessment, hasCounsellor, canAccessDashboard, activeTab, student?.assessmentCompleted]);
 
   // Next question
   const nextQuestion = () => {
@@ -213,6 +283,36 @@ function StudentDashboard() {
     }
   };
 
+  // Student meeting request to assigned counsellor
+  const handleRequestMeeting = () => {
+    if (!assignedCounsellor) {
+      showToast('You can request meetings once a mentor is assigned.', 'info');
+      return;
+    }
+
+    const { topic, date, time } = meetingRequestForm;
+    if (!topic.trim() || !date || !time) {
+      showToast('Please fill topic, date, and time for your meeting request.', 'error');
+      return;
+    }
+
+    requestMeeting(currentUser.id, assignedCounsellor.id, {
+      topic: topic.trim(),
+      date,
+      time
+    });
+
+    addChatMessage(
+      currentUser.id,
+      assignedCounsellor.id,
+      `📬 Meeting request sent.\n\nTopic: ${topic.trim()}\nPreferred: ${date} at ${time}`
+    );
+
+    showToast('Your meeting request has been sent to your mentor.', 'success');
+    setMeetingRequestForm({ topic: '', date: '', time: '' });
+    setShowMeetingRequestForm(false);
+  };
+
   // Get progress percentage
   const getProgress = () => {
     return ((currentQuestion + 1) / interestAssessmentQuestions.length) * 100;
@@ -246,6 +346,31 @@ function StudentDashboard() {
       [STUDENT_STATUS.ACTIVE_GUIDANCE]: 'Active Guidance'
     };
     return labels[status] || status;
+  };
+
+  // Extract platform / ID / password details from meeting
+  const extractMeetingExtra = (meeting) => {
+    const extra = {
+      platform: meeting.platform || '',
+      meetingId: meeting.meetingId || '',
+      meetingPassword: meeting.meetingPassword || ''
+    };
+
+    if (meeting.description && (!extra.platform || !extra.meetingId || !extra.meetingPassword)) {
+      const lines = meeting.description.split('\n').map(line => line.trim());
+      lines.forEach(line => {
+        const lower = line.toLowerCase();
+        if (!extra.platform && lower.startsWith('platform:')) {
+          extra.platform = line.substring(line.indexOf(':') + 1).trim();
+        } else if (!extra.meetingId && lower.startsWith('meeting id:')) {
+          extra.meetingId = line.substring(line.indexOf(':') + 1).trim();
+        } else if (!extra.meetingPassword && (lower.startsWith('password:') || lower.startsWith('passcode:'))) {
+          extra.meetingPassword = line.substring(line.indexOf(':') + 1).trim();
+        }
+      });
+    }
+
+    return extra;
   };
 
   // If student is pending verification or rejected, show appropriate screen
@@ -513,37 +638,6 @@ function StudentDashboard() {
                     <span>{formatStatus(status)}</span>
                   </div>
                 ))}
-              </div>
-            </div>
-            
-            <div className="stats-grid">
-              <div className="stat-card">
-                <span className="stat-icon">📋</span>
-                <div>
-                  <h3>{myAssessment ? '✓' : 'Pending'}</h3>
-                  <p>Assessment</p>
-                </div>
-              </div>
-              <div className="stat-card">
-                <span className="stat-icon">📅</span>
-                <div>
-                  <h3>{myMeetings.length}</h3>
-                  <p>Meetings</p>
-                </div>
-              </div>
-              <div className="stat-card">
-                <span className="stat-icon">💬</span>
-                <div>
-                  <h3>{myChats.length}</h3>
-                  <p>Messages</p>
-                </div>
-              </div>
-              <div className="stat-card">
-                <span className="stat-icon">👨‍🏫</span>
-                <div>
-                  <h3>{assignedCounsellor ? '✓' : 'Pending'}</h3>
-                  <p>Career Mentor</p>
-                </div>
               </div>
             </div>
 
@@ -934,6 +1028,59 @@ function StudentDashboard() {
                     </span>
                   </div>
                 </div>
+                <div className="chat-actions">
+                  <button
+                    type="button"
+                    className="btn-secondary btn-small"
+                    onClick={() => setShowMeetingRequestForm(prev => !prev)}
+                  >
+                    📅 Request Meeting
+                  </button>
+                </div>
+
+                {showMeetingRequestForm && (
+                  <div className="meeting-request-card">
+                    <p className="meeting-request-info">
+                      Your mentor will schedule the call on Google Meet, Zoom, or another platform and share the meeting link, ID, and password (if any) with you in chat.
+                    </p>
+                    <div className="meeting-request-form">
+                      <div className="form-group">
+                        <label>Topic / Reason *</label>
+                        <input
+                          type="text"
+                          value={meetingRequestForm.topic}
+                          onChange={(e) => setMeetingRequestForm({ ...meetingRequestForm, topic: e.target.value })}
+                          placeholder="e.g., Discuss career options after B.Tech"
+                        />
+                      </div>
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Preferred Date *</label>
+                          <input
+                            type="date"
+                            value={meetingRequestForm.date}
+                            onChange={(e) => setMeetingRequestForm({ ...meetingRequestForm, date: e.target.value })}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Preferred Time *</label>
+                          <input
+                            type="time"
+                            value={meetingRequestForm.time}
+                            onChange={(e) => setMeetingRequestForm({ ...meetingRequestForm, time: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn-primary btn-small"
+                        onClick={handleRequestMeeting}
+                      >
+                        Send Request
+                      </button>
+                    </div>
+                  </div>
+                )}
                 
                 <div className="chat-messages">
                   {myChats.length === 0 ? (
@@ -946,7 +1093,7 @@ function StudentDashboard() {
                         key={index} 
                         className={`chat-bubble ${msg.fromId === currentUser?.id ? 'sent' : 'received'}`}
                       >
-                        <p style={{ whiteSpace: 'pre-wrap' }}>{msg.message}</p>
+                        <p style={{ whiteSpace: 'pre-wrap' }}>{sanitizeChatMessage(msg.message)}</p>
                         <span className="chat-time">
                           {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
@@ -963,7 +1110,9 @@ function StudentDashboard() {
                     placeholder="Type a message..."
                     onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                   />
-                  <button className="btn-send" onClick={sendMessage}>Send</button>
+                  <button className="btn-send" onClick={sendMessage} aria-label="Send message">
+                    ➤
+                  </button>
                 </div>
               </div>
             )}
@@ -974,7 +1123,11 @@ function StudentDashboard() {
         {activeTab === 'meetings' && (
           <div className="meetings-section">
             <h1>Scheduled Meetings</h1>
-            
+            <p className="section-subtitle">
+              All video or voice sessions happen on external tools like Google Meet or Zoom.
+              Your mentor will share the meeting link, ID, and password (if needed) in the chat and inside each meeting card.
+            </p>
+
             <div className="meetings-list">
               {myMeetings.length === 0 ? (
                 <div className="empty-state">
@@ -983,22 +1136,41 @@ function StudentDashboard() {
                   <p className="hint">Your career mentor will schedule meetings with you.</p>
                 </div>
               ) : (
-                myMeetings.map((meeting, index) => (
-                  <div key={index} className={`meeting-card status-${meeting.status}`}>
-                    <div className="meeting-info">
-                      <h4>{meeting.topic || meeting.title}</h4>
-                      <p>📅 {meeting.date} at {meeting.time}</p>
-                      <span className={`status-badge ${meeting.status}`}>
-                        {meeting.status}
-                      </span>
-                      {meeting.meetingLink && meeting.status === 'scheduled' && (
-                        <a href={meeting.meetingLink} target="_blank" rel="noopener noreferrer" className="btn-primary btn-small">
-                          Join Meeting
-                        </a>
-                      )}
+                myMeetings.map((meeting, index) => {
+                  const extra = extractMeetingExtra(meeting);
+                  return (
+                    <div key={index} className={`meeting-card status-${meeting.status}`}>
+                      <div className="meeting-info">
+                        <h4>{meeting.topic || meeting.title}</h4>
+                        <p>📅 {meeting.date} at {meeting.time}</p>
+                        {extra.platform && (
+                          <p>🧩 Platform: {extra.platform}</p>
+                        )}
+                        {extra.meetingId && (
+                          <p>🆔 Meeting ID: {extra.meetingId}</p>
+                        )}
+                        {extra.meetingPassword && (
+                          <p>🔑 Password: {extra.meetingPassword}</p>
+                        )}
+                        <div className="meeting-footer">
+                          <span className={`status-badge ${meeting.status}`}>
+                            {meeting.status}
+                          </span>
+                          {meeting.meetingLink && meeting.status === 'scheduled' && (
+                            <a
+                              href={getExternalMeetingUrl(meeting.meetingLink)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn-primary btn-small"
+                            >
+                              Join Meeting
+                            </a>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

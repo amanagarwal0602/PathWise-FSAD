@@ -2,6 +2,7 @@ package com.pathwise.repository;
 
 import com.pathwise.entity.ChatMessage;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -25,4 +26,14 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     
     @Query("SELECT DISTINCT CASE WHEN c.senderId = :userId THEN c.receiverId ELSE c.senderId END FROM ChatMessage c WHERE c.senderId = :userId OR c.receiverId = :userId")
     List<Long> findAllChatParticipants(@Param("userId") Long userId);
+
+    @Modifying
+    @jakarta.transaction.Transactional
+    @Query("DELETE FROM ChatMessage c WHERE (c.senderId = :userId AND c.receiverId = :otherUserId) OR (c.senderId = :otherUserId AND c.receiverId = :userId)")
+    void deleteConversation(@Param("userId") Long userId, @Param("otherUserId") Long otherUserId);
+
+    @Modifying
+    @jakarta.transaction.Transactional
+    @Query("DELETE FROM ChatMessage c WHERE c.senderId = :userId OR c.receiverId = :userId")
+    void deleteAllByUser(@Param("userId") Long userId);
 }

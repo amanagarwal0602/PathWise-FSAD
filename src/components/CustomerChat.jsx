@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
+import { useData } from '../context/DataContext';
 
 function CustomerChat() {
+  const { data, currentUser, addSupportMessageFromVisitor } = useData();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
@@ -13,6 +15,29 @@ function CustomerChat() {
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
+  const lastAdminMessageIdRef = useRef(null);
+
+  // Unique session id per browser for support routing
+  const [sessionId] = useState(() => {
+    try {
+      const stored = localStorage.getItem('pathwiseSupportSessionId');
+      if (stored) return stored;
+      const generated = `support_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      localStorage.setItem('pathwiseSupportSessionId', generated);
+      return generated;
+    } catch {
+      return `support_${Date.now()}`;
+    }
+  });
+
+  const [supportConversationId, setSupportConversationId] = useState(null);
+
+  const getConversationStorageKey = () => {
+    if (currentUser && currentUser.id != null) {
+      return `pathwiseSupportConversationId:user_${currentUser.id}`;
+    }
+    return 'pathwiseSupportConversationId:guest';
+  };
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -20,6 +45,77 @@ function CustomerChat() {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
+
+  // Reset chat and load per-user conversation id when user changes
+  useEffect(() => {
+    // Load stored conversation id for this user/guest, if any
+    let storedId = null;
+    try {
+      const key = getConversationStorageKey();
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        const parsed = parseInt(stored, 10);
+        if (!Number.isNaN(parsed)) storedId = parsed;
+      }
+    } catch {
+      // ignore
+    }
+
+    setSupportConversationId(storedId || null);
+
+    // Reset visible messages to a fresh greeting for this user
+    setMessages([
+      {
+        id: 1,
+        from: 'support',
+        text: 'Hello! Welcome to PathWise. How can I help you today?',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }
+    ]);
+    lastAdminMessageIdRef.current = null;
+  }, [currentUser]);
+
+  // Listen for admin replies on this session's support conversation
+  useEffect(() => {
+    if (!supportConversationId || !data.supportConversations) return;
+
+    const conv = data.supportConversations.find(
+      c => c.id === supportConversationId && Array.isArray(c.messages)
+    );
+    if (!conv) return;
+
+    const adminMessages = conv.messages.filter(m => m.from === 'admin');
+    if (adminMessages.length === 0) return;
+
+    const lastSeenId = lastAdminMessageIdRef.current;
+    const lastAdmin = adminMessages[adminMessages.length - 1];
+
+    let newMessagesToAppend = [];
+    if (!lastSeenId) {
+      newMessagesToAppend = adminMessages;
+    } else {
+      const startIndex = adminMessages.findIndex(m => m.id === lastSeenId);
+      newMessagesToAppend = startIndex === -1
+        ? adminMessages
+        : adminMessages.slice(startIndex + 1);
+    }
+
+    if (newMessagesToAppend.length === 0) return;
+
+    setMessages(prev => [
+      ...prev,
+      ...newMessagesToAppend.map(m => ({
+        id: m.id,
+        from: 'support',
+        text: m.text,
+        time: m.timestamp
+          ? new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }))
+    ]);
+
+    lastAdminMessageIdRef.current = lastAdmin.id;
+  }, [data.supportConversations, supportConversationId]);
 
   // Pre-defined quick replies and responses
   const quickReplies = [
@@ -34,43 +130,73 @@ function CustomerChat() {
     const lowerMessage = userMessage.toLowerCase();
 
     if (lowerMessage.includes('register') || lowerMessage.includes('sign up') || lowerMessage.includes('create account')) {
-      return "To register on PathWise:\n\n1. Click 'Create Account' on the login page\n2. Fill in your details (name, email, password)\n3. Complete the registration form\n4. Wait for verification by our team\n5. Once verified, you can take the assessment and get matched with a career mentor!";
+      return {
+        text: "To register on PathWise:\n\n1. Click 'Create Account' on the login page\n2. Fill in your details (name, email, password)\n3. Complete the registration form\n4. Wait for verification by our team\n5. Once verified, you can take the assessment and get matched with a career mentor!",
+        handledByBot: true
+      };
     }
 
     if (lowerMessage.includes('what is pathwise') || lowerMessage.includes('about pathwise') || lowerMessage.includes('pathwise')) {
-      return "PathWise is a comprehensive career guidance platform that helps students make informed career decisions.\n\n✨ Key Features:\n• Personalized career assessments\n• Expert career mentor matching\n• One-on-one guidance sessions\n• AI-powered recommendations\n\nOur mission is to empower students with the right guidance for their future!";
+      return {
+        text: "PathWise is a comprehensive career guidance platform that helps students make informed career decisions.\n\n✨ Key Features:\n• Personalized career assessments\n• Expert career mentor matching\n• One-on-one guidance sessions\n• AI-powered recommendations\n\nOur mission is to empower students with the right guidance for their future!",
+        handledByBot: true
+      };
     }
 
     if (lowerMessage.includes('contact') || lowerMessage.includes('support') || lowerMessage.includes('help')) {
-      return "You can reach our support team through:\n\n📧 Email: support@pathwise.com\n📞 Phone: +1-800-PATHWISE\n💬 This chat (we'll respond soon!)\n\nOur support hours are Monday-Friday, 9 AM - 6 PM IST.";
+      return {
+        text: "You can reach our support team through:\n\n📧 Email: support@pathwise.com\n📞 Phone: +1-800-PATHWISE\n💬 This chat (we'll respond soon!)\n\nOur support hours are Monday-Friday, 9 AM - 6 PM IST.",
+        handledByBot: true
+      };
     }
 
     if (lowerMessage.includes('career guidance') || lowerMessage.includes('how does') || lowerMessage.includes('process')) {
-      return "Here's how the career guidance process works:\n\n1️⃣ Register & Get Verified\n2️⃣ Complete Interest Assessment\n3️⃣ Chat with Career Coordinator\n4️⃣ Get Matched with Specialized Mentor\n5️⃣ Receive Ongoing Guidance\n\nEach step helps us understand you better and provide personalized recommendations!";
+      return {
+        text: "Here's how the career guidance process works:\n\n1️⃣ Register & Get Verified\n2️⃣ Complete Interest Assessment\n3️⃣ Chat with Career Coordinator\n4️⃣ Get Matched with Specialized Mentor\n5️⃣ Receive Ongoing Guidance\n\nEach step helps us understand you better and provide personalized recommendations!",
+        handledByBot: true
+      };
     }
 
     if (lowerMessage.includes('login') || lowerMessage.includes('password') || lowerMessage.includes('forgot')) {
-      return "Having login issues?\n\n• Make sure you're using the correct email/username\n• Check if Caps Lock is on\n• If you forgot your password, use the registered email\n• Contact support if you're still having trouble\n\nTip: You can login with either your email or username!";
+      return {
+        text: "Having login issues?\n\n• Make sure you're using the correct email/username\n• Check if Caps Lock is on\n• If you forgot your password, use the registered email\n• Contact support if you're still having trouble\n\nTip: You can login with either your email or username!",
+        handledByBot: true
+      };
     }
 
     if (lowerMessage.includes('counsellor') || lowerMessage.includes('mentor') || lowerMessage.includes('counselor')) {
-      return "Our career mentors are experienced professionals who:\n\n👨‍🏫 Provide personalized guidance\n📊 Help interpret your assessment results\n🎯 Suggest suitable career paths\n💬 Answer all your career questions\n\nYou'll be matched with a mentor based on your interests and goals!";
+      return {
+        text: "Our career mentors are experienced professionals who:\n\n👨‍🏫 Provide personalized guidance\n📊 Help interpret your assessment results\n🎯 Suggest suitable career paths\n💬 Answer all your career questions\n\nYou'll be matched with a mentor based on your interests and goals!",
+        handledByBot: true
+      };
     }
 
     if (lowerMessage.includes('assessment') || lowerMessage.includes('test') || lowerMessage.includes('quiz')) {
-      return "The Interest Assessment is a key part of PathWise:\n\n📝 Takes about 10-15 minutes\n🎯 Covers multiple areas:\n  • Career interests\n  • Technical vs Creative inclination\n  • Leadership style\n  • Problem-solving approach\n\nYour responses help us match you with the right career path and mentor!";
+      return {
+        text: "The Interest Assessment is a key part of PathWise:\n\n📝 Takes about 10-15 minutes\n🎯 Covers multiple areas:\n  • Career interests\n  • Technical vs Creative inclination\n  • Leadership style\n  • Problem-solving approach\n\nYour responses help us match you with the right career path and mentor!",
+        handledByBot: true
+      };
     }
 
     if (lowerMessage.includes('thank') || lowerMessage.includes('thanks')) {
-      return "You're welcome! 😊 Is there anything else I can help you with? Feel free to ask any questions about PathWise or career guidance!";
+      return {
+        text: "You're welcome! 😊 Is there anything else I can help you with? Feel free to ask any questions about PathWise or career guidance!",
+        handledByBot: true
+      };
     }
 
     if (lowerMessage.includes('hi') || lowerMessage.includes('hello') || lowerMessage.includes('hey')) {
-      return "Hello! 👋 Welcome to PathWise support! How can I assist you today?\n\nYou can ask me about:\n• Registration process\n• Career guidance\n• Assessment details\n• Mentor matching\n• Or anything else!";
+      return {
+        text: "Hello! 👋 Welcome to PathWise support! How can I assist you today?\n\nYou can ask me about:\n• Registration process\n• Career guidance\n• Assessment details\n• Mentor matching\n• Or anything else!",
+        handledByBot: true
+      };
     }
 
     // Default response
-    return "Thank you for your message! Our support team will review it shortly.\n\nIn the meantime, you can try asking about:\n• How to register\n• What PathWise does\n• The career guidance process\n• Assessment details\n\nOr click one of the quick reply options below!";
+    return {
+      text: "Thank you for your message! Our support team will review it shortly.\n\nIn the meantime, you can try asking about:\n• How to register\n• What PathWise does\n• The career guidance process\n• Assessment details\n\nOr click one of the quick reply options below!",
+      handledByBot: false
+    };
   };
 
   const handleSendMessage = () => {
@@ -87,12 +213,29 @@ function CustomerChat() {
     setInputMessage('');
     setIsTyping(true);
 
+    const { text: autoText, handledByBot } = getAutoResponse(inputMessage);
+
+    if (!handledByBot) {
+      const convId = addSupportMessageFromVisitor(sessionId, inputMessage);
+      setSupportConversationId(prev => {
+        const nextId = prev || convId || null;
+        if (nextId && nextId !== prev) {
+          try {
+            localStorage.setItem(getConversationStorageKey(), String(nextId));
+          } catch {
+            // ignore
+          }
+        }
+        return nextId;
+      });
+    }
+
     // Simulate typing delay before response
     setTimeout(() => {
       const botResponse = {
         id: Date.now() + 1,
         from: 'support',
-        text: getAutoResponse(inputMessage),
+        text: autoText,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages(prev => [...prev, botResponse]);
@@ -112,11 +255,28 @@ function CustomerChat() {
       setMessages(prev => [...prev, userMessage]);
       setIsTyping(true);
 
+      const { text: autoText, handledByBot } = getAutoResponse(reply);
+
+      if (!handledByBot) {
+        const convId = addSupportMessageFromVisitor(sessionId, reply);
+        setSupportConversationId(prev => {
+          const nextId = prev || convId || null;
+          if (nextId && nextId !== prev) {
+            try {
+              localStorage.setItem(getConversationStorageKey(), String(nextId));
+            } catch {
+              // ignore
+            }
+          }
+          return nextId;
+        });
+      }
+
       setTimeout(() => {
         const botResponse = {
           id: Date.now() + 1,
           from: 'support',
-          text: getAutoResponse(reply),
+          text: autoText,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
         setMessages(prev => [...prev, botResponse]);
@@ -497,8 +657,8 @@ function CustomerChat() {
         }
 
         .chat-input-container {
-          padding: 12px 16px;
-          background: white;
+          padding: 10px 8px 12px;
+          background: transparent;
           display: flex;
           gap: 8px;
           border-top: 1px solid #e2e8f0;
@@ -507,8 +667,8 @@ function CustomerChat() {
         .chat-input {
           flex: 1;
           border: 1px solid #e2e8f0;
-          border-radius: 24px;
-          padding: 10px 16px;
+          border-radius: 16px;
+          padding: 8px 12px;
           font-size: 14px;
           outline: none;
           transition: border-color 0.2s;

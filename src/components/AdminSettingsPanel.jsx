@@ -36,6 +36,7 @@ function AdminSettingsPanel({ onClose }) {
     { id: 'contact', label: 'Contact Info', icon: '📞' },
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
     { id: 'customcss', label: 'Custom CSS', icon: '💻' },
+    { id: 'integrations', label: 'Integrations', icon: '🔌' },
     { id: 'datamanage', label: 'Data Management', icon: '🗄️' },
     { id: 'backup', label: 'Backup', icon: '💾' }
   ];
@@ -476,6 +477,90 @@ function AdminSettingsPanel({ onClose }) {
                       <div className="toggle-slider"></div>
                     </div>
                   </label>
+                </div>
+              </div>
+            )}
+
+            {/* Integrations Section */}
+            {activeSection === 'integrations' && (
+              <div className="settings-section">
+                <h3>🔌 Integrations</h3>
+                <p className="section-desc">Configure analytics and preferred external meeting providers</p>
+
+                <div className="settings-group">
+                  <label>Google Analytics ID</label>
+                  <input
+                    type="text"
+                    value={localSettings.integrations.googleAnalyticsId}
+                    onChange={(e) => handleChange('integrations', 'googleAnalyticsId', e.target.value)}
+                    placeholder="G-XXXXXXXXXX"
+                  />
+                </div>
+
+                <div className="settings-group toggle-group">
+                  <label className="toggle-label">
+                    <span>Enable Google Meet</span>
+                    <div
+                      className={`toggle-switch ${localSettings.integrations.googleMeetEnabled ? 'active' : ''}`}
+                      onClick={() => handleChange('integrations', 'googleMeetEnabled', !localSettings.integrations.googleMeetEnabled)}
+                    >
+                      <div className="toggle-slider"></div>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="settings-group toggle-group">
+                  <label className="toggle-label">
+                    <span>Enable Zoom</span>
+                    <div
+                      className={`toggle-switch ${localSettings.integrations.zoomEnabled ? 'active' : ''}`}
+                      onClick={() => handleChange('integrations', 'zoomEnabled', !localSettings.integrations.zoomEnabled)}
+                    >
+                      <div className="toggle-slider"></div>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="settings-group">
+                  <label>External Meeting Provider</label>
+                  <select
+                    value={localSettings.integrations.videoProvider || 'generic'}
+                    onChange={(e) => handleChange('integrations', 'videoProvider', e.target.value)}
+                  >
+                    <option value="generic">Generic (link only)</option>
+                    <option value="google_meet">Google Meet style links</option>
+                    <option value="zoom">Zoom style links</option>
+                    <option value="custom">Custom base URL</option>
+                  </select>
+                  <small>
+                    The app does not host calls. Mentors create meetings on these providers and paste the join link (and ID/password if needed) into meetings or chat so students can join.
+                  </small>
+                </div>
+
+                <div className="settings-group">
+                  <label>Custom Meeting Base URL</label>
+                  <input
+                    type="url"
+                    value={localSettings.integrations.customVideoBaseUrl || ''}
+                    onChange={(e) => handleChange('integrations', 'customVideoBaseUrl', e.target.value)}
+                    placeholder="https://meet.google.com or https://your-video-service.com/rooms"
+                  />
+                  <small>
+                    Optional: used only to help format meeting links consistently for your organization.
+                  </small>
+                </div>
+
+                <div className="settings-group">
+                  <label>Meeting Link Prefix</label>
+                  <input
+                    type="text"
+                    value={localSettings.integrations.videoRoomPrefix || ''}
+                    onChange={(e) => handleChange('integrations', 'videoRoomPrefix', e.target.value)}
+                    placeholder="pathwise-"
+                  />
+                  <small>
+                    This text is prefixed to the random room ID in generated video links.
+                  </small>
                 </div>
               </div>
             )}

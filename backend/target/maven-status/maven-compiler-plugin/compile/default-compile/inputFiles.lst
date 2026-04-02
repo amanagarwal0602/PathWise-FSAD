@@ -11,6 +11,7 @@ D:\OneDrive\Desktop\Fsad Project\backend\src\main\java\com\pathwise\controller\T
 D:\OneDrive\Desktop\Fsad Project\backend\src\main\java\com\pathwise\repository\ChatMessageRepository.java
 D:\OneDrive\Desktop\Fsad Project\backend\src\main\java\com\pathwise\repository\TestResultRepository.java
 D:\OneDrive\Desktop\Fsad Project\backend\src\main\java\com\pathwise\dto\RegisterRequest.java
+D:\OneDrive\Desktop\Fsad Project\backend\src\main\java\com\pathwise\config\WebSocketConfig.java
 D:\OneDrive\Desktop\Fsad Project\backend\src\main\java\com\pathwise\entity\Notification.java
 D:\OneDrive\Desktop\Fsad Project\backend\src\main\java\com\pathwise\controller\ChatController.java
 D:\OneDrive\Desktop\Fsad Project\backend\src\main\java\com\pathwise\entity\ChatMessage.java
@@ -23,6 +24,7 @@ D:\OneDrive\Desktop\Fsad Project\backend\src\main\java\com\pathwise\security\Jwt
 D:\OneDrive\Desktop\Fsad Project\backend\src\main\java\com\pathwise\dto\ApiResponse.java
 D:\OneDrive\Desktop\Fsad Project\backend\src\main\java\com\pathwise\entity\Meeting.java
 D:\OneDrive\Desktop\Fsad Project\backend\src\main\java\com\pathwise\entity\Resource.java
+D:\OneDrive\Desktop\Fsad Project\backend\src\main\java\com\pathwise\websocket\SignalingWebSocketHandler.java
 D:\OneDrive\Desktop\Fsad Project\backend\src\main\java\com\pathwise\PathWiseApplication.java
 D:\OneDrive\Desktop\Fsad Project\backend\src\main\java\com\pathwise\controller\SyncController.java
 D:\OneDrive\Desktop\Fsad Project\backend\src\main\java\com\pathwise\controller\AuthController.java

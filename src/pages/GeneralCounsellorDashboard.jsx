@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { useSiteSettings } from '../context/SiteSettingsContext';
+import { useToast } from '../context/ToastContext';
 
 function GeneralCounsellorDashboard() {
   const navigate = useNavigate();
@@ -29,6 +30,16 @@ function GeneralCounsellorDashboard() {
   const [selectedCounsellorId, setSelectedCounsellorId] = useState('');
   const [studentFilter, setStudentFilter] = useState('all');
   const chatEndRef = useRef(null);
+  const { showToast } = useToast();
+
+  const sanitizeChatMessage = (message) => {
+    if (!message) return '';
+    const lower = message.toLowerCase();
+    if (lower.includes('instant video call') || message.includes('/call/pathwise')) {
+      return 'Note: This is an old automatic meeting message from an earlier version. Please use the latest scheduled meeting details and external meeting link shared by the mentor.';
+    }
+    return message;
+  };
 
   // Get all students
   const allStudents = data.users.filter(u => u.role === 'student');
@@ -97,6 +108,9 @@ function GeneralCounsellorDashboard() {
       }
     }
   };
+
+  // General counsellor now uses chat plus standard meetings
+  // managed by mentors; no in-app video room is required here.
 
   // Add note for student
   const handleAddNote = () => {
@@ -222,53 +236,6 @@ function GeneralCounsellorDashboard() {
                 <p className="subtitle">Control center for student guidance and mentor assignment</p>
               </>
             )}
-            
-            <div className="stats-grid gc-stats">
-              <div className="stat-card" onClick={() => { setActiveTab('students'); setStudentFilter('all'); }}>
-                <span className="stat-icon">👥</span>
-                <div>
-                  <h3>{stats.total}</h3>
-                  <p>Total Students</p>
-                </div>
-              </div>
-              <div className="stat-card highlight" onClick={() => { setActiveTab('students'); setStudentFilter('new'); }}>
-                <span className="stat-icon">🆕</span>
-                <div>
-                  <h3>{stats.new}</h3>
-                  <p>New Students</p>
-                </div>
-              </div>
-              <div className="stat-card success" onClick={() => { setActiveTab('students'); setStudentFilter('assessment_done'); }}>
-                <span className="stat-icon">📋</span>
-                <div>
-                  <h3>{stats.assessmentDone}</h3>
-                  <p>Ready for Review</p>
-                </div>
-              </div>
-              <div className="stat-card info" onClick={() => { setActiveTab('students'); setStudentFilter('chat_active'); }}>
-                <span className="stat-icon">💬</span>
-                <div>
-                  <h3>{stats.chatActive}</h3>
-                  <p>Chat Active</p>
-                </div>
-              </div>
-              <div className="stat-card" onClick={() => { setActiveTab('students'); setStudentFilter('assigned'); }}>
-                <span className="stat-icon">✅</span>
-                <div>
-                  <h3>{stats.assigned}</h3>
-                  <p>Assigned</p>
-                </div>
-              </div>
-              {stats.flagged > 0 && (
-                <div className="stat-card danger" onClick={() => { setActiveTab('students'); setStudentFilter('flagged'); }}>
-                  <span className="stat-icon">🚩</span>
-                  <div>
-                    <h3>{stats.flagged}</h3>
-                    <p>Flagged</p>
-                  </div>
-                </div>
-              )}
-            </div>
 
             {/* Quick Actions */}
             <div className="gc-actions">
@@ -454,25 +421,57 @@ function GeneralCounsellorDashboard() {
                     </div>
                   </div>
 
+                  {/* Flag Information */}
+                  {selectedStudent.flagged && (
+                    <div className="detail-section flag-section">
+                      <h3>🚩 Flag Information</h3>
+                      <div className="flag-details">
+                        <p><strong>Reason:</strong> {selectedStudent.flagReason || 'No reason provided'}</p>
+                        {selectedStudent.flaggedAt && (
+                          <p><strong>Flagged On:</strong> {new Date(selectedStudent.flaggedAt).toLocaleDateString()}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Verification Info */}
-                  {selectedStudent.verifiedBy && (
+                  {(selectedStudent.verifiedBy || selectedStudent.verificationNotes || selectedStudent.rejectionReason) && (
                     <div className="detail-section">
                       <h3>✅ Verification Details</h3>
                       <div className="info-grid">
-                        <div className="info-item">
-                          <label>Verified By</label>
-                          <span>
-                            {(() => {
-                              const evaluator = data.users.find(u => u.id === selectedStudent.verifiedBy);
-                              return evaluator ? `${evaluator.name} (${evaluator.email})` : 'Verification Specialist';
-                            })()}
-                          </span>
-                        </div>
+                        {selectedStudent.verifiedBy && (
+                          <div className="info-item">
+                            <label>Verified By</label>
+                            <span>
+                              {(() => {
+                                const evaluator = data.users.find(u => u.id === selectedStudent.verifiedBy);
+                                return evaluator ? `${evaluator.name} (${evaluator.email})` : 'Verification Specialist';
+                              })()}
+                            </span>
+                          </div>
+                        )}
                         <div className="info-item">
                           <label>Verified On</label>
                           <span>{selectedStudent.verifiedAt ? new Date(selectedStudent.verifiedAt).toLocaleString() : 'N/A'}</span>
                         </div>
                       </div>
+
+                      {(selectedStudent.verificationNotes || selectedStudent.rejectionReason) && (
+                        <div className="evaluator-notes-box">
+                          {selectedStudent.verificationNotes && (
+                            <div className="eval-note approved">
+                              <span className="eval-note-label">✅ Verification Notes:</span>
+                              <p>{selectedStudent.verificationNotes}</p>
+                            </div>
+                          )}
+                          {selectedStudent.rejectionReason && (
+                            <div className="eval-note rejected">
+                              <span className="eval-note-label">❌ Rejection Reason:</span>
+                              <p>{selectedStudent.rejectionReason}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -627,7 +626,7 @@ function GeneralCounsellorDashboard() {
                               key={index} 
                               className={`chat-bubble ${msg.fromId === currentUser?.id ? 'sent' : 'received'}`}
                             >
-                              <p style={{ whiteSpace: 'pre-wrap' }}>{msg.message}</p>
+                                <p style={{ whiteSpace: 'pre-wrap' }}>{sanitizeChatMessage(msg.message)}</p>
                               <span className="chat-time">
                                 {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </span>
@@ -635,6 +634,13 @@ function GeneralCounsellorDashboard() {
                           ))
                         )}
                         <div ref={chatEndRef} />
+                      </div>
+                      <div className="chat-actions-inline">
+                          <p className="chat-help-text">
+                            For live sessions, coordinate a suitable time with the student and
+                            ask the assigned mentor to share an external meeting link
+                            (Google Meet, Zoom, etc.) with full details.
+                          </p>
                       </div>
                       <div className="chat-input-inline">
                         <input
@@ -657,17 +663,23 @@ function GeneralCounsellorDashboard() {
                         {getStudentNotes(selectedStudent.id).length === 0 ? (
                           <p className="no-notes">No notes yet</p>
                         ) : (
-                          getStudentNotes(selectedStudent.id).map((note, i) => (
-                            <div key={i} className={`note-item ${note.noteType}`}>
-                              <div className="note-header">
-                                <span className="note-type">{note.noteType}</span>
-                                <span className="note-date">
-                                  {new Date(note.createdAt).toLocaleDateString()}
-                                </span>
+                          getStudentNotes(selectedStudent.id).map((note, i) => {
+                            const author = data.users.find(u => u.id === note.authorId);
+                            return (
+                              <div key={i} className={`note-item ${note.noteType}`}>
+                                <div className="note-header">
+                                  <span className="note-type">{note.noteType}</span>
+                                  {author && (
+                                    <span className="note-author">{author.name}</span>
+                                  )}
+                                  <span className="note-date">
+                                    {new Date(note.createdAt).toLocaleDateString()}
+                                  </span>
+                                </div>
+                                <p>{note.content}</p>
                               </div>
-                              <p>{note.content}</p>
-                            </div>
-                          ))
+                            );
+                          })
                         )}
                       </div>
                       <div className="add-note">

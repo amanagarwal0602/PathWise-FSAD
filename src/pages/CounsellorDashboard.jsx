@@ -17,8 +17,19 @@ function CounsellorDashboard() {
   
   // Site settings for dynamic branding
   const { settings } = useSiteSettings();
-  
-  const [activeTab, setActiveTab] = useState('dashboard');
+
+  const sanitizeChatMessage = (message) => {
+    if (!message) return '';
+    const lower = message.toLowerCase();
+    if (lower.includes('instant video call') || message.includes('/call/pathwise')) {
+      return 'Note: This is an old automatic meeting message from an earlier version. Please use the latest scheduled meeting details and external meeting link shared by the mentor.';
+    }
+    return message;
+  };
+  const [activeTab, setActiveTab] = useState(() => {
+    const saved = localStorage.getItem('counsellorActiveTab');
+    return saved || 'dashboard';
+  });
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [chatMessage, setChatMessage] = useState('');
   const [showStudentDetail, setShowStudentDetail] = useState(false);
@@ -30,12 +41,57 @@ function CounsellorDashboard() {
     time: '10:00', 
     type: 'individual',
     studentId: '',
-    meetingLink: ''
+    meetingLink: '',
+    platform: '',
+    meetingId: '',
+    meetingPassword: ''
   });
   const [groupForm, setGroupForm] = useState({ name: '', studentIds: [] });
+  const [requestDialogOpen, setRequestDialogOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [requestMeetingForm, setRequestMeetingForm] = useState({
+    title: '',
+    date: '',
+    time: '10:00',
+    meetingLink: '',
+    platform: '',
+    meetingId: '',
+    meetingPassword: ''
+  });
 
   // Get counsellor's data
   const counsellor = data.users.find(u => u.id === currentUser?.id);
+
+  // Persist active tab so refresh returns to the same section
+  useEffect(() => {
+    if (currentUser && currentUser.role === 'counsellor') {
+      localStorage.setItem('counsellorActiveTab', activeTab);
+    }
+  }, [activeTab, currentUser?.id]);
+
+  // Persist selected student in chat so refresh keeps the same conversation
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== 'counsellor') return;
+    if (selectedStudent) {
+      localStorage.setItem('counsellorSelectedStudentId', String(selectedStudent.id));
+    } else {
+      localStorage.removeItem('counsellorSelectedStudentId');
+    }
+  }, [selectedStudent?.id, currentUser?.id]);
+
+  // Restore previously selected student in chat (if any)
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== 'counsellor') return;
+    if (selectedStudent) return; // don't override manual selection
+    const savedId = localStorage.getItem('counsellorSelectedStudentId');
+    if (!savedId) return;
+    const parsed = parseInt(savedId, 10);
+    if (Number.isNaN(parsed)) return;
+    const existing = data.users.find(u => u.id === parsed && u.role === 'student' && u.assignedCounsellor === currentUser.id);
+    if (existing) {
+      setSelectedStudent(existing);
+    }
+  }, [currentUser?.id, data.users, selectedStudent]);
 
   // Auto-refresh for pending verification
   useEffect(() => {
@@ -46,6 +102,15 @@ function CounsellorDashboard() {
       return () => clearInterval(interval);
     }
   }, [counsellor?.status, refreshData]);
+
+  // Lightweight polling to keep meetings in sync
+  useEffect(() => {
+    if (!currentUser) return;
+    const interval = setInterval(() => {
+      refreshData();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [currentUser?.id, refreshData]);
 
   // Protect route
   useEffect(() => {
@@ -107,6 +172,14 @@ function CounsellorDashboard() {
     );
   }
 
+  const normalizeMeetingLink = (raw) => {
+    if (!raw) return '';
+    const trimmed = raw.trim();
+    if (!trimmed) return '';
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    return `https://${trimmed}`;
+  };
+
   // Check if counsellor was rejected
   if (counsellor && counsellor.status === 'rejected') {
     return (
@@ -125,10 +198,13 @@ function CounsellorDashboard() {
             If you believe this was an error, please contact our support team.
           </p>
           <div className="verification-actions">
-            <button onClick={() => {
-              localStorage.removeItem('currentUser');
-              navigate('/login');
-            }} className="logout-btn">
+            <button
+              onClick={() => {
+                localStorage.removeItem('currentUser');
+                navigate('/login');
+              }}
+              className="logout-btn"
+            >
               Back to Login
             </button>
           </div>
@@ -147,8 +223,47 @@ function CounsellorDashboard() {
     m.counsellorId === currentUser?.id && m.status === 'pending'
   );
 
-  // All meetings for this counsellor
-  const myMeetings = data.meetings.filter(m => m.counsellorId === currentUser?.id);
+  // Try to link a chat "meeting request" message to the corresponding pending request
+  const getMeetingRequestForChatMessage = (msg) => {
+    if (!selectedStudent || !msg || !msg.message) return null;
+    if (!msg.message.startsWith('📬 Meeting request sent.')) return null;
+
+    const lines = msg.message.split('\n').map(l => l.trim());
+    const topicLine = lines.find(l => l.toLowerCase().startsWith('topic:'));
+    const preferredLine = lines.find(l => l.toLowerCase().startsWith('preferred:'));
+
+    const topic = topicLine ? topicLine.substring(topicLine.indexOf(':') + 1).trim() : '';
+    let date = '';
+    let time = '';
+
+    if (preferredLine) {
+      // Expected format: "Preferred: YYYY-MM-DD at HH:MM" (24h) or similar
+      const raw = preferredLine.substring(preferredLine.indexOf(':') + 1).trim();
+      const match = raw.match(/(\d{4}-\d{2}-\d{2})\s+at\s+(.+)/i);
+      if (match) {
+        date = match[1];
+        time = match[2].trim();
+      }
+    }
+
+    return meetingRequests.find(m => 
+      m.studentId === selectedStudent.id &&
+      m.counsellorId === currentUser?.id &&
+      (!topic || (m.topic || '').trim() === topic) &&
+      (!date || m.date === date) &&
+      (!time || m.time === time)
+    ) || null;
+  };
+
+  // All meetings for this counsellor (only real external-link meetings)
+  const myMeetings = data.meetings.filter(m => 
+    m.counsellorId === currentUser?.id &&
+    m.meetingLink &&
+    !(
+      (m.title && m.title.toLowerCase().includes('instant video call')) ||
+      (m.meetingLink && m.meetingLink.startsWith('/call/pathwise'))
+    )
+  );
 
   // My groups
   const myGroups = data.groups.filter(g => g.counsellorId === currentUser?.id);
@@ -158,6 +273,9 @@ function CounsellorDashboard() {
     logout();
     navigate('/login', { replace: true });
   };
+
+  // (Previously there was special polling for time-sensitive calls.
+  // Now mentors simply use the standard meetings list with external links.)
 
   // Get chat messages with selected student
   const getStudentChats = () => {
@@ -175,6 +293,15 @@ function CounsellorDashboard() {
     }
   }, [activeTab, currentUser?.id, selectedStudent?.id]);
 
+  // Lightweight polling to keep chat updated in real time while on Chat tab
+  useEffect(() => {
+    if (activeTab !== 'chat' || !currentUser || !selectedStudent) return;
+    const interval = setInterval(() => {
+      loadConversation(currentUser.id, selectedStudent.id);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [activeTab, currentUser?.id, selectedStudent?.id]);
+
   // Send chat message
   const sendMessage = () => {
     if (chatMessage.trim() && selectedStudent) {
@@ -182,6 +309,10 @@ function CounsellorDashboard() {
       setChatMessage('');
     }
   };
+
+  // From chat, mentors can jump into the Meetings tab
+  // with the current student pre-selected and then paste
+  // an external Google Meet / Zoom / Teams link there.
 
   // Create meeting with link and notify student
   const handleCreateMeeting = () => {
@@ -206,18 +337,47 @@ function CounsellorDashboard() {
       ? [parseInt(meetingForm.studentId)] 
       : groupForm.studentIds;
 
+    const normalizedLink = normalizeMeetingLink(meetingForm.meetingLink);
+    if (!normalizedLink) {
+      showToast('Please enter a valid meeting link', 'error');
+      return;
+    }
+
+    // Build human-readable details for description / chat
+    const detailsLines = [
+      `Title: ${meetingForm.title}`,
+      `Date: ${meetingForm.date}`,
+      `Time: ${formatTime(meetingForm.time)}`,
+      `Link: ${normalizedLink}`
+    ];
+    if (meetingForm.platform) {
+      detailsLines.push(`Platform: ${meetingForm.platform}`);
+    }
+    if (meetingForm.meetingId) {
+      detailsLines.push(`Meeting ID: ${meetingForm.meetingId}`);
+    }
+    if (meetingForm.meetingPassword) {
+      detailsLines.push(`Password: ${meetingForm.meetingPassword}`);
+    }
+
+    const description = detailsLines.join('\n');
+
     // Create the meeting
     createMeeting(currentUser.id, {
       title: meetingForm.title,
       date: meetingForm.date,
       time: meetingForm.time,
       type: meetingForm.type,
-      meetingLink: meetingForm.meetingLink,
+      meetingLink: normalizedLink,
+      platform: meetingForm.platform,
+      meetingId: meetingForm.meetingId,
+      meetingPassword: meetingForm.meetingPassword,
+      description,
       participants
     });
 
     // Send notification message to student(s)
-    const meetingMessage = `📅 Meeting Scheduled!\n\nTitle: ${meetingForm.title}\nDate: ${meetingForm.date}\nTime: ${formatTime(meetingForm.time)}\n\n🔗 Meeting Link: ${meetingForm.meetingLink}\n\nPlease join on time!`;
+    const meetingMessage = `📅 Meeting Scheduled!\n\n${detailsLines.join('\n')}\n\nPlease join on time!`;
     
     participants.forEach(studentId => {
       addChatMessage(currentUser.id, studentId, meetingMessage);
@@ -230,7 +390,10 @@ function CounsellorDashboard() {
       time: '10:00', 
       type: 'individual',
       studentId: '',
-      meetingLink: ''
+      meetingLink: '',
+      platform: '',
+      meetingId: '',
+      meetingPassword: ''
     });
     setGroupForm({ ...groupForm, studentIds: [] });
     
@@ -244,16 +407,109 @@ function CounsellorDashboard() {
     return `${hour > 12 ? hour - 12 : hour}:${minutes} ${hour >= 12 ? 'PM' : 'AM'}`;
   };
 
-  // Handle meeting request
+  // Handle meeting request (decline only - approvals use dialog with details)
   const handleMeetingRequest = (meetingId, status) => {
     updateMeetingStatus(meetingId, status);
     const meeting = data.meetings.find(m => m.id === meetingId);
-    if (meeting && status === 'approved') {
-      addChatMessage(currentUser.id, meeting.studentId, `✅ Your meeting request "${meeting.topic}" has been approved for ${meeting.date} at ${formatTime(meeting.time)}.`);
-    } else if (meeting && status === 'rejected') {
-      addChatMessage(currentUser.id, meeting.studentId, `❌ Your meeting request "${meeting.topic}" has been declined. Please request another time.`);
+    if (meeting && status === 'rejected') {
+      addChatMessage(
+        currentUser.id,
+        meeting.studentId,
+        `❌ Your meeting request "${meeting.topic}" has been declined. Please request another time.`
+      );
     }
     showToast(`Meeting ${status}!`, 'success');
+  };
+
+  const openRequestDialog = (meeting) => {
+    const student = data.users.find(u => u.id === meeting.studentId);
+    setSelectedRequest(meeting);
+    setRequestMeetingForm({
+      title: meeting.topic || `Mentoring session with ${student?.name || 'student'}`,
+      date: meeting.date || getTodayDate(),
+      time: meeting.time || '10:00',
+      meetingLink: '',
+      platform: '',
+      meetingId: '',
+      meetingPassword: ''
+    });
+    setRequestDialogOpen(true);
+  };
+
+  const handleApproveRequestWithDetails = () => {
+    if (!selectedRequest) return;
+    const normalizedLink = normalizeMeetingLink(requestMeetingForm.meetingLink);
+    if (!normalizedLink) {
+      showToast('Please enter a valid meeting link', 'error');
+      return;
+    }
+
+    const detailsLines = [
+      `Title: ${requestMeetingForm.title}`,
+      `Date: ${requestMeetingForm.date}`,
+      `Time: ${formatTime(requestMeetingForm.time)}`,
+      `Link: ${normalizedLink}`
+    ];
+    if (requestMeetingForm.platform) {
+      detailsLines.push(`Platform: ${requestMeetingForm.platform}`);
+    }
+    if (requestMeetingForm.meetingId) {
+      detailsLines.push(`Meeting ID: ${requestMeetingForm.meetingId}`);
+    }
+    if (requestMeetingForm.meetingPassword) {
+      detailsLines.push(`Password: ${requestMeetingForm.meetingPassword}`);
+    }
+
+    const description = detailsLines.join('\n');
+
+    const participants = [selectedRequest.studentId];
+
+    createMeeting(currentUser.id, {
+      title: requestMeetingForm.title,
+      date: requestMeetingForm.date,
+      time: requestMeetingForm.time,
+      type: 'individual',
+      meetingLink: normalizedLink,
+      platform: requestMeetingForm.platform,
+      meetingId: requestMeetingForm.meetingId,
+      meetingPassword: requestMeetingForm.meetingPassword,
+      description,
+      participants
+    });
+
+    updateMeetingStatus(selectedRequest.id, 'approved');
+
+    const notifyMessage = `📅 Meeting Scheduled!\n\n${detailsLines.join('\n')}\n\nPlease join on time!`;
+    addChatMessage(currentUser.id, selectedRequest.studentId, notifyMessage);
+
+    setRequestDialogOpen(false);
+    setSelectedRequest(null);
+    showToast('Meeting scheduled and request approved', 'success');
+  };
+
+  // Extract platform / ID / password details from meeting
+  const extractMeetingExtra = (meeting) => {
+    const extra = {
+      platform: meeting.platform || '',
+      meetingId: meeting.meetingId || '',
+      meetingPassword: meeting.meetingPassword || ''
+    };
+
+    if (meeting.description && (!extra.platform || !extra.meetingId || !extra.meetingPassword)) {
+      const lines = meeting.description.split('\n').map(line => line.trim());
+      lines.forEach(line => {
+        const lower = line.toLowerCase();
+        if (!extra.platform && lower.startsWith('platform:')) {
+          extra.platform = line.substring(line.indexOf(':') + 1).trim();
+        } else if (!extra.meetingId && lower.startsWith('meeting id:')) {
+          extra.meetingId = line.substring(line.indexOf(':') + 1).trim();
+        } else if (!extra.meetingPassword && (lower.startsWith('password:') || lower.startsWith('passcode:'))) {
+          extra.meetingPassword = line.substring(line.indexOf(':') + 1).trim();
+        }
+      });
+    }
+
+    return extra;
   };
 
   // Share meeting link with student
@@ -262,7 +518,17 @@ function CounsellorDashboard() {
       showToast('No meeting link available for this meeting.', 'warning');
       return;
     }
-    const msg = `🔗 Reminder: Meeting "${meeting.title}" on ${meeting.date} at ${formatTime(meeting.time)}\n\nJoin Link: ${meeting.meetingLink}`;
+    const extra = extractMeetingExtra(meeting);
+    let msg = `🔗 Reminder: Meeting "${meeting.title || meeting.topic}" on ${meeting.date} at ${formatTime(meeting.time)}\n\nJoin Link: ${meeting.meetingLink}`;
+
+    const extraLines = [];
+    if (extra.platform) extraLines.push(`Platform: ${extra.platform}`);
+    if (extra.meetingId) extraLines.push(`Meeting ID: ${extra.meetingId}`);
+    if (extra.meetingPassword) extraLines.push(`Password: ${extra.meetingPassword}`);
+    if (extraLines.length > 0) {
+      msg += `\n\n${extraLines.join('\n')}`;
+    }
+
     meeting.participants?.forEach(studentId => {
       addChatMessage(currentUser.id, studentId, msg);
     });
@@ -356,37 +622,6 @@ function CounsellorDashboard() {
             <p style={{ color: '#6b7280', marginBottom: '24px' }}>
               Students are assigned to you by the Career Coordinator based on your specialization.
             </p>
-            
-            <div className="stats-grid">
-              <div className="stat-card">
-                <span className="stat-icon">👥</span>
-                <div>
-                  <h3>{myStudents.length}</h3>
-                  <p>My Students</p>
-                </div>
-              </div>
-              <div className="stat-card">
-                <span className="stat-icon">📅</span>
-                <div>
-                  <h3>{myMeetings.length}</h3>
-                  <p>Meetings</p>
-                </div>
-              </div>
-              <div className="stat-card">
-                <span className="stat-icon">👨‍👩‍👧‍👦</span>
-                <div>
-                  <h3>{myGroups.length}</h3>
-                  <p>Groups</p>
-                </div>
-              </div>
-              <div className="stat-card">
-                <span className="stat-icon">💬</span>
-                <div>
-                  <h3>{data.chats.filter(c => c.fromId === currentUser?.id || c.toId === currentUser?.id).length}</h3>
-                  <p>Messages</p>
-                </div>
-              </div>
-            </div>
 
             {meetingRequests.length > 0 && (
               <div className="alert-card">
@@ -519,6 +754,28 @@ function CounsellorDashboard() {
                       <span>🎓</span>
                       <span>{selectedStudent.name}</span>
                     </div>
+
+                    <div className="chat-actions">
+                      <button
+                        type="button"
+                        className="btn-secondary btn-small"
+                        onClick={() => {
+                          if (!selectedStudent) {
+                            showToast('Select a student first to schedule a meeting.', 'error');
+                            return;
+                          }
+                          setMeetingForm(prev => ({
+                            ...prev,
+                            type: 'individual',
+                            studentId: selectedStudent.id.toString(),
+                            date: prev.date || getTodayDate()
+                          }));
+                          setActiveTab('meetings');
+                        }}
+                      >
+                        📅 Schedule Meeting
+                      </button>
+                    </div>
                     
                     <div className="chat-messages">
                       {getStudentChats().length === 0 ? (
@@ -526,17 +783,41 @@ function CounsellorDashboard() {
                           <p>No messages yet.</p>
                         </div>
                       ) : (
-                        getStudentChats().map((msg, index) => (
-                          <div 
-                            key={index} 
-                            className={`chat-bubble ${msg.fromId === currentUser?.id ? 'sent' : 'received'}`}
-                          >
-                            <p style={{ whiteSpace: 'pre-wrap' }}>{msg.message}</p>
-                            <span className="chat-time">
-                              {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                          </div>
-                        ))
+                        getStudentChats().map((msg, index) => {
+                          const isFromStudent = msg.fromId === selectedStudent.id;
+                          const linkedRequest = isFromStudent ? getMeetingRequestForChatMessage(msg) : null;
+                          return (
+                            <div 
+                              key={index} 
+                              className={`chat-bubble ${msg.fromId === currentUser?.id ? 'sent' : 'received'}`}
+                            >
+                              <p style={{ whiteSpace: 'pre-wrap' }}>{sanitizeChatMessage(msg.message)}</p>
+
+                              {linkedRequest && (
+                                <div className="chat-meeting-actions">
+                                  <button
+                                    type="button"
+                                    className="btn-success btn-small"
+                                    onClick={() => openRequestDialog(linkedRequest)}
+                                  >
+                                    ✅ Accept
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn-danger btn-small"
+                                    onClick={() => handleMeetingRequest(linkedRequest.id, 'rejected')}
+                                  >
+                                    ❌ Decline
+                                  </button>
+                                </div>
+                              )}
+
+                              <span className="chat-time">
+                                {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                          );
+                        })
                       )}
                     </div>
 
@@ -548,7 +829,13 @@ function CounsellorDashboard() {
                         placeholder="Type a message..."
                         onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                       />
-                      <button className="btn-send" onClick={sendMessage}>Send</button>
+                      <button
+                        className="btn-send"
+                        onClick={sendMessage}
+                        aria-label="Send message"
+                      >
+                        ➤
+                      </button>
                     </div>
                   </>
                 )}
@@ -671,6 +958,38 @@ function CounsellorDashboard() {
                   />
                   <small className="form-hint">Paste your meeting link here. The student will receive this link automatically.</small>
                 </div>
+
+                <div className="form-group full-width">
+                  <label>Platform (optional)</label>
+                  <input
+                    type="text"
+                    value={meetingForm.platform}
+                    onChange={(e) => setMeetingForm({ ...meetingForm, platform: e.target.value })}
+                    placeholder="e.g., Google Meet, Zoom, Microsoft Teams"
+                  />
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Meeting ID (optional)</label>
+                    <input
+                      type="text"
+                      value={meetingForm.meetingId}
+                      onChange={(e) => setMeetingForm({ ...meetingForm, meetingId: e.target.value })}
+                      placeholder="Enter meeting ID if applicable"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Meeting Passcode (optional)</label>
+                    <input
+                      type="text"
+                      autoComplete="off"
+                      value={meetingForm.meetingPassword}
+                      onChange={(e) => setMeetingForm({ ...meetingForm, meetingPassword: e.target.value })}
+                      placeholder="Enter meeting passcode if applicable"
+                    />
+                  </div>
+                </div>
               </div>
               
               <button className="btn-primary" onClick={handleCreateMeeting}>
@@ -694,7 +1013,7 @@ function CounsellorDashboard() {
                       <div className="meeting-actions">
                         <button 
                           className="btn-success"
-                          onClick={() => handleMeetingRequest(meeting.id, 'approved')}
+                          onClick={() => openRequestDialog(meeting)}
                         >
                           ✅ Accept
                         </button>
@@ -732,7 +1051,7 @@ function CounsellorDashboard() {
                           <p>📅 {meeting.date} at {formatTime(meeting.time)}</p>
                           {meeting.meetingLink && (
                             <p>
-                              🔗 <a href={meeting.meetingLink} target="_blank" rel="noopener noreferrer">
+                              🔗 <a href={normalizeMeetingLink(meeting.meetingLink)} target="_blank" rel="noopener noreferrer">
                                 Join Meeting
                               </a>
                             </p>
@@ -1142,6 +1461,96 @@ function CounsellorDashboard() {
               </button>
               <button className="btn-primary" onClick={() => setShowStudentDetail(false)}>
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Approve Meeting Request Dialog (independent of student detail modal) */}
+      {requestDialogOpen && selectedRequest && (
+        <div className="modal-overlay" onClick={() => setRequestDialogOpen(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Approve Meeting Request</h2>
+              <button className="close-btn" onClick={() => setRequestDialogOpen(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <p className="meeting-request-info">
+                Student requested a meeting.
+                Please confirm the final time and share your external meeting link (Google Meet, Zoom, etc.).
+              </p>
+              <div className="form-group">
+                <label>Title *</label>
+                <input
+                  type="text"
+                  value={requestMeetingForm.title}
+                  onChange={e => setRequestMeetingForm({ ...requestMeetingForm, title: e.target.value })}
+                />
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Date *</label>
+                  <input
+                    type="date"
+                    value={requestMeetingForm.date}
+                    min={getTodayDate()}
+                    onChange={e => setRequestMeetingForm({ ...requestMeetingForm, date: e.target.value })}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Time *</label>
+                  <input
+                    type="time"
+                    value={requestMeetingForm.time}
+                    onChange={e => setRequestMeetingForm({ ...requestMeetingForm, time: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Meeting Link * (Google Meet / Zoom / Teams)</label>
+                <input
+                  type="url"
+                  value={requestMeetingForm.meetingLink}
+                  onChange={e => setRequestMeetingForm({ ...requestMeetingForm, meetingLink: e.target.value })}
+                  placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                />
+              </div>
+              <div className="form-group">
+                <label>Platform (optional)</label>
+                <input
+                  type="text"
+                  value={requestMeetingForm.platform}
+                  onChange={e => setRequestMeetingForm({ ...requestMeetingForm, platform: e.target.value })}
+                  placeholder="e.g., Google Meet, Zoom, Microsoft Teams"
+                />
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Meeting ID (optional)</label>
+                  <input
+                    type="text"
+                    value={requestMeetingForm.meetingId}
+                    onChange={e => setRequestMeetingForm({ ...requestMeetingForm, meetingId: e.target.value })}
+                    placeholder="Enter meeting ID if applicable"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Meeting Passcode (optional)</label>
+                  <input
+                    type="text"
+                    autoComplete="off"
+                    value={requestMeetingForm.meetingPassword}
+                    onChange={e => setRequestMeetingForm({ ...requestMeetingForm, meetingPassword: e.target.value })}
+                    placeholder="Enter meeting passcode if applicable"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => setRequestDialogOpen(false)}>Cancel</button>
+              <button className="btn-primary" onClick={handleApproveRequestWithDetails}>
+                ✅ Approve & Share Details
               </button>
             </div>
           </div>

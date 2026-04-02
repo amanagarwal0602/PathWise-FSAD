@@ -22,7 +22,10 @@ function AdminDashboard() {
     flagStudent,
     unflagStudent,
     assignCounsellor,
-    logout
+    deleteChatHistoryForUser,
+    logout,
+    addSupportMessageFromAdmin,
+    closeSupportConversation
   } = useData();
   const { settings } = useSiteSettings();
   const { showToast } = useToast();
@@ -71,6 +74,9 @@ function AdminDashboard() {
     meetingLink: ''
   });
 
+  const [activeSupportId, setActiveSupportId] = useState(null);
+  const [supportReply, setSupportReply] = useState('');
+
   // Protect route
   useEffect(() => {
     if (!currentUser || currentUser.role !== 'admin') {
@@ -91,6 +97,13 @@ function AdminDashboard() {
     totalMeetings: data.meetings.length,
     totalTests: data.testResults.length,
     unassignedStudents: students.filter(s => !s.assignedCounsellor).length
+  };
+
+  const scrollToElement = (id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   const handleLogout = () => {
@@ -123,9 +136,9 @@ function AdminDashboard() {
     const meetings = data.meetings.filter(
       m => m.studentId === studentId || m.participants?.includes(studentId)
     );
-    const chats = data.chats.filter(
-      c => c.fromId === studentId || c.toId === studentId
-    );
+    const chats = data.chats
+      .filter(c => c.fromId === studentId || c.toId === studentId)
+      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
     return { student, counsellor, testResults, meetings, chats };
   };
 
@@ -134,7 +147,28 @@ function AdminDashboard() {
     const assignedStudents = students.filter(s => s.assignedCounsellor === counsellorId);
     const meetings = data.meetings.filter(m => m.counsellorId === counsellorId);
     const groups = data.groups.filter(g => g.counsellorId === counsellorId);
-    return { counsellor, assignedStudents, meetings, groups };
+    const chats = data.chats
+      .filter(c => c.fromId === counsellorId || c.toId === counsellorId)
+      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    return { counsellor, assignedStudents, meetings, groups, chats };
+  };
+
+  const sanitizeChatMessage = (message) => {
+    if (!message) return '';
+    const lower = message.toLowerCase();
+    if (lower.includes('instant video call') || message.includes('/call/pathwise')) {
+      return 'Note: This is an old automatic meeting message from an earlier version. Please use the latest scheduled meeting details and external meeting link shared by the mentor.';
+    }
+    return message;
+  };
+
+  // Ensure meeting links open as proper external URLs (not localhost routes)
+  const getExternalMeetingUrl = (raw) => {
+    if (!raw) return '';
+    const trimmed = raw.trim();
+    if (!trimmed) return '';
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    return `https://${trimmed.replace(/^\/+/, '')}`;
   };
 
   const formatTime = (time) => {
@@ -293,6 +327,27 @@ function AdminDashboard() {
     }
   };
 
+  const supportConversations = data.supportConversations || [];
+
+  const activeSupportConversation =
+    (activeSupportId && supportConversations.find(c => c.id === activeSupportId)) ||
+    supportConversations[0] ||
+    null;
+
+  const handleSendSupportReply = () => {
+    if (!activeSupportConversation || !supportReply.trim()) return;
+    // Admin reply will flow back to the visitor's widget via DataContext
+    addSupportMessageFromAdmin(activeSupportConversation.id, supportReply.trim());
+    setSupportReply('');
+    showToast('Reply sent to visitor', 'success');
+  };
+
+  const handleCloseSupportConversation = () => {
+    if (!activeSupportConversation) return;
+    closeSupportConversation(activeSupportConversation.id);
+    showToast('Conversation closed', 'success');
+  };
+
   return (
     <div className="dashboard-layout admin-dashboard">
       {/* Sidebar */}
@@ -346,6 +401,12 @@ function AdminDashboard() {
           >
             📈 Reports
           </button>
+          <button
+            className={activeTab === 'support' ? 'active' : ''}
+            onClick={() => setActiveTab('support')}
+          >
+            🛟 Support Inbox
+          </button>
           <button className="settings-btn" onClick={() => setShowSettings(true)}>
             ⚙️ Site Settings
           </button>
@@ -367,49 +428,6 @@ function AdminDashboard() {
           <div className="dashboard-content">
             <h1>Admin Dashboard</h1>
             <p className="subtitle">Full platform control and management</p>
-
-            <div className="stats-grid">
-              <div
-                className="stat-card admin-stat"
-                onClick={() => setActiveTab('students')}
-              >
-                <span className="stat-icon">👥</span>
-                <div>
-                  <h3>{stats.totalStudents}</h3>
-                  <p>Students</p>
-                </div>
-              </div>
-              <div
-                className="stat-card admin-stat"
-                onClick={() => setActiveTab('counsellors')}
-              >
-                <span className="stat-icon">👨‍🏫</span>
-                <div>
-                  <h3>{stats.totalCounsellors}</h3>
-                  <p>Counsellors</p>
-                </div>
-              </div>
-              <div
-                className="stat-card admin-stat"
-                onClick={() => setActiveTab('meetings')}
-              >
-                <span className="stat-icon">📅</span>
-                <div>
-                  <h3>{stats.totalMeetings}</h3>
-                  <p>Meetings</p>
-                </div>
-              </div>
-              <div
-                className="stat-card admin-stat"
-                onClick={() => setActiveTab('reports')}
-              >
-                <span className="stat-icon">📋</span>
-                <div>
-                  <h3>{data.interestAssessments?.length || 0}</h3>
-                  <p>Assessments</p>
-                </div>
-              </div>
-            </div>
 
             {/* Quick Actions */}
             <div className="quick-actions">
@@ -598,7 +616,8 @@ function AdminDashboard() {
                 student,
                 counsellor,
                 testResults,
-                meetings
+                meetings,
+                chats
               } = getStudentData(viewingStudent);
               if (!student) return <p>Student not found</p>;
 
@@ -623,6 +642,12 @@ function AdminDashboard() {
                         onClick={() => startEditUser(student)}
                       >
                         ✏️ Edit Profile
+                      </button>
+                      <button
+                        className="btn-secondary"
+                        onClick={() => scrollToElement('admin-student-chat-history')}
+                      >
+                        💬 View Chats
                       </button>
                     </div>
                   </div>
@@ -692,6 +717,32 @@ function AdminDashboard() {
                       </div>
                     )}
                   </div>
+
+                  {/* Evaluator Notes */}
+                  {(student.verificationNotes || student.rejectionReason) && (
+                    <div className="profile-section evaluator-notes-section">
+                      <h3>📝 Evaluator Notes</h3>
+                      <div className="evaluator-notes-box">
+                        {student.verificationNotes && (
+                          <div className="eval-note approved">
+                            <span className="eval-note-label">✅ Verification Notes:</span>
+                            <p>{student.verificationNotes}</p>
+                          </div>
+                        )}
+                        {student.rejectionReason && (
+                          <div className="eval-note rejected">
+                            <span className="eval-note-label">❌ Rejection Reason:</span>
+                            <p>{student.rejectionReason}</p>
+                          </div>
+                        )}
+                        {student.verifiedAt && (
+                          <span className="eval-note-meta">
+                            Verified on: {new Date(student.verifiedAt).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Interest assessment */}
                   <div className="profile-section">
@@ -866,6 +917,51 @@ function AdminDashboard() {
                       </div>
                     )}
                   </div>
+
+                  {/* Chats */}
+                  <div className="profile-section" id="admin-student-chat-history">
+                    <div className="profile-section-header-row">
+                      <h3>💬 Chat History ({chats.length})</h3>
+                      {chats.length > 0 && (
+                        <button
+                          className="btn-small btn-danger"
+                          onClick={async () => {
+                            if (!window.confirm('Delete all chat messages for this student? This cannot be undone.')) return;
+                            const ok = await deleteChatHistoryForUser(student.id);
+                            if (ok) {
+                              showToast('Chat history deleted for this student', 'success');
+                            } else {
+                              showToast('Failed to delete chat history', 'error');
+                            }
+                          }}
+                        >
+                          🗑️ Delete Chat History
+                        </button>
+                      )}
+                    </div>
+                    {chats.length === 0 ? (
+                      <p className="no-data">No chats for this student yet.</p>
+                    ) : (
+                      <div className="chat-history-list">
+                        {chats.map(msg => {
+                          const isStudentMessage = msg.fromId === student.id;
+                          return (
+                            <div
+                              key={msg.id}
+                              className={`chat-bubble ${isStudentMessage ? 'sent' : 'received'}`}
+                            >
+                              <p style={{ whiteSpace: 'pre-wrap' }}>{sanitizeChatMessage(msg.message)}</p>
+                              <span className="chat-time">
+                                {msg.timestamp
+                                  ? new Date(msg.timestamp).toLocaleString()
+                                  : ''}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </>
               );
             })()}
@@ -992,7 +1088,8 @@ function AdminDashboard() {
                 counsellor,
                 assignedStudents,
                 meetings,
-                groups
+                groups,
+                chats
               } = getCounsellorData(viewingCounsellor);
               if (!counsellor) return <p>Counsellor not found</p>;
 
@@ -1021,6 +1118,12 @@ function AdminDashboard() {
                       >
                         ✏️ Edit Profile
                       </button>
+                      <button
+                        className="btn-secondary"
+                        onClick={() => scrollToElement('admin-counsellor-chat-history')}
+                      >
+                        💬 View Chats
+                      </button>
                     </div>
                   </div>
 
@@ -1039,7 +1142,32 @@ function AdminDashboard() {
                     </div>
                   </div>
 
-                  <div className="profile-section">
+                  {(counsellor.verificationNotes || counsellor.rejectionReason) && (
+                    <div className="profile-section evaluator-notes-section">
+                      <h3>📝 Evaluator Notes</h3>
+                      <div className="evaluator-notes-box">
+                        {counsellor.verificationNotes && (
+                          <div className="eval-note approved">
+                            <span className="eval-note-label">✅ Verification Notes:</span>
+                            <p>{counsellor.verificationNotes}</p>
+                          </div>
+                        )}
+                        {counsellor.rejectionReason && (
+                          <div className="eval-note rejected">
+                            <span className="eval-note-label">❌ Rejection Reason:</span>
+                            <p>{counsellor.rejectionReason}</p>
+                          </div>
+                        )}
+                        {counsellor.verifiedAt && (
+                          <span className="eval-note-meta">
+                            Verified on: {new Date(counsellor.verifiedAt).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="profile-section" id="admin-counsellor-chat-history">
                     <h3>👥 Assigned Students ({assignedStudents.length})</h3>
                     {assignedStudents.length === 0 ? (
                       <p className="no-data">No students assigned</p>
@@ -1113,6 +1241,50 @@ function AdminDashboard() {
                                 className={`status-badge ${meeting.status}`}
                               >
                                 {meeting.status}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="profile-section">
+                    <div className="profile-section-header-row">
+                      <h3>💬 Chat History ({chats.length})</h3>
+                      {chats.length > 0 && (
+                        <button
+                          className="btn-small btn-danger"
+                          onClick={async () => {
+                            if (!window.confirm('Delete all chat messages for this counsellor? This cannot be undone.')) return;
+                            const ok = await deleteChatHistoryForUser(counsellor.id);
+                            if (ok) {
+                              showToast('Chat history deleted for this counsellor', 'success');
+                            } else {
+                              showToast('Failed to delete chat history', 'error');
+                            }
+                          }}
+                        >
+                          🗑️ Delete Chat History
+                        </button>
+                      )}
+                    </div>
+                    {chats.length === 0 ? (
+                      <p className="no-data">No chats for this counsellor yet.</p>
+                    ) : (
+                      <div className="chat-history-list">
+                        {chats.map(msg => {
+                          const isCounsellorMessage = msg.fromId === counsellor.id;
+                          return (
+                            <div
+                              key={msg.id}
+                              className={`chat-bubble ${isCounsellorMessage ? 'sent' : 'received'}`}
+                            >
+                              <p style={{ whiteSpace: 'pre-wrap' }}>{sanitizeChatMessage(msg.message)}</p>
+                              <span className="chat-time">
+                                {msg.timestamp
+                                  ? new Date(msg.timestamp).toLocaleString()
+                                  : ''}
                               </span>
                             </div>
                           );
@@ -1269,7 +1441,7 @@ function AdminDashboard() {
                           <td>
                             {meeting.meetingLink ? (
                               <a
-                                href={meeting.meetingLink}
+                                href={getExternalMeetingUrl(meeting.meetingLink)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
@@ -1530,6 +1702,126 @@ function AdminDashboard() {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Support Inbox */}
+        {activeTab === 'support' && (
+          <div className="manage-section support-section">
+            <div className="section-header">
+              <h1>Support Inbox</h1>
+            </div>
+
+            {supportConversations.length === 0 ? (
+              <div className="empty-state">
+                <span className="empty-icon">💬</span>
+                <p>No support conversations yet. Messages that the bot cannot auto-answer will appear here.</p>
+              </div>
+            ) : (
+              <div className="support-layout">
+                <div className="support-list">
+                  <h3>Open Conversations</h3>
+                  <ul>
+                    {supportConversations.map(conv => {
+                      const lastMessage = (conv.messages || [])[conv.messages.length - 1];
+                      const statusLabel = conv.status === 'closed' ? 'Closed' : 'Open';
+                      return (
+                        <li
+                          key={conv.id}
+                          className={`support-list-item ${
+                            activeSupportConversation && activeSupportConversation.id === conv.id
+                              ? 'active'
+                              : ''
+                          }`}
+                          onClick={() => setActiveSupportId(conv.id)}
+                        >
+                          <div className="support-list-main">
+                            <span className="support-list-title">
+                              Visitor Session
+                            </span>
+                            <span className={`status-badge ${conv.status || 'open'}`}>
+                              {statusLabel}
+                            </span>
+                          </div>
+                          {lastMessage && (
+                            <div className="support-list-snippet">
+                              <span className="snippet-text">
+                                {lastMessage.text.length > 60
+                                  ? `${lastMessage.text.slice(0, 57)}...`
+                                  : lastMessage.text}
+                              </span>
+                              <span className="snippet-time">
+                                {lastMessage.timestamp
+                                  ? new Date(lastMessage.timestamp).toLocaleString()
+                                  : ''}
+                              </span>
+                            </div>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+
+                <div className="support-detail">
+                  {activeSupportConversation ? (
+                    <>
+                      <h3>Conversation Details</h3>
+                      <div className="chat-history-list support-chat-history">
+                        {(activeSupportConversation.messages || []).map(msg => {
+                          const isAdmin = msg.from === 'admin';
+                          return (
+                            <div
+                              key={msg.id}
+                              className={`chat-bubble ${isAdmin ? 'sent' : 'received'}`}
+                            >
+                              <p style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</p>
+                              <span className="chat-time">
+                                {msg.timestamp
+                                  ? new Date(msg.timestamp).toLocaleString()
+                                  : ''}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {activeSupportConversation.status !== 'closed' && (
+                        <div className="support-reply-box">
+                          <h4>Reply as Admin</h4>
+                          <textarea
+                            value={supportReply}
+                            onChange={e => setSupportReply(e.target.value)}
+                            rows={2}
+                            placeholder="Type your reply..."
+                          />
+                          <div className="support-actions-row">
+                            <button
+                              className="btn-primary btn-small"
+                              onClick={handleSendSupportReply}
+                              disabled={!supportReply.trim()}
+                            >
+                              Send Reply
+                            </button>
+                            <button
+                              className="btn-secondary btn-small"
+                              onClick={handleCloseSupportConversation}
+                            >
+                              Close Conversation
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      {activeSupportConversation.status === 'closed' && (
+                        <p className="no-data">This conversation is closed.</p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="no-data">Select a conversation from the left.</p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>
