@@ -9335,8 +9335,8 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 @media (max-width: 768px) {
   .ev-sidebar {
     position: fixed;
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
+    transform: translateX(0);
+    transition: none;
     z-index: 1000;
   }
 
@@ -9345,7 +9345,7 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   }
   
   .ev-main {
-    margin-left: 0;
+    margin-left: 280px;
   }
   
   .ev-students-grid {
@@ -11384,17 +11384,22 @@ input[type="password"]:focus {
     justify-content: center;
   }
 
-  /* Admin dashboard: keep full left sidebar always visible on phones */
-  .admin-dashboard .sidebar {
+  /* Dashboards: keep full left sidebar always visible on phones */
+  .dashboard-layout .sidebar {
     transform: translateX(0);
   }
 
-  .admin-dashboard .main-content {
+  .dashboard-layout .main-content {
     margin-left: 260px;
     margin-top: 16px;
   }
 
-  .admin-dashboard .mobile-menu-toggle {
+  .dashboard-layout .mobile-menu-toggle {
+    display: none;
+  }
+
+  /* Evaluator dashboard: hide mobile toggle (sidebar stays visible) */
+  .evaluator-dashboard .mobile-menu-toggle {
     display: none;
   }
 
