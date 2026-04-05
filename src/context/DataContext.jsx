@@ -418,11 +418,42 @@ export function DataProvider({ children }) {
     if (serverData) {
       // Normalize all user roles/statuses to lowercase for frontend compatibility
       if (serverData.users) {
-        serverData.users = serverData.users.map(u => ({
-          ...u,
-          role: u.role?.toLowerCase(),
-          status: u.status?.toLowerCase()
-        }));
+        const BASE_WORKFLOW_STATUSES = new Set([
+          STUDENT_STATUS.PENDING_VERIFICATION,
+          STUDENT_STATUS.VERIFIED,
+          STUDENT_STATUS.REJECTED
+        ]);
+
+        serverData.users = serverData.users.map(u => {
+          const normalizedRole = u.role?.toLowerCase();
+          const normalizedStatus = u.status?.toLowerCase();
+
+          // Try to preserve richer frontend-only workflow states (assessment_completed, etc.)
+          // while still reflecting backend verification status changes.
+          let mergedStudentStatus;
+          const existing = data.users?.find(prev => prev.id === u.id);
+
+          if (existing && existing.studentStatus) {
+            const prevStatus = existing.studentStatus;
+            if (BASE_WORKFLOW_STATUSES.has(prevStatus)) {
+              // For base verification states, always sync with backend status (may have changed).
+              mergedStudentStatus = normalizedStatus || prevStatus;
+            } else {
+              // For advanced workflow states, keep the richer local value.
+              mergedStudentStatus = prevStatus;
+            }
+          } else if (normalizedRole === 'student') {
+            // For students without a workflow state yet, start from backend status.
+            mergedStudentStatus = normalizedStatus;
+          }
+
+          return {
+            ...u,
+            role: normalizedRole,
+            status: normalizedStatus,
+            studentStatus: mergedStudentStatus
+          };
+        });
       }
 
       const finalData = { ...initialData, ...serverData };
@@ -481,7 +512,15 @@ export function DataProvider({ children }) {
       const resData = await res.json();
       if (res.ok && resData.success) {
         // Normalize role/status to lowercase for frontend compatibility
-        const newUser = { ...resData.data, role: resData.data.role?.toLowerCase(), status: resData.data.status?.toLowerCase() };
+        const normalizedRole = resData.data.role?.toLowerCase();
+        const normalizedStatus = resData.data.status?.toLowerCase();
+        const newUser = {
+          ...resData.data,
+          role: normalizedRole,
+          status: normalizedStatus,
+          // For students, initialise workflow state from backend verification status
+          studentStatus: normalizedRole === 'student' ? normalizedStatus : resData.data.studentStatus
+        };
         // Optimistically add to local state
         setData(prev => ({
           ...prev,

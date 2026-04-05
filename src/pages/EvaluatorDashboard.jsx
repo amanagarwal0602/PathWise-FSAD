@@ -43,22 +43,31 @@ export default function EvaluatorDashboard() {
   const entityType = isStudentEvaluator ? 'Student' : 'Career Mentor';
   const entityTypeIcon = isStudentEvaluator ? '🎓' : '👨‍🏫';
 
+  // Unified status accessor so students can use workflow studentStatus while
+  // mentors continue to rely on the normal status field
+  const getEntityStatusValue = (entity) => {
+    return isStudentEvaluator
+      ? (entity.studentStatus || entity.status)
+      : entity.status;
+  };
+
   // Get entities based on evaluator type
   const allEntities = isStudentEvaluator 
     ? data.users.filter(u => u.role === 'student')
     : data.users.filter(u => u.role === 'counsellor');
   
   // Get pending verification entities
-  const pendingEntities = allEntities.filter(e => e.status === 'pending_verification');
+  const pendingEntities = allEntities.filter(e => getEntityStatusValue(e) === 'pending_verification');
   
   // Get verified entities (by this evaluator)
   const verifiedEntities = allEntities.filter(e => 
-    Number(e.verifiedBy) === Number(currentUser.id) && e.status === (isStudentEvaluator ? 'verified' : 'active')
+    Number(e.verifiedBy) === Number(currentUser.id) &&
+    getEntityStatusValue(e) === (isStudentEvaluator ? 'verified' : 'active')
   );
   
   // Get rejected entities (by this evaluator)
   const rejectedEntities = allEntities.filter(e => 
-    Number(e.verifiedBy) === Number(currentUser.id) && e.status === 'rejected'
+    Number(e.verifiedBy) === Number(currentUser.id) && getEntityStatusValue(e) === 'rejected'
   );
 
   // Get verification requests/history
@@ -139,10 +148,7 @@ export default function EvaluatorDashboard() {
   };
 
   const getEntityStatus = (entity) => {
-    if (isStudentEvaluator) {
-      return entity.studentStatus;
-    }
-    return entity.status;
+    return getEntityStatusValue(entity);
   };
 
   const formatDate = (dateStr) => {

@@ -17,6 +17,10 @@ function AdminDashboard() {
     changePassword,
     createMeeting,
     updateMeetingStatus,
+    verifyStudent,
+    rejectStudent,
+    verifyCounsellor,
+    rejectCounsellor,
     getStudentNotes,
     getInterestAssessment,
     addStudentNote,
@@ -322,6 +326,46 @@ function AdminDashboard() {
       time: '10:00',
       meetingLink: ''
     });
+  };
+
+  const handleAdminVerifyStudent = async (student) => {
+    if (!student) return;
+    const ok = await verifyStudent(student.id, currentUser.id, 'Verified by admin');
+    if (ok) {
+      showToast('Student verified successfully by admin', 'success');
+    } else {
+      showToast('Failed to verify student', 'error');
+    }
+  };
+
+  const handleAdminRejectStudent = async (student, reason) => {
+    if (!student || !reason) return;
+    const ok = await rejectStudent(student.id, currentUser.id, reason);
+    if (ok) {
+      showToast('Student rejected by admin', 'warning');
+    } else {
+      showToast('Failed to reject student', 'error');
+    }
+  };
+
+  const handleAdminVerifyCounsellor = async (counsellor) => {
+    if (!counsellor) return;
+    const ok = await verifyCounsellor(counsellor.id, currentUser.id, 'Verified by admin');
+    if (ok) {
+      showToast('Counsellor verified successfully by admin', 'success');
+    } else {
+      showToast('Failed to verify counsellor', 'error');
+    }
+  };
+
+  const handleAdminRejectCounsellor = async (counsellor, reason) => {
+    if (!counsellor || !reason) return;
+    const ok = await rejectCounsellor(counsellor.id, currentUser.id, reason);
+    if (ok) {
+      showToast('Counsellor rejected by admin', 'warning');
+    } else {
+      showToast('Failed to reject counsellor', 'error');
+    }
   };
 
   const handleMeetingStatus = async (meetingId, status) => {
@@ -754,6 +798,35 @@ function AdminDashboard() {
                     )}
                   </div>
 
+                  {/* Admin verification controls for pending students */}
+                  {(student.studentStatus === 'pending_verification' || student.status === 'pending_verification') && (
+                    <div className="profile-section admin-verification-section">
+                      <h3>✅ Admin Verification</h3>
+                      <p className="subtitle">
+                        This student is pending verification. As admin, you can approve or reject directly without using the evaluator dashboard.
+                      </p>
+                      <div className="profile-actions" style={{ gap: '10px', flexWrap: 'wrap' }}>
+                        <button
+                          className="btn-primary btn-small"
+                          onClick={() => handleAdminVerifyStudent(student)}
+                        >
+                          ✅ Approve & Verify
+                        </button>
+                        <button
+                          className="btn-danger btn-small"
+                          onClick={() => {
+                            const reason = window.prompt('Enter rejection reason (this will be visible to the student):');
+                            if (reason && reason.trim()) {
+                              handleAdminRejectStudent(student, reason.trim());
+                            }
+                          }}
+                        >
+                          ❌ Reject Student
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Evaluator Notes */}
                   {(student.verificationNotes || student.rejectionReason) && (
                     <div className="profile-section evaluator-notes-section">
@@ -1162,6 +1235,35 @@ function AdminDashboard() {
                       </button>
                     </div>
                   </div>
+
+                  {/* Admin verification controls for pending counsellors */}
+                  {counsellor.status === 'pending_verification' && (
+                    <div className="profile-section admin-verification-section">
+                      <h3>✅ Admin Verification</h3>
+                      <p className="subtitle">
+                        This counsellor is pending verification. As admin, you can approve or reject their mentor profile.
+                      </p>
+                      <div className="profile-actions" style={{ gap: '10px', flexWrap: 'wrap' }}>
+                        <button
+                          className="btn-primary btn-small"
+                          onClick={() => handleAdminVerifyCounsellor(counsellor)}
+                        >
+                          ✅ Approve & Verify
+                        </button>
+                        <button
+                          className="btn-danger btn-small"
+                          onClick={() => {
+                            const reason = window.prompt('Enter rejection reason for this counsellor:');
+                            if (reason && reason.trim()) {
+                              handleAdminRejectCounsellor(counsellor, reason.trim());
+                            }
+                          }}
+                        >
+                          ❌ Reject Counsellor
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="profile-stats">
                     <div className="stat-item">

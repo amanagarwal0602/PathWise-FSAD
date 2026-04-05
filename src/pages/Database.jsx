@@ -4,7 +4,20 @@ import { useData } from '../context/DataContext';
 
 function Database() {
   const navigate = useNavigate();
-  const { data, refreshData, syncStatus, currentUser, updateUser, toggleUserStatus, deleteUser, changePassword } = useData();
+  const {
+    data,
+    refreshData,
+    syncStatus,
+    currentUser,
+    updateUser,
+    toggleUserStatus,
+    deleteUser,
+    changePassword,
+    verifyStudent,
+    rejectStudent,
+    verifyCounsellor,
+    rejectCounsellor
+  } = useData();
   const [activeTab, setActiveTab] = useState('students');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
@@ -175,6 +188,38 @@ function Database() {
     await deleteUser(userId);
     if (selectedUser?.id === userId) setSelectedUser(null);
     if (editUser?.id === userId) setEditUser(null);
+  };
+
+  const handleVerifyUser = async (user) => {
+    if (!user || !currentUser) return;
+
+    try {
+      if (user.role === 'student') {
+        await verifyStudent(user.id, currentUser.id, 'Verified by admin from Database view');
+      } else if (user.role === 'counsellor' || user.role === 'general_counsellor') {
+        await verifyCounsellor(user.id, currentUser.id, 'Verified by admin from Database view');
+      }
+      await refreshData();
+    } catch (err) {
+      // Toasts are handled inside DataContext
+    }
+  };
+
+  const handleRejectUser = async (user) => {
+    if (!user || !currentUser) return;
+    const reason = window.prompt('Enter rejection reason (this will be visible to the user):');
+    if (!reason || !reason.trim()) return;
+
+    try {
+      if (user.role === 'student') {
+        await rejectStudent(user.id, currentUser.id, reason.trim());
+      } else if (user.role === 'counsellor' || user.role === 'general_counsellor') {
+        await rejectCounsellor(user.id, currentUser.id, reason.trim());
+      }
+      await refreshData();
+    } catch (err) {
+      // Toasts are handled inside DataContext
+    }
   };
 
   const renderUserCard = (user, type) => {
@@ -422,6 +467,24 @@ function Database() {
                         <td>{getCounsellorName(s.assignedCounsellor)}</td>
                         <td>
                           <div className="table-actions">
+                            {s.studentStatus === 'pending_verification' && (
+                              <>
+                                <button
+                                  type="button"
+                                  className="action-btn action-btn-status action-btn-status--activate"
+                                  onClick={() => handleVerifyUser(s)}
+                                >
+                                  ✅ Verify
+                                </button>
+                                <button
+                                  type="button"
+                                  className="action-btn action-btn-danger"
+                                  onClick={() => handleRejectUser(s)}
+                                >
+                                  ❌ Reject
+                                </button>
+                              </>
+                            )}
                             <button
                               type="button"
                               className="action-btn action-btn-edit"
@@ -480,6 +543,24 @@ function Database() {
                         <td>{c.status || 'active'}</td>
                         <td>
                           <div className="table-actions">
+                            {c.status === 'pending_verification' && (
+                              <>
+                                <button
+                                  type="button"
+                                  className="action-btn action-btn-status action-btn-status--activate"
+                                  onClick={() => handleVerifyUser(c)}
+                                >
+                                  ✅ Verify
+                                </button>
+                                <button
+                                  type="button"
+                                  className="action-btn action-btn-danger"
+                                  onClick={() => handleRejectUser(c)}
+                                >
+                                  ❌ Reject
+                                </button>
+                              </>
+                            )}
                             <button
                               type="button"
                               className="action-btn action-btn-edit"

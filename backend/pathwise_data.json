@@ -441,6 +441,32 @@
     "reviewCount" : 0,
     "evaluatorType" : null,
     "createdAt" : "2026-04-05T21:10:05"
+  }, {
+    "id" : 23,
+    "name" : "Suhani",
+    "username" : "suhani",
+    "email" : "suhani@gmail.com",
+    "role" : "student",
+    "status" : "verified",
+    "college" : "Klu",
+    "branch" : "Cse",
+    "year" : "2",
+    "careerGoals" : "Suhani career goals",
+    "achievements" : "Suhani achievements",
+    "phoneNumber" : "7878530298",
+    "studentId" : "2400033073",
+    "idProofType" : "College ID Card",
+    "guidanceStage" : "initial",
+    "assignedCounsellor" : null,
+    "assessmentCompleted" : false,
+    "assessmentSkipped" : true,
+    "flagged" : false,
+    "flagReason" : null,
+    "specialization" : null,
+    "rating" : 0,
+    "reviewCount" : 0,
+    "evaluatorType" : null,
+    "createdAt" : "2026-04-05T21:55:11"
   } ],
   "meetings" : [ {
     "id" : 1775154676474,
@@ -693,5 +719,12 @@
     "action" : "approved",
     "notes" : "u are verified",
     "timestamp" : "2026-04-02T18:32:30.335Z"
+  }, {
+    "id" : 1775406382244,
+    "studentId" : 23,
+    "evaluatorId" : 4,
+    "action" : "approved",
+    "notes" : "Verified",
+    "timestamp" : "2026-04-05T16:26:22.244Z"
   } ]
 }
