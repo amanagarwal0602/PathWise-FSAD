@@ -21,6 +21,7 @@ export default function EvaluatorDashboard() {
   const { settings } = useSiteSettings();
   
   const [activeTab, setActiveTab] = useState('pending');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedEntity, setSelectedEntity] = useState(null);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
@@ -157,8 +158,15 @@ export default function EvaluatorDashboard() {
 
   return (
     <div className="evaluator-dashboard">
+      <button
+        className="mobile-menu-toggle"
+        onClick={() => setIsSidebarOpen(prev => !prev)}
+        aria-label="Toggle navigation menu"
+      >
+        ☰
+      </button>
       {/* Sidebar */}
-      <aside className="ev-sidebar">
+      <aside className={`ev-sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="ev-sidebar-header">
           <img src={settings.logoUrl || "/logo.png"} alt={settings.siteName} className="logo-img" />
           <h2>{settings.siteName}</h2>
@@ -177,7 +185,7 @@ export default function EvaluatorDashboard() {
         <nav className="ev-nav">
           <button 
             className={`ev-nav-btn ${activeTab === 'pending' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('pending'); setSelectedEntity(null); }}
+            onClick={() => { setActiveTab('pending'); setSelectedEntity(null); setIsSidebarOpen(false); }}
           >
             <span className="nav-icon">⏳</span>
             <span>Pending Verification</span>
@@ -185,7 +193,7 @@ export default function EvaluatorDashboard() {
           </button>
           <button 
             className={`ev-nav-btn ${activeTab === 'verified' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('verified'); setSelectedEntity(null); }}
+            onClick={() => { setActiveTab('verified'); setSelectedEntity(null); setIsSidebarOpen(false); }}
           >
             <span className="nav-icon">✅</span>
             <span>Verified by Me</span>
@@ -193,7 +201,7 @@ export default function EvaluatorDashboard() {
           </button>
           <button 
             className={`ev-nav-btn ${activeTab === 'rejected' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('rejected'); setSelectedEntity(null); }}
+            onClick={() => { setActiveTab('rejected'); setSelectedEntity(null); setIsSidebarOpen(false); }}
           >
             <span className="nav-icon">❌</span>
             <span>Rejected</span>
@@ -201,7 +209,7 @@ export default function EvaluatorDashboard() {
           </button>
           <button 
             className={`ev-nav-btn ${activeTab === 'history' ? 'active' : ''}`}
-            onClick={() => setActiveTab('history')}
+            onClick={() => { setActiveTab('history'); setIsSidebarOpen(false); }}
           >
             <span className="nav-icon">📋</span>
             <span>My Activity</span>
@@ -217,6 +225,13 @@ export default function EvaluatorDashboard() {
           🚪 Logout
         </button>
       </aside>
+
+      {isSidebarOpen && (
+        <div
+          className="sidebar-backdrop"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
 
       {/* Main Content */}
       <main className="ev-main">

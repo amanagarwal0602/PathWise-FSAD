@@ -41,6 +41,7 @@ function StudentDashboard() {
     const saved = localStorage.getItem('studentActiveTab');
     return saved || 'assessment';
   }); // Start with saved tab or assessment
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [testStarted, setTestStarted] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -514,8 +515,15 @@ function StudentDashboard() {
 
   return (
     <div className="dashboard-layout">
+      <button
+        className="mobile-menu-toggle"
+        onClick={() => setIsSidebarOpen(prev => !prev)}
+        aria-label="Toggle navigation menu"
+      >
+        ☰
+      </button>
       {/* Sidebar */}
-      <aside className="sidebar">
+      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <img src={settings.logoUrl || "/logo.png"} alt={settings.siteName} className="logo-img" />
           <h2>{settings.siteName}</h2>
@@ -557,18 +565,18 @@ function StudentDashboard() {
         <nav className="sidebar-nav">
           <button 
             className={activeTab === 'dashboard' ? 'active' : ''} 
-            onClick={() => canAccessDashboard && setActiveTab('dashboard')}
+            onClick={() => { if (canAccessDashboard) { setActiveTab('dashboard'); setIsSidebarOpen(false); } }}
             disabled={!canAccessDashboard}
             style={{ opacity: canAccessDashboard ? 1 : 0.5 }}
           >
             🏠 Dashboard {!canAccessDashboard && '🔒'}
           </button>
-          <button className={activeTab === 'assessment' ? 'active' : ''} onClick={() => setActiveTab('assessment')}>
+          <button className={activeTab === 'assessment' ? 'active' : ''} onClick={() => { setActiveTab('assessment'); setIsSidebarOpen(false); }}>
             📋 Interest Assessment
           </button>
           <button 
             className={activeTab === 'results' ? 'active' : ''} 
-            onClick={() => hasAssessment && setActiveTab('results')}
+            onClick={() => { if (hasAssessment) { setActiveTab('results'); setIsSidebarOpen(false); } }}
             disabled={!hasAssessment}
             style={{ opacity: hasAssessment ? 1 : 0.5 }}
           >
@@ -576,7 +584,7 @@ function StudentDashboard() {
           </button>
           <button 
             className={activeTab === 'chat' ? 'active' : ''} 
-            onClick={() => hasAssessment && setActiveTab('chat')}
+            onClick={() => { if (hasAssessment) { setActiveTab('chat'); setIsSidebarOpen(false); } }}
             disabled={!hasAssessment}
             style={{ opacity: hasAssessment ? 1 : 0.5 }}
           >
@@ -584,7 +592,7 @@ function StudentDashboard() {
           </button>
           <button 
             className={activeTab === 'meetings' ? 'active' : ''} 
-            onClick={() => hasAssessment && setActiveTab('meetings')}
+            onClick={() => { if (hasAssessment) { setActiveTab('meetings'); setIsSidebarOpen(false); } }}
             disabled={!hasAssessment}
             style={{ opacity: hasAssessment ? 1 : 0.5 }}
           >
@@ -592,19 +600,26 @@ function StudentDashboard() {
           </button>
           <button 
             className={activeTab === 'skills' ? 'active' : ''} 
-            onClick={() => hasAssessment && setActiveTab('skills')}
+            onClick={() => { if (hasAssessment) { setActiveTab('skills'); setIsSidebarOpen(false); } }}
             disabled={!hasAssessment}
             style={{ opacity: hasAssessment ? 1 : 0.5 }}
           >
             🎯 Skill Assessment {!hasAssessment && '🔒'}
           </button>
-          <button className={activeTab === 'profile' ? 'active' : ''} onClick={() => setActiveTab('profile')}>
+          <button className={activeTab === 'profile' ? 'active' : ''} onClick={() => { setActiveTab('profile'); setIsSidebarOpen(false); }}>
             👤 Profile
           </button>
         </nav>
 
         <button className="logout-btn" onClick={handleLogout}>🚪 Logout</button>
       </aside>
+
+      {isSidebarOpen && (
+        <div
+          className="sidebar-backdrop"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
 
       {/* Main Content */}
       <main className="main-content">

@@ -29,6 +29,7 @@ function GeneralCounsellorDashboard() {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedCounsellorId, setSelectedCounsellorId] = useState('');
   const [studentFilter, setStudentFilter] = useState('all');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const chatEndRef = useRef(null);
   const { showToast } = useToast();
 
@@ -187,8 +188,15 @@ function GeneralCounsellorDashboard() {
 
   return (
     <div className="dashboard-layout general-counsellor-layout">
+      <button
+        className="mobile-menu-toggle"
+        onClick={() => setIsSidebarOpen(prev => !prev)}
+        aria-label="Toggle navigation menu"
+      >
+        ☰
+      </button>
       {/* Sidebar */}
-      <aside className="sidebar">
+      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <img src={settings.logoUrl || "/logo.png"} alt={settings.siteName} className="logo-img" />
           <h2>{settings.siteName}</h2>
@@ -200,22 +208,29 @@ function GeneralCounsellorDashboard() {
         </div>
         
         <nav className="sidebar-nav">
-          <button className={activeTab === 'dashboard' ? 'active' : ''} onClick={() => { setActiveTab('dashboard'); setSelectedStudent(null); }}>
+          <button className={activeTab === 'dashboard' ? 'active' : ''} onClick={() => { setActiveTab('dashboard'); setSelectedStudent(null); setIsSidebarOpen(false); }}>
             📊 Dashboard
           </button>
-          <button className={activeTab === 'students' ? 'active' : ''} onClick={() => setActiveTab('students')}>
+          <button className={activeTab === 'students' ? 'active' : ''} onClick={() => { setActiveTab('students'); setIsSidebarOpen(false); }}>
             👥 Students {stats.assessmentDone > 0 && <span className="badge">{stats.assessmentDone}</span>}
           </button>
-          <button className={activeTab === 'counsellors' ? 'active' : ''} onClick={() => setActiveTab('counsellors')}>
+          <button className={activeTab === 'counsellors' ? 'active' : ''} onClick={() => { setActiveTab('counsellors'); setIsSidebarOpen(false); }}>
             👨‍🏫 Career Mentors
           </button>
-          <button className={activeTab === 'reports' ? 'active' : ''} onClick={() => setActiveTab('reports')}>
+          <button className={activeTab === 'reports' ? 'active' : ''} onClick={() => { setActiveTab('reports'); setIsSidebarOpen(false); }}>
             📈 Reports
           </button>
         </nav>
 
         <button className="logout-btn" onClick={handleLogout}>🚪 Logout</button>
       </aside>
+
+      {isSidebarOpen && (
+        <div
+          className="sidebar-backdrop"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
 
       {/* Main Content Area with Student List and Detail View */}
       <div className="gc-main-area">

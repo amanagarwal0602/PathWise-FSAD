@@ -933,6 +933,14 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Dark backdrop behind mobile sidebars */
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 900;
+}
+
 .maintenance-indicator {
   background: #fef3c7;
   color: #92400e;
@@ -9329,6 +9337,11 @@ button:hover, .btn-submit:hover, .login-btn:hover {
     position: fixed;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
+    z-index: 1000;
+  }
+
+  .ev-sidebar.open {
+    transform: translateX(0);
   }
   
   .ev-main {
@@ -11310,107 +11323,89 @@ input[type="password"]:focus {
   .dashboard-layout {
     flex-direction: column;
   }
-  
-  /* Sidebar becomes top nav on mobile */
+
+  /* Sidebar: slide-in panel from the left on mobile */
   .sidebar {
-    width: 100%;
-    height: auto;
+    width: 260px;
+    height: 100vh;
     position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    z-index: 100;
-    flex-direction: column;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
   }
-  
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
   .sidebar-header {
-    padding: 12px 16px;
-    justify-content: space-between;
+    padding: 16px;
+    justify-content: flex-start;
   }
-  
+
   .sidebar-header h2 {
     font-size: 18px;
   }
-  
+
   .sidebar-header .logo-img,
   .sidebar-header .logo-icon {
     width: 28px;
     height: 28px;
     font-size: 22px;
   }
-  
+
   .user-info {
-    display: none;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
-  
-  /* Navigation Tabs */
+
   .sidebar-nav {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding: 8px;
-    gap: 4px;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    padding: 12px 12px 16px;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
   }
-  
-  .sidebar-nav::-webkit-scrollbar {
-    display: none;
-  }
-  
+
   .sidebar-nav button {
-    flex: 0 0 auto;
-    min-width: auto;
-    padding: 10px 14px;
-    font-size: 12px;
-    gap: 6px;
-    white-space: nowrap;
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.1);
+    width: 100%;
+    justify-content: flex-start;
+    font-size: 13px;
   }
-  
-  .sidebar-nav button span:first-child {
-    font-size: 16px;
-  }
-  
-  .sidebar-nav button.active {
-    background: var(--primary);
-  }
-  
-  .sidebar-nav button .badge {
-    padding: 2px 6px;
-    font-size: 10px;
-    margin-left: 4px;
-  }
-  
-  /* Hide text on very small screens, show icons only */
-  .sidebar-nav button span:not(:first-child):not(.badge) {
-    display: inline;
-  }
-  
-  .logout-btn {
-    display: none;
-  }
-  
+
+  .logout-btn,
   .sidebar-footer {
-    display: none;
+    display: block;
   }
-  
+
   .mobile-menu-toggle {
     display: flex;
     align-items: center;
     justify-content: center;
   }
-  
+
+  /* Admin dashboard: keep full left sidebar always visible on phones */
+  .admin-dashboard .sidebar {
+    transform: translateX(0);
+  }
+
+  .admin-dashboard .main-content {
+    margin-left: 260px;
+    margin-top: 16px;
+  }
+
+  .admin-dashboard .mobile-menu-toggle {
+    display: none;
+  }
+
   /* Main Content */
   .main-content {
     margin-left: 0;
-    margin-top: 120px;
+    margin-top: 16px;
     padding: 16px;
-    min-height: calc(100vh - 120px);
+    min-height: calc(100vh - 16px);
   }
-  
+
   .main-content h1 {
     font-size: 22px;
     margin-bottom: 16px;

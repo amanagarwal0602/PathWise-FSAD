@@ -31,6 +31,7 @@ function AdminDashboard() {
   const { showToast } = useToast();
 
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [viewingStudent, setViewingStudent] = useState(null);
   const [viewingCounsellor, setViewingCounsellor] = useState(null);
 
@@ -83,6 +84,13 @@ function AdminDashboard() {
       navigate('/login', { replace: true });
     }
   }, [currentUser, navigate]);
+
+  // On phones, open the admin sidebar by default so all controls are visible
+  useEffect(() => {
+    if (window.innerWidth <= 768) {
+      setIsSidebarOpen(true);
+    }
+  }, []);
 
   if (!currentUser || currentUser.role !== 'admin') {
     return null;
@@ -350,8 +358,15 @@ function AdminDashboard() {
 
   return (
     <div className="dashboard-layout admin-dashboard">
+      <button
+        className="mobile-menu-toggle"
+        onClick={() => setIsSidebarOpen(prev => !prev)}
+        aria-label="Toggle navigation menu"
+      >
+        ☰
+      </button>
       {/* Sidebar */}
-      <aside className="sidebar">
+      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <img
             src={settings.logoUrl || '/logo.png'}
@@ -367,43 +382,43 @@ function AdminDashboard() {
         <nav className="sidebar-nav">
           <button
             className={activeTab === 'dashboard' ? 'active' : ''}
-            onClick={() => setActiveTab('dashboard')}
+            onClick={() => { setActiveTab('dashboard'); setIsSidebarOpen(false); }}
           >
             🏠 Overview
           </button>
           <button
             className={activeTab === 'students' ? 'active' : ''}
-            onClick={() => setActiveTab('students')}
+            onClick={() => { setActiveTab('students'); setIsSidebarOpen(false); }}
           >
             🎓 Students
           </button>
           <button
             className={activeTab === 'counsellors' ? 'active' : ''}
-            onClick={() => setActiveTab('counsellors')}
+            onClick={() => { setActiveTab('counsellors'); setIsSidebarOpen(false); }}
           >
             👨‍🏫 Counsellors
           </button>
           <button
             className={activeTab === 'assignments' ? 'active' : ''}
-            onClick={() => setActiveTab('assignments')}
+            onClick={() => { setActiveTab('assignments'); setIsSidebarOpen(false); }}
           >
             🔗 Assignments
           </button>
           <button
             className={activeTab === 'meetings' ? 'active' : ''}
-            onClick={() => setActiveTab('meetings')}
+            onClick={() => { setActiveTab('meetings'); setIsSidebarOpen(false); }}
           >
             📅 Meetings
           </button>
           <button
             className={activeTab === 'reports' ? 'active' : ''}
-            onClick={() => setActiveTab('reports')}
+            onClick={() => { setActiveTab('reports'); setIsSidebarOpen(false); }}
           >
             📈 Reports
           </button>
           <button
             className={activeTab === 'support' ? 'active' : ''}
-            onClick={() => setActiveTab('support')}
+            onClick={() => { setActiveTab('support'); setIsSidebarOpen(false); }}
           >
             🛟 Support Inbox
           </button>
@@ -420,6 +435,13 @@ function AdminDashboard() {
           </button>
         </div>
       </aside>
+
+      {isSidebarOpen && (
+        <div
+          className="sidebar-backdrop"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
 
       {/* Main Content */}
       <main className="main-content">

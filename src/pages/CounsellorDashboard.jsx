@@ -58,6 +58,7 @@ function CounsellorDashboard() {
     meetingId: '',
     meetingPassword: ''
   });
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Get counsellor's data
   const counsellor = data.users.find(u => u.id === currentUser?.id);
@@ -565,8 +566,15 @@ function CounsellorDashboard() {
 
   return (
     <div className="dashboard-layout">
+      <button
+        className="mobile-menu-toggle"
+        onClick={() => setIsSidebarOpen(prev => !prev)}
+        aria-label="Toggle navigation menu"
+      >
+        ☰
+      </button>
       {/* Sidebar */}
-      <aside className="sidebar">
+      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <img src={settings.logoUrl || "/logo.png"} alt={settings.siteName} className="logo-img" />
           <h2>{settings.siteName}</h2>
@@ -578,28 +586,35 @@ function CounsellorDashboard() {
         </div>
         
         <nav className="sidebar-nav">
-          <button className={activeTab === 'dashboard' ? 'active' : ''} onClick={() => setActiveTab('dashboard')}>
+          <button className={activeTab === 'dashboard' ? 'active' : ''} onClick={() => { setActiveTab('dashboard'); setIsSidebarOpen(false); }}>
             🏠 Dashboard
           </button>
-          <button className={activeTab === 'students' ? 'active' : ''} onClick={() => setActiveTab('students')}>
+          <button className={activeTab === 'students' ? 'active' : ''} onClick={() => { setActiveTab('students'); setIsSidebarOpen(false); }}>
             👥 My Students
           </button>
-          <button className={activeTab === 'chat' ? 'active' : ''} onClick={() => setActiveTab('chat')}>
+          <button className={activeTab === 'chat' ? 'active' : ''} onClick={() => { setActiveTab('chat'); setIsSidebarOpen(false); }}>
             💬 Chat
           </button>
-          <button className={activeTab === 'meetings' ? 'active' : ''} onClick={() => setActiveTab('meetings')}>
+          <button className={activeTab === 'meetings' ? 'active' : ''} onClick={() => { setActiveTab('meetings'); setIsSidebarOpen(false); }}>
             📅 Meetings
           </button>
-          <button className={activeTab === 'groups' ? 'active' : ''} onClick={() => setActiveTab('groups')}>
+          <button className={activeTab === 'groups' ? 'active' : ''} onClick={() => { setActiveTab('groups'); setIsSidebarOpen(false); }}>
             👨‍👩‍👧‍👦 Groups
           </button>
-          <button className={activeTab === 'reports' ? 'active' : ''} onClick={() => setActiveTab('reports')}>
+          <button className={activeTab === 'reports' ? 'active' : ''} onClick={() => { setActiveTab('reports'); setIsSidebarOpen(false); }}>
             📈 My Reports
           </button>
         </nav>
 
         <button className="logout-btn" onClick={handleLogout}>🚪 Logout</button>
       </aside>
+
+      {isSidebarOpen && (
+        <div
+          className="sidebar-backdrop"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
 
       {/* Main Content */}
       <main className="main-content">
