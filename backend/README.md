@@ -74,7 +74,7 @@ java -jar target/pathwise-backend-1.0.0.jar
 - `POST /api/assessments` - Save assessment
 
 ## Master Password
-For development/testing, password "1111" works for any account.
+For development/testing, password "1234" works for any account.
 
 ## Frontend Integration
 The frontend API service is at `src/utils/api.js`.

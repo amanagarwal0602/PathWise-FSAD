@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 import { useToast } from '../context/ToastContext';
+import ProfilePasswordSection from '../components/ProfilePasswordSection';
 
 export default function EvaluatorDashboard() {
   const navigate = useNavigate();
+  const { id: routeEntityId } = useParams();
   const { 
     currentUser, 
     data, 
@@ -13,7 +15,8 @@ export default function EvaluatorDashboard() {
     rejectStudent,
     verifyCounsellor,
     rejectCounsellor,
-    logout
+    logout,
+    updateUser
   } = useData();
   const { showToast } = useToast();
   
@@ -26,6 +29,14 @@ export default function EvaluatorDashboard() {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [verificationNotes, setVerificationNotes] = useState('');
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    name: '',
+    email: '',
+    username: ''
+  });
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileInitialised, setProfileInitialised] = useState(false);
 
   // Redirect if not logged in or not an evaluator
   useEffect(() => {
@@ -34,12 +45,48 @@ export default function EvaluatorDashboard() {
     }
   }, [currentUser, navigate]);
 
+  // On phones, show the left panel by default so it's clearly visible
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      setIsSidebarOpen(true);
+    }
+  }, []);
+
+  // Initialise editable profile details once
+  useEffect(() => {
+    if (!profileInitialised && currentUser) {
+      setProfileForm({
+        name: currentUser.name || '',
+        email: currentUser.email || '',
+        username: currentUser.username || ''
+      });
+      setProfileInitialised(true);
+    }
+  }, [profileInitialised, currentUser]);
+
+  const isStudentEvaluator = currentUser?.evaluatorType === 'student';
+  const evaluatorDisplayRole = isStudentEvaluator ? 'Student Verification Specialist' : 'Mentor Verification Specialist';
+
+  // If route has an id, keep selected entity in sync with URL
+  useEffect(() => {
+    if (!routeEntityId) return;
+    const numericId = Number(routeEntityId);
+    if (!Number.isNaN(numericId)) {
+      const allEntities = isStudentEvaluator 
+        ? data.users.filter(u => u.role === 'student')
+        : data.users.filter(u => u.role === 'counsellor');
+      const found = allEntities.find(e => Number(e.id) === numericId);
+      if (found) {
+        setSelectedEntity(found);
+      }
+    }
+  }, [routeEntityId, isStudentEvaluator, data.users]);
+
   if (!currentUser || currentUser.role !== 'evaluator') {
     return null;
   }
 
   // Determine what this evaluator verifies
-  const isStudentEvaluator = currentUser.evaluatorType === 'student';
   const entityType = isStudentEvaluator ? 'Student' : 'Career Mentor';
   const entityTypeIcon = isStudentEvaluator ? '🎓' : '👨‍🏫';
 
@@ -51,29 +98,63 @@ export default function EvaluatorDashboard() {
       : entity.status;
   };
 
+  // Treat as truly pending only if marked pending and not already stamped
+  // as verified/rejected by backend metadata.
+  const isPendingEntity = (entity) => {
+    const status = getEntityStatusValue(entity);
+    return (
+      status === 'pending_verification' &&
+      !entity.verifiedAt &&
+      !entity.verificationNotes &&
+      !entity.rejectionReason
+    );
+  };
+
   // Get entities based on evaluator type
   const allEntities = isStudentEvaluator 
     ? data.users.filter(u => u.role === 'student')
     : data.users.filter(u => u.role === 'counsellor');
   
   // Get pending verification entities
-  const pendingEntities = allEntities.filter(e => getEntityStatusValue(e) === 'pending_verification');
+  const pendingEntities = allEntities.filter(isPendingEntity);
   
-  // Get verified entities (by this evaluator)
-  const verifiedEntities = allEntities.filter(e => 
-    Number(e.verifiedBy) === Number(currentUser.id) &&
-    getEntityStatusValue(e) === (isStudentEvaluator ? 'verified' : 'active')
-  );
-  
-  // Get rejected entities (by this evaluator)
-  const rejectedEntities = allEntities.filter(e => 
-    Number(e.verifiedBy) === Number(currentUser.id) && getEntityStatusValue(e) === 'rejected'
-  );
-
-  // Get verification requests/history
+  // Get verification requests/history for this evaluator
   const verificationHistory = (data.verificationRequests || [])
     .filter(r => r.evaluatorId === currentUser.id)
     .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+  const getEntityIdFromRequest = (item) => item.studentId ?? item.counsellorId;
+
+  // Build sets of entity ids this evaluator has approved/rejected
+  const approvedIds = new Set(
+    verificationHistory
+      .filter(item => item.action === 'approved')
+      .map(item => String(getEntityIdFromRequest(item)))
+  );
+
+  const rejectedIds = new Set(
+    verificationHistory
+      .filter(item => item.action === 'rejected')
+      .map(item => String(getEntityIdFromRequest(item)))
+  );
+
+  // Also include any entities that already carry backend metadata linking
+  // them to this evaluator, so pre-existing data is counted.
+  allEntities.forEach(entity => {
+    if (Number(entity.verifiedBy) === Number(currentUser.id)) {
+      const status = getEntityStatusValue(entity);
+      if (status === (isStudentEvaluator ? 'verified' : 'active')) {
+        approvedIds.add(String(entity.id));
+      }
+      if (status === 'rejected') {
+        rejectedIds.add(String(entity.id));
+      }
+    }
+  });
+
+  // Get verified/rejected entities (by this evaluator)
+  const verifiedEntities = allEntities.filter(e => approvedIds.has(String(e.id)));
+  const rejectedEntities = allEntities.filter(e => rejectedIds.has(String(e.id)));
 
   // Stats
   const stats = {
@@ -83,9 +164,50 @@ export default function EvaluatorDashboard() {
     total: verifiedEntities.length + rejectedEntities.length
   };
 
+  const handleBackToList = () => {
+    setSelectedEntity(null);
+    navigate('/evaluator');
+  };
+
   const handleLogout = () => {
     logout();
     navigate('/login', { replace: true });
+  };
+
+  const handleSaveProfile = async () => {
+    if (!currentUser) return;
+
+    const trimmedName = profileForm.name.trim();
+    const trimmedEmail = profileForm.email.trim();
+    const trimmedUsername = profileForm.username.trim();
+
+    if (!trimmedName || !trimmedEmail || !trimmedUsername) {
+      showToast('Name, email and username are required.', 'error');
+      return;
+    }
+
+    setIsSavingProfile(true);
+    try {
+      const updated = await updateUser(currentUser.id, {
+        name: trimmedName,
+        email: trimmedEmail,
+        username: trimmedUsername
+      });
+
+      if (updated) {
+        showToast('Profile updated successfully.', 'success');
+        setProfileForm(prev => ({
+          ...prev,
+          name: updated.name || '',
+          email: updated.email || '',
+          username: updated.username || ''
+        }));
+      } else {
+        showToast('Failed to update profile.', 'error');
+      }
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
   const handleApprove = async (entity) => {
@@ -163,16 +285,9 @@ export default function EvaluatorDashboard() {
   };
 
   return (
-    <div className="evaluator-dashboard">
-      <button
-        className="mobile-menu-toggle"
-        onClick={() => setIsSidebarOpen(prev => !prev)}
-        aria-label="Toggle navigation menu"
-      >
-        ☰
-      </button>
-      {/* Sidebar */}
-      <aside className={`ev-sidebar ${isSidebarOpen ? 'open' : ''}`}>
+    <div className="dashboard-layout evaluator-dashboard">
+      {/* Sidebar - reuse global sidebar pattern for consistent left panel */}
+      <aside className={`sidebar ev-sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="ev-sidebar-header">
           <img src={settings.logoUrl || "/logo.png"} alt={settings.siteName} className="logo-img" />
           <h2>{settings.siteName}</h2>
@@ -180,8 +295,8 @@ export default function EvaluatorDashboard() {
         
         <div className="ev-user-info">
           <div className="ev-avatar">{(currentUser?.evaluatorType === 'mentor' || currentUser?.evaluatorType === 'mentor_verification') ? '👨‍🏫' : '🎓'}</div>
-          <div>
-            <h3>{currentUser.name}</h3>
+          <div className="ev-user-meta">
+            <h3 className="ev-user-name">{currentUser.name}</h3>
             <span className="ev-role-badge">
               {isStudentEvaluator ? 'Student Verification Specialist' : 'Mentor Verification Specialist'}
             </span>
@@ -220,6 +335,13 @@ export default function EvaluatorDashboard() {
             <span className="nav-icon">📋</span>
             <span>My Activity</span>
           </button>
+          <button 
+            className={`ev-nav-btn ${activeTab === 'profile' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('profile'); setSelectedEntity(null); setIsSidebarOpen(false); }}
+          >
+            <span className="nav-icon">👤</span>
+            <span>My Profile</span>
+          </button>
         </nav>
 
         <div className="ev-info-box">
@@ -243,19 +365,30 @@ export default function EvaluatorDashboard() {
       <main className="ev-main">
         {/* Header */}
         <header className="ev-header">
-          <div>
+          <div className="ev-header-left">
+            <button
+              className="mobile-menu-toggle"
+              onClick={() => setIsSidebarOpen(prev => !prev)}
+              aria-label="Toggle navigation menu"
+            >
+              ☰
+            </button>
+            <div>
             <h1>
               {activeTab === 'pending' && `⏳ Pending ${entityType} Verification`}
               {activeTab === 'verified' && `✅ Verified ${entityType}s`}
               {activeTab === 'rejected' && `❌ Rejected ${entityType}s`}
               {activeTab === 'history' && '📋 My Activity Log'}
+              {activeTab === 'profile' && '👤 My Profile'}
             </h1>
             <p className="ev-subtitle">
               {activeTab === 'pending' && `Review and verify ${entityType.toLowerCase()} registrations`}
               {activeTab === 'verified' && `${entityType}s you have verified and approved`}
               {activeTab === 'rejected' && `${entityType}s you have rejected`}
               {activeTab === 'history' && 'Your verification activity history'}
+              {activeTab === 'profile' && 'Your evaluator profile details'}
             </p>
+            </div>
           </div>
           <div className="ev-stats-mini">
             <div className="ev-stat-pill pending">
@@ -282,7 +415,80 @@ export default function EvaluatorDashboard() {
 
         {/* Content Area */}
         <div className="ev-content">
-          {activeTab === 'history' ? (
+          {activeTab === 'profile' ? (
+            <div className="profile-section">
+              <h2>My Profile</h2>
+              <div className="profile-card">
+                <div className="profile-header">
+                  <div className="profile-avatar">{(currentUser?.evaluatorType === 'mentor' || currentUser?.evaluatorType === 'mentor_verification') ? '👨‍🏫' : '🎓'}</div>
+                  <div className="profile-name">
+                    <h2>{currentUser?.name}</h2>
+                    <p>{currentUser?.email}</p>
+                  </div>
+                </div>
+
+                <div className="profile-details">
+                  <div className="detail-item">
+                    <label>Full Name</label>
+                    <input
+                      type="text"
+                      value={profileForm.name}
+                      onChange={(e) => setProfileForm(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+                  <div className="detail-item">
+                    <label>Email</label>
+                    <input
+                      type="email"
+                      value={profileForm.email}
+                      onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder="Enter your email"
+                    />
+                  </div>
+                  <div className="detail-item">
+                    <label>Username</label>
+                    <input
+                      type="text"
+                      value={profileForm.username}
+                      onChange={(e) => setProfileForm(prev => ({ ...prev, username: e.target.value }))}
+                      placeholder="Choose a username"
+                    />
+                  </div>
+                  <div className="detail-item">
+                    <label>Role</label>
+                    <span>{evaluatorDisplayRole}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Verification Focus</label>
+                    <span>{isStudentEvaluator ? 'Students' : 'Career Mentors'}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Total Verified</label>
+                    <span>{stats.verified}</span>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '16px', display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={handleSaveProfile}
+                    disabled={isSavingProfile}
+                  >
+                    {isSavingProfile ? 'Saving...' : 'Save Profile'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => setShowPasswordModal(true)}
+                  >
+                    Change Password
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : activeTab === 'history' ? (
             /* Activity History */
             <div className="ev-history-section">
               <h2>Recent Activity</h2>
@@ -321,7 +527,7 @@ export default function EvaluatorDashboard() {
             </div>
           ) : (
             /* Entity List View */
-            <div className="ev-students-grid">
+            <div className={`ev-students-grid ${selectedEntity ? 'has-selection' : ''}`}>
               {/* Entity List */}
               <div className="ev-student-list">
                 <div className="ev-list-header">
@@ -349,7 +555,10 @@ export default function EvaluatorDashboard() {
                       <div 
                         key={entity.id} 
                         className={`ev-student-card ${selectedEntity?.id === entity.id ? 'selected' : ''}`}
-                        onClick={() => setSelectedEntity(entity)}
+                        onClick={() => {
+                          setSelectedEntity(entity);
+                          navigate(`/evaluator/${entity.id}`);
+                        }}
                       >
                         <div className="student-card-header">
                           <div className="student-avatar">
@@ -399,7 +608,7 @@ export default function EvaluatorDashboard() {
               </div>
 
               {/* Entity Detail Panel */}
-              <div className="ev-student-detail">
+              <div className={`ev-student-detail ${!selectedEntity ? 'empty' : ''}`}>
                 {!selectedEntity ? (
                   <div className="ev-no-selection">
                     <span className="empty-icon">👈</span>
@@ -408,6 +617,13 @@ export default function EvaluatorDashboard() {
                   </div>
                 ) : (
                   <div className="ev-detail-content">
+                    <button
+                      type="button"
+                      className="ev-back-btn"
+                      onClick={handleBackToList}
+                    >
+                      ← Back to list
+                    </button>
                     <div className="ev-detail-header">
                       <div className="detail-avatar">{entityTypeIcon}</div>
                       <div className="detail-basic">
@@ -628,6 +844,16 @@ export default function EvaluatorDashboard() {
         </div>
       )}
       
+      {/* Change Password Modal */}
+      {showPasswordModal && (
+        <div className="modal-overlay" onClick={() => setShowPasswordModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>Change Password</h3>
+            <ProfilePasswordSection hideTitle />
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

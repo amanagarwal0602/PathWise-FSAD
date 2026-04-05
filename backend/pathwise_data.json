@@ -284,7 +284,8 @@
     "rating" : 0,
     "reviewCount" : 0,
     "evaluatorType" : null,
-    "createdAt" : "2026-03-31T22:59:31"
+    "createdAt" : "2026-03-31T22:59:31",
+    "studentStatus" : "active"
   }, {
     "id" : 13,
     "name" : "Aman Agarwal",
@@ -310,14 +311,15 @@
     "rating" : 0,
     "reviewCount" : 0,
     "evaluatorType" : null,
-    "createdAt" : "2026-03-31T23:11:55"
+    "createdAt" : "2026-03-31T23:11:55",
+    "studentStatus" : "pending_verification"
   }, {
     "id" : 14,
     "name" : "Aman",
     "username" : "aman",
     "email" : "aman@gmail.com",
     "role" : "student",
-    "status" : "pending_verification",
+    "status" : "verified",
     "college" : "KLU",
     "branch" : "CSE",
     "year" : "2",
@@ -336,7 +338,8 @@
     "rating" : 0,
     "reviewCount" : 0,
     "evaluatorType" : null,
-    "createdAt" : "2026-03-31T23:16:09"
+    "createdAt" : "2026-03-31T23:16:09",
+    "studentStatus" : "verified"
   }, {
     "id" : 18,
     "name" : "Prateek Sharma",
@@ -362,7 +365,8 @@
     "rating" : 0,
     "reviewCount" : 0,
     "evaluatorType" : null,
-    "createdAt" : "2026-04-01T16:04:52"
+    "createdAt" : "2026-04-01T16:04:52",
+    "studentStatus" : "verified"
   }, {
     "id" : 20,
     "name" : "Student 1",
@@ -388,7 +392,8 @@
     "rating" : 0,
     "reviewCount" : 0,
     "evaluatorType" : null,
-    "createdAt" : "2026-04-01T23:17:29"
+    "createdAt" : "2026-04-01T23:17:29",
+    "studentStatus" : "pending_verification"
   }, {
     "id" : 21,
     "name" : "Student 2",
@@ -414,7 +419,8 @@
     "rating" : 0,
     "reviewCount" : 0,
     "evaluatorType" : null,
-    "createdAt" : "2026-04-01T23:17:29"
+    "createdAt" : "2026-04-01T23:17:29",
+    "studentStatus" : "pending_verification"
   }, {
     "id" : 22,
     "name" : "Rajan Aryan",
@@ -440,7 +446,8 @@
     "rating" : 0,
     "reviewCount" : 0,
     "evaluatorType" : null,
-    "createdAt" : "2026-04-05T21:10:05"
+    "createdAt" : "2026-04-05T21:10:05",
+    "studentStatus" : "pending_verification"
   }, {
     "id" : 23,
     "name" : "Suhani",
@@ -457,7 +464,7 @@
     "studentId" : "2400033073",
     "idProofType" : "College ID Card",
     "guidanceStage" : "initial",
-    "assignedCounsellor" : null,
+    "assignedCounsellor" : 10,
     "assessmentCompleted" : false,
     "assessmentSkipped" : true,
     "flagged" : false,
@@ -466,7 +473,8 @@
     "rating" : 0,
     "reviewCount" : 0,
     "evaluatorType" : null,
-    "createdAt" : "2026-04-05T21:55:11"
+    "createdAt" : "2026-04-05T21:55:11",
+    "studentStatus" : "verified"
   } ],
   "meetings" : [ {
     "id" : 1775154676474,
@@ -726,5 +734,12 @@
     "action" : "approved",
     "notes" : "Verified",
     "timestamp" : "2026-04-05T16:26:22.244Z"
+  }, {
+    "id" : 1775409481438,
+    "studentId" : 14,
+    "evaluatorId" : 4,
+    "action" : "approved",
+    "notes" : "",
+    "timestamp" : "2026-04-05T17:18:01.438Z"
   } ]
 }

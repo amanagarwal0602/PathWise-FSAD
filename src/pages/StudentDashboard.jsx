@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 import { useToast } from '../context/ToastContext';
+import ProfilePasswordSection from '../components/ProfilePasswordSection';
 
 function StudentDashboard() {
   const navigate = useNavigate();
@@ -11,7 +12,7 @@ function StudentDashboard() {
     saveTestResult, addChatMessage, saveInterestAssessment,
     calculateInterestScores, getInterestAssessment, STUDENT_STATUS,
     updateStudentStatus, refreshData, syncStatus, logout,
-    loadConversation, requestMeeting, skipInterestAssessment, changePassword
+    loadConversation, requestMeeting, skipInterestAssessment, updateUser
   } = useData();
   const { showToast } = useToast();
   
@@ -53,10 +54,20 @@ function StudentDashboard() {
     time: ''
   });
   const [showMeetingRequestForm, setShowMeetingRequestForm] = useState(false);
-  const [currentPasswordInput, setCurrentPasswordInput] = useState('');
-  const [newPasswordInput, setNewPasswordInput] = useState('');
-  const [confirmNewPasswordInput, setConfirmNewPasswordInput] = useState('');
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    name: '',
+    email: '',
+    username: '',
+    college: '',
+    branch: '',
+    careerGoals: '',
+    achievements: ''
+  });
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileInitialised, setProfileInitialised] = useState(false);
+  const welcomeIntrosSentRef = useRef(new Set());
+  const welcomeFollowupPendingRef = useRef(new Set());
 
   // Protect route
   useEffect(() => {
@@ -82,6 +93,22 @@ function StudentDashboard() {
     ? data.users.find(u => u.id === student.assignedCounsellor) 
     : null;
   const generalCounsellor = data.users.find(u => u.role === 'general_counsellor');
+
+  // Initialise editable profile form once student data is available
+  useEffect(() => {
+    if (!profileInitialised && currentUser && student) {
+      setProfileForm({
+        name: currentUser.name || '',
+        email: currentUser.email || '',
+        username: currentUser.username || '',
+        college: student.college || '',
+        branch: student.branch || '',
+        careerGoals: student.careerGoals || '',
+        achievements: student.achievements || ''
+      });
+      setProfileInitialised(true);
+    }
+  }, [profileInitialised, currentUser, student]);
 
   // Get student's interest assessment
   const myAssessment = getInterestAssessment(currentUser?.id);
@@ -157,10 +184,103 @@ function StudentDashboard() {
     return () => clearInterval(interval);
   }, [currentUser?.id, refreshData]);
 
+  // Automated mentor-style welcome messages in chat
+  useEffect(() => {
+    if (activeTab !== 'chat') return;
+    if (!currentUser || !chatPartner) return;
+    if (!hasAssessment) return;
+
+    const pairKey = `${currentUser.id}-${chatPartner.id}`;
+
+    // If there is already a conversation, never auto-send welcome again
+    if (myChats.length > 0) {
+      welcomeIntrosSentRef.current.add(pairKey);
+      welcomeFollowupPendingRef.current.delete(pairKey);
+      return;
+    }
+
+    if (welcomeIntrosSentRef.current.has(pairKey)) {
+      return;
+    }
+
+    welcomeIntrosSentRef.current.add(pairKey);
+
+    const firstName = (currentUser.name || '').split(' ')[0] || 'there';
+
+    // If a mentor is already assigned, send a personalised mentor welcome
+    if (assignedCounsellor && chatPartner.id === assignedCounsellor.id) {
+      const mentorType = assignedCounsellor.specialization || 'Career Mentor';
+      const introText =
+        `Hi ${firstName}, I’m ${assignedCounsellor.name}, your ${mentorType} at PathWise. 👋\n\n` +
+        `I’ve had a look at your profile and assessment. Tell me about your dream role or the direction you’re curious about, so we can plan your next steps.`;
+      addChatMessage(assignedCounsellor.id, currentUser.id, introText);
+      return;
+    }
+
+    // If no mentor yet, send a general coordinator style welcome and prepare a follow-up
+    if (generalCounsellor && chatPartner.id === generalCounsellor.id) {
+      const introText =
+        `Hi ${firstName}, I’m ${generalCounsellor.name || 'your Career Coordinator'} from the PathWise team. 👋\n\n` +
+        `Thanks for completing your assessment. Share a quick introduction about yourself and what you’re hoping to achieve, ` +
+        `so we can connect you to the best mentor.`;
+
+      (async () => {
+        await addChatMessage(generalCounsellor.id, currentUser.id, introText);
+        welcomeFollowupPendingRef.current.add(pairKey);
+      })();
+    }
+  }, [activeTab, currentUser?.id, chatPartner?.id, myChats.length, hasAssessment, assignedCounsellor?.id, generalCounsellor?.id]);
+
   // Handle logout
   const handleLogout = () => {
     logout();
     navigate('/login', { replace: true });
+  };
+
+  // Save editable profile details to backend
+  const handleSaveProfile = async () => {
+    if (!currentUser || !student) return;
+
+    const trimmedName = profileForm.name.trim();
+    const trimmedEmail = profileForm.email.trim();
+    const trimmedUsername = profileForm.username.trim();
+
+    if (!trimmedName || !trimmedEmail || !trimmedUsername) {
+      showToast('Name, email and username are required.', 'error');
+      return;
+    }
+
+    setIsSavingProfile(true);
+    try {
+      const payload = {
+        name: trimmedName,
+        email: trimmedEmail,
+        username: trimmedUsername,
+        college: profileForm.college?.trim() || '',
+        branch: profileForm.branch?.trim() || '',
+        careerGoals: profileForm.careerGoals?.trim() || '',
+        achievements: profileForm.achievements?.trim() || ''
+      };
+
+      const updated = await updateUser(currentUser.id, payload);
+      if (updated) {
+        showToast('Profile updated successfully.', 'success');
+        setProfileForm(prev => ({
+          ...prev,
+          name: updated.name || '',
+          email: updated.email || '',
+          username: updated.username || '',
+          college: updated.college || '',
+          branch: updated.branch || '',
+          careerGoals: updated.careerGoals || '',
+          achievements: updated.achievements || ''
+        }));
+      } else {
+        showToast('Failed to update profile.', 'error');
+      }
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
   // Multiple select answer toggle
@@ -281,10 +401,32 @@ function StudentDashboard() {
   };
 
   // Send chat message
-  const sendMessage = () => {
-    if (chatMessage.trim() && chatPartner) {
-      addChatMessage(currentUser.id, chatPartner.id, chatMessage.trim());
-      setChatMessage('');
+  const sendMessage = async () => {
+    if (!chatMessage.trim() || !chatPartner) return;
+
+    const trimmed = chatMessage.trim();
+    setChatMessage('');
+
+    const pairKey = `${currentUser.id}-${chatPartner.id}`;
+
+    await addChatMessage(currentUser.id, chatPartner.id, trimmed);
+
+    // For students still chatting with the general counsellor (no mentor yet),
+    // send a one-time follow-up thank-you after their first reply.
+    if (
+      welcomeFollowupPendingRef.current.has(pairKey) &&
+      generalCounsellor &&
+      chatPartner.id === generalCounsellor.id
+    ) {
+      welcomeFollowupPendingRef.current.delete(pairKey);
+
+      const firstName = (currentUser.name || '').split(' ')[0] || 'there';
+      const followupText =
+        `Thanks for sharing that, ${firstName}! 🙌\n\n` +
+        `We’ll use this to match you with the most suitable mentor and schedule your next steps. ` +
+        `You’ll receive a notification once your mentor is assigned.`;
+
+      await addChatMessage(generalCounsellor.id, currentUser.id, followupText);
     }
   };
 
@@ -316,44 +458,6 @@ function StudentDashboard() {
     showToast('Your meeting request has been sent to your mentor.', 'success');
     setMeetingRequestForm({ topic: '', date: '', time: '' });
     setShowMeetingRequestForm(false);
-  };
-
-  // Change password from profile section
-  const handleChangePassword = async (e) => {
-    e.preventDefault();
-
-    if (!newPasswordInput || !confirmNewPasswordInput) {
-      showToast('Please enter and confirm your new password.', 'error');
-      return;
-    }
-
-    if (newPasswordInput !== confirmNewPasswordInput) {
-      showToast('New passwords do not match.', 'error');
-      return;
-    }
-
-    if (newPasswordInput.length < 4) {
-      showToast('New password is too short.', 'error');
-      return;
-    }
-
-    if (!currentPasswordInput) {
-      showToast('Please enter your current password.', 'error');
-      return;
-    }
-
-    setIsChangingPassword(true);
-    const result = await changePassword(currentUser.id, currentPasswordInput, newPasswordInput);
-    setIsChangingPassword(false);
-
-    if (result.success) {
-      showToast('Password updated successfully.', 'success');
-      setCurrentPasswordInput('');
-      setNewPasswordInput('');
-      setConfirmNewPasswordInput('');
-    } else {
-      showToast(result.message || 'Failed to update password.', 'error');
-    }
   };
 
   // Get progress percentage
@@ -1357,12 +1461,49 @@ function StudentDashboard() {
 
               <div className="profile-details">
                 <div className="detail-item">
+                  <label>Full Name</label>
+                  <input
+                    type="text"
+                    value={profileForm.name}
+                    onChange={(e) => setProfileForm(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Enter your full name"
+                  />
+                </div>
+                <div className="detail-item">
+                  <label>Email</label>
+                  <input
+                    type="email"
+                    value={profileForm.email}
+                    onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="Enter your email"
+                  />
+                </div>
+                <div className="detail-item">
+                  <label>Username</label>
+                  <input
+                    type="text"
+                    value={profileForm.username}
+                    onChange={(e) => setProfileForm(prev => ({ ...prev, username: e.target.value }))}
+                    placeholder="Choose a username"
+                  />
+                </div>
+                <div className="detail-item">
                   <label>College</label>
-                  <span>{student?.college || 'Not specified'}</span>
+                  <input
+                    type="text"
+                    value={profileForm.college}
+                    onChange={(e) => setProfileForm(prev => ({ ...prev, college: e.target.value }))}
+                    placeholder="Your college name"
+                  />
                 </div>
                 <div className="detail-item">
                   <label>Branch</label>
-                  <span>{student?.branch || 'Not specified'}</span>
+                  <input
+                    type="text"
+                    value={profileForm.branch}
+                    onChange={(e) => setProfileForm(prev => ({ ...prev, branch: e.target.value }))}
+                    placeholder="Your branch / major"
+                  />
                 </div>
                 <div className="detail-item">
                   <label>Status</label>
@@ -1372,11 +1513,21 @@ function StudentDashboard() {
                 </div>
                 <div className="detail-item">
                   <label>Career Goals</label>
-                  <span>{student?.careerGoals || 'Not specified'}</span>
+                  <textarea
+                    value={profileForm.careerGoals}
+                    onChange={(e) => setProfileForm(prev => ({ ...prev, careerGoals: e.target.value }))}
+                    placeholder="Describe your career goals"
+                    rows={2}
+                  />
                 </div>
                 <div className="detail-item">
                   <label>Achievements</label>
-                  <span>{student?.achievements || 'Not specified'}</span>
+                  <textarea
+                    value={profileForm.achievements}
+                    onChange={(e) => setProfileForm(prev => ({ ...prev, achievements: e.target.value }))}
+                    placeholder="Highlight any key achievements"
+                    rows={2}
+                  />
                 </div>
                 <div className="detail-item">
                   <label>Your Career Mentor</label>
@@ -1414,50 +1565,38 @@ function StudentDashboard() {
               )}
 
               {/* Change Password */}
-              <div className="profile-password-section">
-                <h3>Change Password</h3>
-                <form className="password-form" onSubmit={handleChangePassword}>
-                  <div className="detail-item">
-                    <label>Current Password</label>
-                    <input
-                      type="password"
-                      value={currentPasswordInput}
-                      onChange={(e) => setCurrentPasswordInput(e.target.value)}
-                      placeholder="Enter current password"
-                    />
-                  </div>
-                  <div className="detail-item">
-                    <label>New Password</label>
-                    <input
-                      type="password"
-                      value={newPasswordInput}
-                      onChange={(e) => setNewPasswordInput(e.target.value)}
-                      placeholder="Enter new password"
-                    />
-                  </div>
-                  <div className="detail-item">
-                    <label>Confirm New Password</label>
-                    <input
-                      type="password"
-                      value={confirmNewPasswordInput}
-                      onChange={(e) => setConfirmNewPasswordInput(e.target.value)}
-                      placeholder="Re-enter new password"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="btn-primary"
-                    disabled={isChangingPassword}
-                  >
-                    {isChangingPassword ? 'Updating...' : 'Update Password'}
-                  </button>
-                </form>
+              <div style={{ marginTop: '16px', display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={handleSaveProfile}
+                  disabled={isSavingProfile}
+                >
+                  {isSavingProfile ? 'Saving...' : 'Save Profile'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setShowPasswordModal(true)}
+                >
+                  Change Password
+                </button>
               </div>
             </div>
           </div>
         )}
       </main>
       
+      {/* Change Password Modal */}
+      {showPasswordModal && (
+        <div className="modal-overlay" onClick={() => setShowPasswordModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>Change Password</h3>
+            <ProfilePasswordSection hideTitle />
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

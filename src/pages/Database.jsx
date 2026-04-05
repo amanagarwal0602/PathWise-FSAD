@@ -22,6 +22,7 @@ function Database() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
   const [editUser, setEditUser] = useState(null);
+  const [actionUser, setActionUser] = useState(null);
 
   const goBackToDashboard = () => {
     if (!currentUser) {
@@ -124,6 +125,14 @@ function Database() {
   // Get assessment for student
   const getAssessment = (studentId) => {
     return data.interestAssessments?.find(a => a.studentId === studentId);
+  };
+
+  const openActionMenu = (user) => {
+    setActionUser(user);
+  };
+
+  const closeActionMenu = () => {
+    setActionUser(null);
   };
 
   const openEditUser = (user) => {
@@ -466,47 +475,13 @@ function Database() {
                         </td>
                         <td>{getCounsellorName(s.assignedCounsellor)}</td>
                         <td>
-                          <div className="table-actions">
-                            {s.studentStatus === 'pending_verification' && (
-                              <>
-                                <button
-                                  type="button"
-                                  className="action-btn action-btn-status action-btn-status--activate"
-                                  onClick={() => handleVerifyUser(s)}
-                                >
-                                  ✅ Verify
-                                </button>
-                                <button
-                                  type="button"
-                                  className="action-btn action-btn-danger"
-                                  onClick={() => handleRejectUser(s)}
-                                >
-                                  ❌ Reject
-                                </button>
-                              </>
-                            )}
-                            <button
-                              type="button"
-                              className="action-btn action-btn-edit"
-                              onClick={() => openEditUser(s)}
-                            >
-                              ✏ Edit
-                            </button>
-                            <button
-                              type="button"
-                              className={`action-btn action-btn-status ${s.status === 'inactive' ? 'action-btn-status--activate' : 'action-btn-status--deactivate'}`}
-                              onClick={() => handleToggleStatus(s.id)}
-                            >
-                              {s.status === 'inactive' ? '✓ Activate' : '⏸ Deactivate'}
-                            </button>
-                            <button
-                              type="button"
-                              className="action-btn action-btn-danger"
-                              onClick={() => handleDeleteUserRow(s.id)}
-                            >
-                              🗑 Delete
-                            </button>
-                          </div>
+                          <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={() => openActionMenu(s)}
+                          >
+                            ⋯ Actions
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -542,47 +517,13 @@ function Database() {
                         <td>{getStudentCount(c.id)}</td>
                         <td>{c.status || 'active'}</td>
                         <td>
-                          <div className="table-actions">
-                            {c.status === 'pending_verification' && (
-                              <>
-                                <button
-                                  type="button"
-                                  className="action-btn action-btn-status action-btn-status--activate"
-                                  onClick={() => handleVerifyUser(c)}
-                                >
-                                  ✅ Verify
-                                </button>
-                                <button
-                                  type="button"
-                                  className="action-btn action-btn-danger"
-                                  onClick={() => handleRejectUser(c)}
-                                >
-                                  ❌ Reject
-                                </button>
-                              </>
-                            )}
-                            <button
-                              type="button"
-                              className="action-btn action-btn-edit"
-                              onClick={() => openEditUser(c)}
-                            >
-                              ✏ Edit
-                            </button>
-                            <button
-                              type="button"
-                              className={`action-btn action-btn-status ${c.status === 'inactive' ? 'action-btn-status--activate' : 'action-btn-status--deactivate'}`}
-                              onClick={() => handleToggleStatus(c.id)}
-                            >
-                              {c.status === 'inactive' ? '✓ Activate' : '⏸ Deactivate'}
-                            </button>
-                            <button
-                              type="button"
-                              className="action-btn action-btn-danger"
-                              onClick={() => handleDeleteUserRow(c.id)}
-                            >
-                              🗑 Delete
-                            </button>
-                          </div>
+                          <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={() => openActionMenu(c)}
+                          >
+                            ⋯ Actions
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -618,29 +559,13 @@ function Database() {
                         <td>{getStudentCount(g.id)}</td>
                         <td>{g.status || 'active'}</td>
                         <td>
-                          <div className="table-actions">
-                            <button
-                              type="button"
-                              className="action-btn action-btn-edit"
-                              onClick={() => openEditUser(g)}
-                            >
-                              ✏ Edit
-                            </button>
-                            <button
-                              type="button"
-                              className={`action-btn action-btn-status ${g.status === 'inactive' ? 'action-btn-status--activate' : 'action-btn-status--deactivate'}`}
-                              onClick={() => handleToggleStatus(g.id)}
-                            >
-                              {g.status === 'inactive' ? '✓ Activate' : '⏸ Deactivate'}
-                            </button>
-                            <button
-                              type="button"
-                              className="action-btn action-btn-danger"
-                              onClick={() => handleDeleteUserRow(g.id)}
-                            >
-                              🗑 Delete
-                            </button>
-                          </div>
+                          <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={() => openActionMenu(g)}
+                          >
+                            ⋯ Actions
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -674,29 +599,13 @@ function Database() {
                         <td>{e.evaluatorType === 'counsellor' ? 'Mentor Verifier' : 'Student Verifier'}</td>
                         <td>{e.specialization || 'N/A'}</td>
                         <td>
-                          <div className="table-actions">
-                            <button
-                              type="button"
-                              className="action-btn action-btn-edit"
-                              onClick={() => openEditUser(e)}
-                            >
-                              ✏ Edit
-                            </button>
-                            <button
-                              type="button"
-                              className={`action-btn action-btn-status ${e.status === 'inactive' ? 'action-btn-status--activate' : 'action-btn-status--deactivate'}`}
-                              onClick={() => handleToggleStatus(e.id)}
-                            >
-                              {e.status === 'inactive' ? '✓ Activate' : '⏸ Deactivate'}
-                            </button>
-                            <button
-                              type="button"
-                              className="action-btn action-btn-danger"
-                              onClick={() => handleDeleteUserRow(e.id)}
-                            >
-                              🗑 Delete
-                            </button>
-                          </div>
+                          <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={() => openActionMenu(e)}
+                          >
+                            ⋯ Actions
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -728,29 +637,13 @@ function Database() {
                         <td className="hide-mobile">{a.email}</td>
                         <td>{a.status || 'active'}</td>
                         <td>
-                          <div className="table-actions">
-                            <button
-                              type="button"
-                              className="action-btn action-btn-edit"
-                              onClick={() => openEditUser(a)}
-                            >
-                              ✏ Edit
-                            </button>
-                            <button
-                              type="button"
-                              className={`action-btn action-btn-status ${a.status === 'inactive' ? 'action-btn-status--activate' : 'action-btn-status--deactivate'}`}
-                              onClick={() => handleToggleStatus(a.id)}
-                            >
-                              {a.status === 'inactive' ? '✓ Activate' : '⏸ Deactivate'}
-                            </button>
-                            <button
-                              type="button"
-                              className="action-btn action-btn-danger"
-                              onClick={() => handleDeleteUserRow(a.id)}
-                            >
-                              🗑 Delete
-                            </button>
-                          </div>
+                          <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={() => openActionMenu(a)}
+                          >
+                            ⋯ Actions
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -841,6 +734,115 @@ function Database() {
           </div>
         )}
       </main>
+
+      {/* Unified Actions Modal */}
+      {actionUser && (
+        <div className="db-modal-overlay" onClick={closeActionMenu}>
+          <div className="db-modal" onClick={e => e.stopPropagation()}>
+            <div className="db-modal-header">
+              <h2>
+                Actions 
+                {actionUser.role === 'student' ? '🎓' : 
+                 actionUser.role === 'counsellor' ? '👨‍🏫' : 
+                 actionUser.role === 'general_counsellor' ? '🎯' : 
+                 actionUser.role === 'evaluator' ? '✅' : '👑'}
+                {actionUser.name}
+              </h2>
+              <button className="db-modal-close" onClick={closeActionMenu}>✕</button>
+            </div>
+            <div className="db-modal-body">
+              <div className="db-modal-section">
+                <h3>Quick actions</h3>
+                <p className="db-tip">Choose what you want to do for this user.</p>
+                <div className="db-action-list">
+                  {(actionUser.role === 'student' && actionUser.studentStatus === 'pending_verification') && (
+                    <>
+                      <button
+                        type="button"
+                        className="btn-primary db-action-btn"
+                        onClick={async () => {
+                          await handleVerifyUser(actionUser);
+                          closeActionMenu();
+                        }}
+                      >
+                        ✅ Verify student
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-secondary db-action-btn"
+                        onClick={async () => {
+                          await handleRejectUser(actionUser);
+                          closeActionMenu();
+                        }}
+                      >
+                        ❌ Reject student
+                      </button>
+                    </>
+                  )}
+
+                  {((actionUser.role === 'counsellor' || actionUser.role === 'general_counsellor') && actionUser.status === 'pending_verification') && (
+                    <>
+                      <button
+                        type="button"
+                        className="btn-primary db-action-btn"
+                        onClick={async () => {
+                          await handleVerifyUser(actionUser);
+                          closeActionMenu();
+                        }}
+                      >
+                        ✅ Verify mentor
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-secondary db-action-btn"
+                        onClick={async () => {
+                          await handleRejectUser(actionUser);
+                          closeActionMenu();
+                        }}
+                      >
+                        ❌ Reject mentor
+                      </button>
+                    </>
+                  )}
+
+                  <button
+                    type="button"
+                    className="btn-secondary db-action-btn"
+                    onClick={() => {
+                      openEditUser(actionUser);
+                      closeActionMenu();
+                    }}
+                  >
+                    ✏ Edit details
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn-secondary db-action-btn"
+                    onClick={async () => {
+                      await handleToggleStatus(actionUser.id);
+                      closeActionMenu();
+                    }}
+                  >
+                    {actionUser.status === 'inactive' ? '✓ Activate account' : '⏸ Deactivate account'}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn-danger db-action-btn"
+                    onClick={async () => {
+                      await handleDeleteUserRow(actionUser.id);
+                      closeActionMenu();
+                    }}
+                  >
+                    🗑 Permanently delete user
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* User Detail Modal */}
       {selectedUser && (

@@ -4,6 +4,7 @@ import { useData } from '../context/DataContext';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 import { useToast } from '../context/ToastContext';
 import AdminSettingsPanel from '../components/AdminSettingsPanel';
+import ProfilePasswordSection from '../components/ProfilePasswordSection';
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -45,6 +46,7 @@ function AdminDashboard() {
   const [showCreateMeeting, setShowCreateMeeting] = useState(false);
   const [showEditUser, setShowEditUser] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   const [studentForm, setStudentForm] = useState({
     name: '',
@@ -58,7 +60,9 @@ function AdminDashboard() {
     email: '',
     username: '',
     password: '',
-    specialization: ''
+    specialization: '',
+    role: 'counsellor',
+    evaluatorType: 'student'
   });
 
   const [editForm, setEditForm] = useState({
@@ -68,7 +72,8 @@ function AdminDashboard() {
     password: '',
     status: 'active',
     role: '',
-    specialization: ''
+    specialization: '',
+    evaluatorType: 'student'
   });
 
   const [meetingForm, setMeetingForm] = useState({
@@ -82,6 +87,13 @@ function AdminDashboard() {
 
   const [activeSupportId, setActiveSupportId] = useState(null);
   const [supportReply, setSupportReply] = useState('');
+  const [adminProfileForm, setAdminProfileForm] = useState({
+    name: '',
+    email: '',
+    username: ''
+  });
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileInitialised, setProfileInitialised] = useState(false);
 
   // Protect route
   useEffect(() => {
@@ -96,6 +108,18 @@ function AdminDashboard() {
       setIsSidebarOpen(true);
     }
   }, []);
+
+  // Initialise editable admin profile details once
+  useEffect(() => {
+    if (!profileInitialised && currentUser) {
+      setAdminProfileForm({
+        name: currentUser.name || '',
+        email: currentUser.email || '',
+        username: currentUser.username || ''
+      });
+      setProfileInitialised(true);
+    }
+  }, [profileInitialised, currentUser]);
 
   if (!currentUser || currentUser.role !== 'admin') {
     return null;
@@ -122,6 +146,42 @@ function AdminDashboard() {
   const handleLogout = () => {
     logout();
     navigate('/login', { replace: true });
+  };
+
+  const handleSaveProfile = async () => {
+    if (!currentUser) return;
+
+    const trimmedName = adminProfileForm.name.trim();
+    const trimmedEmail = adminProfileForm.email.trim();
+    const trimmedUsername = adminProfileForm.username.trim();
+
+    if (!trimmedName || !trimmedEmail || !trimmedUsername) {
+      showToast('Name, email and username are required.', 'error');
+      return;
+    }
+
+    setIsSavingProfile(true);
+    try {
+      const updated = await updateUser(currentUser.id, {
+        name: trimmedName,
+        email: trimmedEmail,
+        username: trimmedUsername
+      });
+
+      if (updated) {
+        showToast('Profile updated successfully.', 'success');
+        setAdminProfileForm(prev => ({
+          ...prev,
+          name: updated.name || '',
+          email: updated.email || '',
+          username: updated.username || ''
+        }));
+      } else {
+        showToast('Failed to update profile.', 'error');
+      }
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
   const getCounsellorName = (id) => {
@@ -226,7 +286,8 @@ function AdminDashboard() {
       password: '',
       status: user.status || 'active',
       role: user.role || '',
-      specialization: user.specialization || ''
+      specialization: user.specialization || '',
+      evaluatorType: user.evaluatorType || 'student'
     });
   };
 
@@ -236,8 +297,12 @@ function AdminDashboard() {
       name: editForm.name,
       email: editForm.email,
       status: editForm.status,
-      specialization: editForm.specialization
+      specialization: editForm.specialization,
+      role: editForm.role
     };
+    if (editForm.role === 'evaluator') {
+      payload.evaluatorType = editForm.evaluatorType;
+    }
     const updated = await updateUser(editForm.id, payload);
     if (!updated) {
       showToast('Failed to update user', 'error');
@@ -281,15 +346,30 @@ function AdminDashboard() {
       showToast('Please fill all required fields', 'error');
       return;
     }
-    const user = await addUser({
-      ...counsellorForm,
-      role: 'counsellor',
+    const payload = {
+      name: counsellorForm.name,
+      email: counsellorForm.email,
+      username: counsellorForm.username,
+      password: counsellorForm.password,
+      specialization: counsellorForm.specialization,
+      role: counsellorForm.role,
       status: 'active'
-    });
+    };
+
+    if (counsellorForm.role === 'evaluator') {
+      payload.evaluatorType = counsellorForm.evaluatorType;
+    }
+
+    const user = await addUser(payload);
     if (user) {
-      showToast('Counsellor added', 'success');
+      const label = counsellorForm.role === 'general_counsellor'
+        ? 'General Counsellor added'
+        : counsellorForm.role === 'evaluator'
+          ? 'Evaluator added'
+          : 'Counsellor added';
+      showToast(label, 'success');
       setShowAddCounsellor(false);
-      setCounsellorForm({ name: '', email: '', username: '', password: '', specialization: '' });
+      setCounsellorForm({ name: '', email: '', username: '', password: '', specialization: '', role: 'counsellor', evaluatorType: 'student' });
     } else {
       showToast('Failed to add counsellor', 'error');
     }
@@ -479,6 +559,12 @@ function AdminDashboard() {
             onClick={() => { setActiveTab('database'); setIsSidebarOpen(false); navigate('/database'); }}
           >
             🗄️ Database Live View
+          </button>
+          <button
+            className={activeTab === 'profile' ? 'active' : ''}
+            onClick={() => { setActiveTab('profile'); setIsSidebarOpen(false); }}
+          >
+            👤 My Profile
           </button>
           <button className="settings-btn" onClick={() => setShowSettings(true)}>
             ⚙️ Site Settings
@@ -1843,6 +1929,74 @@ function AdminDashboard() {
           </div>
         )}
 
+        {/* My Profile */}
+        {activeTab === 'profile' && (
+          <div className="profile-section">
+            <h1>My Profile</h1>
+            <div className="profile-card">
+              <div className="profile-header">
+                <div className="profile-avatar">🛠️</div>
+                <div className="profile-name">
+                  <h2>{currentUser?.name}</h2>
+                  <p>{currentUser?.email}</p>
+                </div>
+              </div>
+
+              <div className="profile-details">
+                <div className="detail-item">
+                  <label>Full Name</label>
+                  <input
+                    type="text"
+                    value={adminProfileForm.name}
+                    onChange={(e) => setAdminProfileForm(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Enter your full name"
+                  />
+                </div>
+                <div className="detail-item">
+                  <label>Email</label>
+                  <input
+                    type="email"
+                    value={adminProfileForm.email}
+                    onChange={(e) => setAdminProfileForm(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="Enter your email"
+                  />
+                </div>
+                <div className="detail-item">
+                  <label>Username</label>
+                  <input
+                    type="text"
+                    value={adminProfileForm.username}
+                    onChange={(e) => setAdminProfileForm(prev => ({ ...prev, username: e.target.value }))}
+                    placeholder="Choose a username"
+                  />
+                </div>
+                <div className="detail-item">
+                  <label>Role</label>
+                  <span>{currentUser?.role || 'admin'}</span>
+                </div>
+              </div>
+
+              <div style={{ marginTop: '16px', display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={handleSaveProfile}
+                  disabled={isSavingProfile}
+                >
+                  {isSavingProfile ? 'Saving...' : 'Save Profile'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setShowPasswordModal(true)}
+                >
+                  Change Password
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Support Inbox */}
         {activeTab === 'support' && (
           <div className="manage-section support-section">
@@ -2122,6 +2276,39 @@ function AdminDashboard() {
                 />
               </div>
               <div className="form-group">
+                <label>Role *</label>
+                <select
+                  value={counsellorForm.role}
+                  onChange={e =>
+                    setCounsellorForm({
+                      ...counsellorForm,
+                      role: e.target.value
+                    })
+                  }
+                >
+                  <option value="counsellor">Mentor (Counsellor)</option>
+                  <option value="general_counsellor">General Counsellor</option>
+                  <option value="evaluator">Evaluator</option>
+                </select>
+              </div>
+              {counsellorForm.role === 'evaluator' && (
+                <div className="form-group">
+                  <label>Evaluator Type</label>
+                  <select
+                    value={counsellorForm.evaluatorType}
+                    onChange={e =>
+                      setCounsellorForm({
+                        ...counsellorForm,
+                        evaluatorType: e.target.value
+                      })
+                    }
+                  >
+                    <option value="student">Student Evaluator</option>
+                    <option value="mentor">Mentor Evaluator</option>
+                  </select>
+                </div>
+              )}
+              <div className="form-group">
                 <label>Specialization</label>
                 <input
                   type="text"
@@ -2201,7 +2388,36 @@ function AdminDashboard() {
                   }
                 />
               </div>
-              {editForm.role === 'counsellor' && (
+              <div className="form-group">
+                <label>Role</label>
+                <select
+                  value={editForm.role}
+                  onChange={e =>
+                    setEditForm({ ...editForm, role: e.target.value })
+                  }
+                >
+                  <option value="student">Student</option>
+                  <option value="counsellor">Mentor (Counsellor)</option>
+                  <option value="general_counsellor">General Counsellor</option>
+                  <option value="evaluator">Evaluator</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              {editForm.role === 'evaluator' && (
+                <div className="form-group">
+                  <label>Evaluator Type</label>
+                  <select
+                    value={editForm.evaluatorType}
+                    onChange={e =>
+                      setEditForm({ ...editForm, evaluatorType: e.target.value })
+                    }
+                  >
+                    <option value="student">Student Evaluator</option>
+                    <option value="mentor">Mentor Evaluator</option>
+                  </select>
+                </div>
+              )}
+              {(editForm.role === 'counsellor' || editForm.role === 'general_counsellor') && (
                 <div className="form-group">
                   <label>Specialization</label>
                   <input
@@ -2373,6 +2589,16 @@ function AdminDashboard() {
                 Create Meeting
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Change Password Modal */}
+      {showPasswordModal && (
+        <div className="modal-overlay" onClick={() => setShowPasswordModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>Change Password</h3>
+            <ProfilePasswordSection hideTitle />
           </div>
         </div>
       )}

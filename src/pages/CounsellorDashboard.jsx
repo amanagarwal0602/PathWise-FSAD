@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 import { useToast } from '../context/ToastContext';
+import ProfilePasswordSection from '../components/ProfilePasswordSection';
 
 function CounsellorDashboard() {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ function CounsellorDashboard() {
     createMeeting, updateMeetingStatus, createGroup,
     getStudentNotes, getInterestAssessment, addStudentNote,
     refreshData,
+    updateUser,
     loadConversation
   } = useData();
   const { showToast } = useToast();
@@ -59,6 +61,15 @@ function CounsellorDashboard() {
     meetingPassword: ''
   });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    name: '',
+    email: '',
+    username: '',
+    specialization: ''
+  });
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileInitialised, setProfileInitialised] = useState(false);
 
   // Get counsellor's data
   const counsellor = data.users.find(u => u.id === currentUser?.id);
@@ -112,6 +123,19 @@ function CounsellorDashboard() {
     }, 5000);
     return () => clearInterval(interval);
   }, [currentUser?.id, refreshData]);
+
+  // Initialise editable profile details once counsellor data is available
+  useEffect(() => {
+    if (!profileInitialised && currentUser && counsellor) {
+      setProfileForm({
+        name: currentUser.name || '',
+        email: currentUser.email || '',
+        username: currentUser.username || '',
+        specialization: counsellor.specialization || ''
+      });
+      setProfileInitialised(true);
+    }
+  }, [profileInitialised, currentUser, counsellor]);
 
   // Protect route
   useEffect(() => {
@@ -273,6 +297,45 @@ function CounsellorDashboard() {
   const handleLogout = () => {
     logout();
     navigate('/login', { replace: true });
+  };
+
+  const handleSaveProfile = async () => {
+    if (!currentUser) return;
+
+    const trimmedName = profileForm.name.trim();
+    const trimmedEmail = profileForm.email.trim();
+    const trimmedUsername = profileForm.username.trim();
+    const trimmedSpec = profileForm.specialization.trim();
+
+    if (!trimmedName || !trimmedEmail || !trimmedUsername) {
+      showToast('Name, email and username are required.', 'error');
+      return;
+    }
+
+    setIsSavingProfile(true);
+    try {
+      const updated = await updateUser(currentUser.id, {
+        name: trimmedName,
+        email: trimmedEmail,
+        username: trimmedUsername,
+        specialization: trimmedSpec
+      });
+
+      if (updated) {
+        showToast('Profile updated successfully.', 'success');
+        setProfileForm(prev => ({
+          ...prev,
+          name: updated.name || '',
+          email: updated.email || '',
+          username: updated.username || '',
+          specialization: updated.specialization || ''
+        }));
+      } else {
+        showToast('Failed to update profile.', 'error');
+      }
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
   // (Previously there was special polling for time-sensitive calls.
@@ -603,6 +666,9 @@ function CounsellorDashboard() {
           </button>
           <button className={activeTab === 'reports' ? 'active' : ''} onClick={() => { setActiveTab('reports'); setIsSidebarOpen(false); }}>
             📈 My Reports
+          </button>
+          <button className={activeTab === 'profile' ? 'active' : ''} onClick={() => { setActiveTab('profile'); setIsSidebarOpen(false); }}>
+            👤 Profile
           </button>
         </nav>
 
@@ -1299,7 +1365,94 @@ function CounsellorDashboard() {
             </div>
           </div>
         )}
+
+        {/* My Profile */}
+        {activeTab === 'profile' && (
+          <div className="profile-section">
+            <h1>My Profile</h1>
+            <div className="profile-card">
+              <div className="profile-header">
+                <div className="profile-avatar">👨‍🏫</div>
+                <div className="profile-name">
+                  <h2>{currentUser?.name}</h2>
+                  <p>{currentUser?.email}</p>
+                </div>
+              </div>
+
+              <div className="profile-details">
+                <div className="detail-item">
+                  <label>Full Name</label>
+                  <input
+                    type="text"
+                    value={profileForm.name}
+                    onChange={(e) => setProfileForm(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Enter your full name"
+                  />
+                </div>
+                <div className="detail-item">
+                  <label>Email</label>
+                  <input
+                    type="email"
+                    value={profileForm.email}
+                    onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="Enter your email"
+                  />
+                </div>
+                <div className="detail-item">
+                  <label>Username</label>
+                  <input
+                    type="text"
+                    value={profileForm.username}
+                    onChange={(e) => setProfileForm(prev => ({ ...prev, username: e.target.value }))}
+                    placeholder="Choose a username"
+                  />
+                </div>
+                <div className="detail-item">
+                  <label>Specialization</label>
+                  <input
+                    type="text"
+                    value={profileForm.specialization}
+                    onChange={(e) => setProfileForm(prev => ({ ...prev, specialization: e.target.value }))}
+                    placeholder="Your specialization"
+                  />
+                </div>
+                <div className="detail-item">
+                  <label>Role</label>
+                  <span>{currentUser?.role || 'counsellor'}</span>
+                </div>
+              </div>
+
+              <div style={{ marginTop: '16px', display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={handleSaveProfile}
+                  disabled={isSavingProfile}
+                >
+                  {isSavingProfile ? 'Saving...' : 'Save Profile'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setShowPasswordModal(true)}
+                >
+                  Change Password
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
+
+      {/* Change Password Modal */}
+      {showPasswordModal && (
+        <div className="modal-overlay" onClick={() => setShowPasswordModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>Change Password</h3>
+            <ProfilePasswordSection hideTitle />
+          </div>
+        </div>
+      )}
 
       {/* Student Detail Modal */}
       {showStudentDetail && selectedStudent && (

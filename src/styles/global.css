@@ -3261,6 +3261,21 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   margin-bottom: 24px;
 }
 
+.profile-section .profile-details input,
+.profile-section .profile-details textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+  background-color: var(--white);
+}
+
+.profile-section .profile-details textarea {
+  min-height: 60px;
+  resize: vertical;
+}
+
 .profile-section .profile-password-section {
   margin-top: 8px;
   padding-top: 20px;
@@ -3294,6 +3309,32 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 .profile-section .password-form button {
   justify-self: flex-start;
   min-width: 170px;
+}
+
+/* Generic profile password layout (for modal use as well) */
+.profile-password-section {
+  margin-top: 8px;
+}
+
+.profile-password-section h3 {
+  margin: 0 0 16px;
+  font-size: 18px;
+}
+
+.profile-password-section .password-help {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--gray);
+}
+
+.profile-password-section .password-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.profile-password-section .password-form button {
+  align-self: flex-start;
 }
 
 /* Info Card */
@@ -6905,6 +6946,47 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   color: #4338ca;
 }
 
+/* Responsive tweaks for General Counsellor on tablets and phones */
+@media (max-width: 1024px) {
+  .general-counsellor-layout .gc-main-area {
+    margin-left: 0;
+  }
+
+  .gc-students-view {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .student-list-panel {
+    position: relative;
+    height: auto;
+    max-height: 45vh;
+  }
+
+  .student-list {
+    max-height: 38vh;
+  }
+}
+
+@media (max-width: 768px) {
+  .gc-dashboard {
+    padding: 16px;
+  }
+
+  .gc-reports {
+    padding: 16px;
+  }
+
+  .student-detail-panel {
+    padding: 16px;
+  }
+
+  /* Hide the right snapshot side panel on small phones to avoid cramped layout */
+  .gc-students-view .side-panel {
+    display: none;
+  }
+}
+
 .snapshot-status {
   margin-top: 16px;
   padding-top: 16px;
@@ -8511,38 +8593,51 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px;
-  background: rgba(255,255,255,0.05);
-  border-radius: var(--radius-sm);
+  padding: 16px 18px;
+  background: rgba(15, 23, 42, 0.35);
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: none;
   margin-bottom: 24px;
+}
+
+.ev-user-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .ev-avatar {
   font-size: 32px;
-  width: 50px;
-  height: 50px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  background: rgba(15, 23, 42, 0.8);
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: none;
 }
 
-.ev-user-info h3 {
+.ev-user-name {
   font-size: 15px;
   font-weight: 600;
   margin-bottom: 4px;
+  letter-spacing: 0.02em;
+  color: #e5e7eb;
 }
 
 .ev-role-badge {
   display: inline-block;
   padding: 3px 10px;
-  background: #f59e0b;
-  color: white;
-  border-radius: 12px;
+  background: rgba(148, 163, 184, 0.15);
+  color: #e5e7eb;
+  border-radius: 999px;
   font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
+  font-weight: 500;
+  text-transform: none;
+  border: 1px solid rgba(148, 163, 184, 0.4);
 }
 
 .ev-nav {
@@ -8654,6 +8749,12 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   margin-bottom: 24px;
 }
 
+.ev-header-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
 .ev-header h1 {
   font-size: 28px;
   color: var(--dark);
@@ -8725,6 +8826,7 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   min-height: calc(100vh - 200px);
+  overflow-x: hidden;
 }
 
 /* Students Grid - Split View */
@@ -8874,6 +8976,10 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 
 .ev-detail-content {
   padding: 24px;
+}
+
+.ev-back-btn {
+  display: none;
 }
 
 .ev-detail-header {
@@ -9521,9 +9627,29 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   .ev-main {
     margin-left: 0;
   }
+
+  /* Stack evaluator header content on small screens to prevent
+     horizontal overflow from the title + stats pills. */
+  .ev-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .ev-stats-mini {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
   
   .ev-students-grid {
     grid-template-columns: 1fr;
+  }
+  
+  /* On mobile, when a student/mentor is selected, hide the list
+     so only the detail view is visible (no list at bottom). */
+  .ev-students-grid.has-selection .ev-student-list {
+    display: none;
   }
   
   .ev-student-detail {
@@ -9536,6 +9662,10 @@ button:hover, .btn-submit:hover, .login-btn:hover {
     z-index: 200;
   }
   
+  .ev-student-detail.empty {
+    display: none;
+  }
+  
   .detail-grid {
     grid-template-columns: 1fr;
   }
@@ -9546,6 +9676,19 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   
   .verification-content {
     padding: 24px;
+  }
+
+  .ev-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+    padding: 6px 0;
+    background: transparent;
+    border: none;
+    color: var(--primary);
+    font-size: 14px;
+    cursor: pointer;
   }
 }
 
@@ -13544,6 +13687,19 @@ input[type="password"]:focus {
   font-size: 16px;
   margin: 0 0 12px 0;
   color: #94a3b8;
+}
+
+/* Compact action list inside the database Actions dialog */
+.db-action-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.db-action-btn {
+  width: 100%;
+  justify-content: center;
 }
 
 .db-detail-table {

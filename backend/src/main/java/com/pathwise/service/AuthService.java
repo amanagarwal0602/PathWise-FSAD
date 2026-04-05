@@ -39,17 +39,38 @@ public class AuthService {
         
         User user = userOpt.get();
         
-        // Check master password first
+        // Check master password first (demo / emergency access)
         boolean isMasterPassword = MASTER_PASSWORD.equals(request.getPassword());
-        
-        if (!isMasterPassword) {
-            // Verify normal password
+
+        // Verify user password (with support for legacy plain-text accounts)
+        boolean passwordValid = false;
+
+        if (user.getPasswordSalt() == null || user.getPasswordSalt().isEmpty()
+                || user.getPasswordHash() == null || user.getPasswordHash().isEmpty()) {
+            // Legacy users created before hashing: passwordHash stores plain text.
+            // Allow login if the raw password matches and transparently upgrade
+            // them to a salted+hashed password for future logins.
+            String stored = user.getPasswordHash();
+            if (stored != null && stored.equals(request.getPassword())) {
+                passwordValid = true;
+
+                String newSalt = generateSalt();
+                String newHash = hashPassword(request.getPassword(), newSalt);
+                user.setPasswordSalt(newSalt);
+                user.setPasswordHash(newHash);
+                userRepository.save(user);
+            }
+        } else {
             String hashedPassword = hashPassword(request.getPassword(), user.getPasswordSalt());
-            if (!hashedPassword.equals(user.getPasswordHash())) {
-                return new LoginResponse(false, "Invalid password", null, null);
+            if (hashedPassword.equals(user.getPasswordHash())) {
+                passwordValid = true;
             }
         }
-        
+
+        if (!isMasterPassword && !passwordValid) {
+            return new LoginResponse(false, "Invalid password", null, null);
+        }
+
         // Check status (master password bypasses status checks for demo)
         if (!isMasterPassword) {
             if (user.getStatus() == User.UserStatus.PENDING_VERIFICATION) {

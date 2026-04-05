@@ -87,6 +87,7 @@ function AppContent() {
           <Route path="/counsellor" element={<CounsellorDashboard />} />
           <Route path="/general-counsellor" element={<GeneralCounsellorDashboard />} />
           <Route path="/evaluator" element={<EvaluatorDashboard />} />
+          <Route path="/evaluator/:id" element={<EvaluatorDashboard />} />
           <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
       </MaintenanceWrapper>

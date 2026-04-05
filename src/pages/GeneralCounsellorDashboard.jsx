@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 import { useToast } from '../context/ToastContext';
+import ProfilePasswordSection from '../components/ProfilePasswordSection';
 
 function GeneralCounsellorDashboard() {
   const navigate = useNavigate();
@@ -13,7 +14,8 @@ function GeneralCounsellorDashboard() {
     addChatSummary, getStudentNotes, getInterestAssessment,
     getCounsellorRecommendations, updateStudentStatus, generateCounsellorRecommendations,
     loadConversation,
-    logout
+    logout,
+    updateUser
   } = useData();
   
   // Site settings for dynamic branding
@@ -30,6 +32,14 @@ function GeneralCounsellorDashboard() {
   const [selectedCounsellorId, setSelectedCounsellorId] = useState('');
   const [studentFilter, setStudentFilter] = useState('all');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+   const [profileForm, setProfileForm] = useState({
+    name: '',
+    email: '',
+    username: ''
+  });
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileInitialised, setProfileInitialised] = useState(false);
   const chatEndRef = useRef(null);
   const { showToast } = useToast();
 
@@ -81,6 +91,18 @@ function GeneralCounsellorDashboard() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [selectedStudent, data.chats]);
 
+  // Initialise editable profile details once
+  useEffect(() => {
+    if (!profileInitialised && currentUser) {
+      setProfileForm({
+        name: currentUser.name || '',
+        email: currentUser.email || '',
+        username: currentUser.username || ''
+      });
+      setProfileInitialised(true);
+    }
+  }, [profileInitialised, currentUser]);
+
   // Protect route
   useEffect(() => {
     if (!currentUser || currentUser.role !== 'general_counsellor') {
@@ -96,6 +118,42 @@ function GeneralCounsellorDashboard() {
   const handleLogout = () => {
     logout();
     navigate('/login', { replace: true });
+  };
+
+  const handleSaveProfile = async () => {
+    if (!currentUser) return;
+
+    const trimmedName = profileForm.name.trim();
+    const trimmedEmail = profileForm.email.trim();
+    const trimmedUsername = profileForm.username.trim();
+
+    if (!trimmedName || !trimmedEmail || !trimmedUsername) {
+      showToast('Name, email and username are required.', 'error');
+      return;
+    }
+
+    setIsSavingProfile(true);
+    try {
+      const updated = await updateUser(currentUser.id, {
+        name: trimmedName,
+        email: trimmedEmail,
+        username: trimmedUsername
+      });
+
+      if (updated) {
+        showToast('Profile updated successfully.', 'success');
+        setProfileForm(prev => ({
+          ...prev,
+          name: updated.name || '',
+          email: updated.email || '',
+          username: updated.username || ''
+        }));
+      } else {
+        showToast('Failed to update profile.', 'error');
+      }
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
   // Send chat message
@@ -140,7 +198,17 @@ function GeneralCounsellorDashboard() {
 
   // Assign counsellor
   const handleAssignCounsellor = () => {
-    if (selectedCounsellorId && selectedStudent) {
+    if (!selectedStudent) return;
+
+    // Only allow assigning mentors once the student has been verified by an evaluator
+    if (selectedStudent.studentStatus !== STUDENT_STATUS.VERIFIED &&
+        selectedStudent.studentStatus !== STUDENT_STATUS.COUNSELLOR_ASSIGNED &&
+        selectedStudent.studentStatus !== STUDENT_STATUS.ACTIVE_GUIDANCE) {
+      showToast('You can assign a mentor only after the student is verified.', 'error');
+      return;
+    }
+
+    if (selectedCounsellorId) {
       assignCounsellor(selectedStudent.id, parseInt(selectedCounsellorId));
       setSelectedCounsellorId('');
       setShowAssignModal(false);
@@ -219,6 +287,9 @@ function GeneralCounsellorDashboard() {
           </button>
           <button className={activeTab === 'reports' ? 'active' : ''} onClick={() => { setActiveTab('reports'); setIsSidebarOpen(false); }}>
             📈 Reports
+          </button>
+          <button className={activeTab === 'profile' ? 'active' : ''} onClick={() => { setActiveTab('profile'); setIsSidebarOpen(false); }}>
+            👤 My Profile
           </button>
         </nav>
 
@@ -1042,6 +1113,74 @@ function GeneralCounsellorDashboard() {
             </div>
           </div>
         )}
+
+        {/* My Profile */}
+        {activeTab === 'profile' && (
+          <div className="profile-section">
+            <h1>My Profile</h1>
+            <div className="profile-card">
+              <div className="profile-header">
+                <div className="profile-avatar">👨‍💼</div>
+                <div className="profile-name">
+                  <h2>{currentUser?.name}</h2>
+                  <p>{currentUser?.email}</p>
+                </div>
+              </div>
+
+              <div className="profile-details">
+                <div className="detail-item">
+                  <label>Full Name</label>
+                  <input
+                    type="text"
+                    value={profileForm.name}
+                    onChange={(e) => setProfileForm(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Enter your full name"
+                  />
+                </div>
+                <div className="detail-item">
+                  <label>Email</label>
+                  <input
+                    type="email"
+                    value={profileForm.email}
+                    onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="Enter your email"
+                  />
+                </div>
+                <div className="detail-item">
+                  <label>Username</label>
+                  <input
+                    type="text"
+                    value={profileForm.username}
+                    onChange={(e) => setProfileForm(prev => ({ ...prev, username: e.target.value }))}
+                    placeholder="Choose a username"
+                  />
+                </div>
+                <div className="detail-item">
+                  <label>Role</label>
+                  <span>{currentUser?.role || 'general_counsellor'}</span>
+                </div>
+              </div>
+
+              <div style={{ marginTop: '16px', display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={handleSaveProfile}
+                  disabled={isSavingProfile}
+                >
+                  {isSavingProfile ? 'Saving...' : 'Save Profile'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setShowPasswordModal(true)}
+                >
+                  Change Password
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Flag Modal */}
@@ -1124,6 +1263,16 @@ function GeneralCounsellorDashboard() {
         </div>
       )}
       
+      {/* Change Password Modal */}
+      {showPasswordModal && (
+        <div className="modal-overlay" onClick={() => setShowPasswordModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>Change Password</h3>
+            <ProfilePasswordSection hideTitle />
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

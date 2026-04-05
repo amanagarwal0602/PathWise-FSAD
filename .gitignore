@@ -40,3 +40,15 @@ logs/
 
 # Vite
 .vite/
+
+# Java / Maven build outputs
+backend/target/
+
+# Local tooling and runtimes
+backend/apache-maven-3.9.6/
+node/
+node.zip
+cloudflared.exe
+
+# Local credentials (do NOT commit real secrets)
+credentials.txt
