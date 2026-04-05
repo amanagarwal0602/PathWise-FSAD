@@ -11,7 +11,7 @@ function StudentDashboard() {
     saveTestResult, addChatMessage, saveInterestAssessment,
     calculateInterestScores, getInterestAssessment, STUDENT_STATUS,
     updateStudentStatus, refreshData, syncStatus, logout,
-    loadConversation, requestMeeting, skipInterestAssessment
+    loadConversation, requestMeeting, skipInterestAssessment, changePassword
   } = useData();
   const { showToast } = useToast();
   
@@ -53,6 +53,10 @@ function StudentDashboard() {
     time: ''
   });
   const [showMeetingRequestForm, setShowMeetingRequestForm] = useState(false);
+  const [currentPasswordInput, setCurrentPasswordInput] = useState('');
+  const [newPasswordInput, setNewPasswordInput] = useState('');
+  const [confirmNewPasswordInput, setConfirmNewPasswordInput] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   // Protect route
   useEffect(() => {
@@ -312,6 +316,44 @@ function StudentDashboard() {
     showToast('Your meeting request has been sent to your mentor.', 'success');
     setMeetingRequestForm({ topic: '', date: '', time: '' });
     setShowMeetingRequestForm(false);
+  };
+
+  // Change password from profile section
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+
+    if (!newPasswordInput || !confirmNewPasswordInput) {
+      showToast('Please enter and confirm your new password.', 'error');
+      return;
+    }
+
+    if (newPasswordInput !== confirmNewPasswordInput) {
+      showToast('New passwords do not match.', 'error');
+      return;
+    }
+
+    if (newPasswordInput.length < 4) {
+      showToast('New password is too short.', 'error');
+      return;
+    }
+
+    if (!currentPasswordInput) {
+      showToast('Please enter your current password.', 'error');
+      return;
+    }
+
+    setIsChangingPassword(true);
+    const result = await changePassword(currentUser.id, currentPasswordInput, newPasswordInput);
+    setIsChangingPassword(false);
+
+    if (result.success) {
+      showToast('Password updated successfully.', 'success');
+      setCurrentPasswordInput('');
+      setNewPasswordInput('');
+      setConfirmNewPasswordInput('');
+    } else {
+      showToast(result.message || 'Failed to update password.', 'error');
+    }
   };
 
   // Get progress percentage
@@ -1370,15 +1412,52 @@ function StudentDashboard() {
                   </div>
                 </div>
               )}
+
+              {/* Change Password */}
+              <div className="profile-password-section">
+                <h3>Change Password</h3>
+                <form className="password-form" onSubmit={handleChangePassword}>
+                  <div className="detail-item">
+                    <label>Current Password</label>
+                    <input
+                      type="password"
+                      value={currentPasswordInput}
+                      onChange={(e) => setCurrentPasswordInput(e.target.value)}
+                      placeholder="Enter current password"
+                    />
+                  </div>
+                  <div className="detail-item">
+                    <label>New Password</label>
+                    <input
+                      type="password"
+                      value={newPasswordInput}
+                      onChange={(e) => setNewPasswordInput(e.target.value)}
+                      placeholder="Enter new password"
+                    />
+                  </div>
+                  <div className="detail-item">
+                    <label>Confirm New Password</label>
+                    <input
+                      type="password"
+                      value={confirmNewPasswordInput}
+                      onChange={(e) => setConfirmNewPasswordInput(e.target.value)}
+                      placeholder="Re-enter new password"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="btn-primary"
+                    disabled={isChangingPassword}
+                  >
+                    {isChangingPassword ? 'Updating...' : 'Update Password'}
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
         )}
       </main>
       
-      {/* Mobile Logout Button */}
-      <button className="mobile-logout-btn" onClick={handleLogout} title="Logout">
-        🚪
-      </button>
     </div>
   );
 }

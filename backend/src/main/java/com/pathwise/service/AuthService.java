@@ -24,8 +24,8 @@ public class AuthService {
         this.jwtUtil = jwtUtil;
     }
     
-    // Master password constant
-    private static final String MASTER_PASSWORD = "1234";
+    // Master password constant (used for emergency access and password changes)
+    public static final String MASTER_PASSWORD = "1234";
     
     public LoginResponse login(LoginRequest request) {
         // Normal login

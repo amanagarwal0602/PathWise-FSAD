@@ -145,7 +145,7 @@ function CustomerChat() {
 
     if (lowerMessage.includes('contact') || lowerMessage.includes('support') || lowerMessage.includes('help')) {
       return {
-        text: "You can reach our support team through:\n\n📧 Email: support@pathwise.com\n📞 Phone: +1-800-PATHWISE\n💬 This chat (we'll respond soon!)\n\nOur support hours are Monday-Friday, 9 AM - 6 PM IST.",
+        text: "You can reach our support team through:\n\n📧 Email: 2400033009@kluniversity.in\n👤 Contact Person: Amit Agarwal\n💬 Or simply continue this chat (the admin team will see your messages).\n\nOur support hours are Monday-Friday, 9 AM - 6 PM IST.",
         handledByBot: true
       };
     }

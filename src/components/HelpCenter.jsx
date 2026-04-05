@@ -32,8 +32,8 @@ function HelpCenter() {
   ];
 
   const contactInfo = {
-    email: "support@pathwise.com",
-    phone: "+91 1800-123-4567",
+    email: "2400033009@kluniversity.in",
+    contactPerson: "Amit Agarwal",
     hours: "Mon-Fri: 9:00 AM - 6:00 PM IST"
   };
 
@@ -104,10 +104,10 @@ function HelpCenter() {
                     </div>
                   </div>
                   <div className="contact-item">
-                    <span className="contact-icon">📞</span>
+                    <span className="contact-icon">👤</span>
                     <div>
-                      <strong>Phone</strong>
-                      <p>{contactInfo.phone}</p>
+                      <strong>Contact Person</strong>
+                      <p>{contactInfo.contactPerson}</p>
                     </div>
                   </div>
                   <div className="contact-item">

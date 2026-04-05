@@ -1575,10 +1575,6 @@ function CounsellorDashboard() {
         </div>
       )}
       
-      {/* Mobile Logout Button */}
-      <button className="mobile-logout-btn" onClick={handleLogout} title="Logout">
-        🚪
-      </button>
     </div>
   );
 }

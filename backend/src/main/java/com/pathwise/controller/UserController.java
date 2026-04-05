@@ -4,6 +4,7 @@ import com.pathwise.dto.ApiResponse;
 import com.pathwise.dto.UserDTO;
 import com.pathwise.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -141,6 +142,29 @@ public class UserController {
     @PostMapping("/{id}/unflag")
     public ResponseEntity<ApiResponse<UserDTO>> unflagStudent(@PathVariable Long id) {
         ApiResponse<UserDTO> response = userService.unflagStudent(id);
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @PostMapping("/{id}/change-password")
+    public ResponseEntity<ApiResponse<UserDTO>> changePassword(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body,
+            Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.status(401).body(ApiResponse.error("Unauthorized"));
+        }
+
+        String currentPassword = body.get("currentPassword");
+        String newPassword = body.get("newPassword");
+        String requester = authentication.getName();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+
+        ApiResponse<UserDTO> response = userService.changePassword(id, currentPassword, newPassword, requester, isAdmin);
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         } else {

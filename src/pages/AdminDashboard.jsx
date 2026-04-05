@@ -14,6 +14,7 @@ function AdminDashboard() {
     deleteUser,
     toggleUserStatus,
     updateUser,
+    changePassword,
     createMeeting,
     updateMeetingStatus,
     getStudentNotes,
@@ -233,16 +234,23 @@ function AdminDashboard() {
       status: editForm.status,
       specialization: editForm.specialization
     };
-    if (editForm.password) {
-      payload.password = editForm.password;
-    }
     const updated = await updateUser(editForm.id, payload);
-    if (updated) {
-      showToast('User updated', 'success');
-      setShowEditUser(false);
-    } else {
+    if (!updated) {
       showToast('Failed to update user', 'error');
+      return;
     }
+
+    // If admin entered a new password, update it directly (no old password required)
+    if (editForm.password) {
+      const result = await changePassword(editForm.id, '', editForm.password);
+      if (!result.success) {
+        showToast(result.message || 'Failed to update password', 'error');
+        return;
+      }
+    }
+
+    showToast('User updated', 'success');
+    setShowEditUser(false);
   };
 
   const handleAddStudent = async () => {
@@ -421,6 +429,12 @@ function AdminDashboard() {
             onClick={() => { setActiveTab('support'); setIsSidebarOpen(false); }}
           >
             🛟 Support Inbox
+          </button>
+          <button
+            className={activeTab === 'database' ? 'active' : ''}
+            onClick={() => { setActiveTab('database'); setIsSidebarOpen(false); navigate('/database'); }}
+          >
+            🗄️ Database Live View
           </button>
           <button className="settings-btn" onClick={() => setShowSettings(true)}>
             ⚙️ Site Settings
@@ -2261,14 +2275,6 @@ function AdminDashboard() {
         </div>
       )}
 
-      {/* Mobile Logout Button */}
-      <button
-        className="mobile-logout-btn"
-        onClick={handleLogout}
-        title="Logout"
-      >
-        🚪
-      </button>
     </div>
   );
 }

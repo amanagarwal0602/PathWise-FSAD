@@ -53,6 +53,8 @@ body {
   line-height: 1.6;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  /* Prevent global horizontal scrolling while allowing inner containers to scroll */
+  overflow-x: hidden;
 }
 
 /* Base button styling so all buttons look consistent */
@@ -88,6 +90,7 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   align-items: center;
   justify-content: center;
   background: #f8fafc;
+  padding: 16px;
 }
 
 .login-container {
@@ -99,7 +102,7 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   border-radius: 12px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   overflow: hidden;
-  margin: 20px;
+  margin: 0;
 }
 
 /* Left Branding Panel */
@@ -346,10 +349,12 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   .login-container {
     flex-direction: column;
     max-width: 440px;
+    min-height: auto;
   }
   
   .login-branding {
-    padding: 32px;
+    padding: 24px;
+    justify-content: center;
   }
   
   .login-branding h1 {
@@ -361,7 +366,7 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   }
   
   .login-form-panel {
-    padding: 32px;
+    padding: 24px;
   }
 }
 
@@ -1172,20 +1177,76 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   transform: translateY(-2px) !important;
 }
 
+.table-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .action-btn {
-  padding: 12px 20px;
-  background: var(--light);
-  border: 2px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f9fafb;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #0f172a;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 
 .action-btn:hover {
-  background: var(--primary);
-  color: var(--white);
-  border-color: var(--primary);
+  background: #e5edff;
+  border-color: var(--primary-light);
+  color: var(--primary-dark);
+}
+
+.action-btn-edit {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.action-btn-edit:hover {
+  background: #dbeafe;
+  border-color: #60a5fa;
+  color: #1d4ed8;
+}
+
+.action-btn-status {
+  background: #fef3c7;
+  border-color: #fed7aa;
+  color: #b45309;
+}
+
+.action-btn-status--activate {
+  background: #ecfdf3;
+  border-color: #bbf7d0;
+  color: #15803d;
+}
+
+.action-btn-status--deactivate {
+  background: #fef3c7;
+  border-color: #fed7aa;
+  color: #b45309;
+}
+
+.action-btn-danger {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.action-btn-danger:hover {
+  background: #ef4444;
+  border-color: #b91c1c;
+  color: #ffffff;
 }
 
 /* ========================================
@@ -3140,6 +3201,99 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   color: var(--dark);
   border-bottom: 1px solid var(--border);
   padding-bottom: 12px;
+}
+
+/* Student / user profile full-page layout */
+.profile-section > h1 {
+  margin: 0 0 16px;
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--dark);
+}
+
+.profile-section .profile-card {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 24px 28px;
+}
+
+.profile-section .profile-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 0 16px;
+  margin-bottom: 20px;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  border-bottom: 1px solid var(--border);
+}
+
+.profile-section .profile-avatar {
+  font-size: 42px;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-light);
+  border-radius: 50%;
+}
+
+.profile-section .profile-name h2 {
+  margin: 0 0 4px;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--dark);
+}
+
+.profile-section .profile-name p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--gray);
+}
+
+.profile-section .profile-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px 24px;
+  margin-bottom: 24px;
+}
+
+.profile-section .profile-password-section {
+  margin-top: 8px;
+  padding-top: 20px;
+  border-top: 1px dashed var(--border);
+}
+
+.profile-section .profile-password-section h3 {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 16px;
+}
+
+.profile-section .password-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px 20px;
+  align-items: flex-end;
+}
+
+.profile-section .password-form .detail-item {
+  margin: 0;
+}
+
+.profile-section .password-form input {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.profile-section .password-form button {
+  justify-self: flex-start;
+  min-width: 170px;
 }
 
 /* Info Card */
@@ -5503,7 +5657,7 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   border-radius: 12px;
   margin-bottom: 24px;
   box-shadow: var(--shadow);
-  overflow-x: auto;
+  overflow-x: visible;
 }
 
 .status-step {
@@ -6521,12 +6675,32 @@ button:hover, .btn-submit:hover, .login-btn:hover {
     grid-template-columns: 1fr;
   }
   
-  .student-status-tracker {
+  /* Student "Your Journey" tracker - make it vertical and non-scrollable on phones */
+  .status-tracker {
     padding: 16px;
   }
-  
-  .status-step:not(:last-child)::after {
+
+  .status-steps {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 0;
+  }
+
+  .status-steps::before {
     display: none;
+  }
+
+  .status-step {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .status-step span {
+    text-align: left;
+    font-size: 14px;
   }
 }
 
@@ -9335,8 +9509,8 @@ button:hover, .btn-submit:hover, .login-btn:hover {
 @media (max-width: 768px) {
   .ev-sidebar {
     position: fixed;
-    transform: translateX(0);
-    transition: none;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
     z-index: 1000;
   }
 
@@ -9345,7 +9519,7 @@ button:hover, .btn-submit:hover, .login-btn:hover {
   }
   
   .ev-main {
-    margin-left: 280px;
+    margin-left: 0;
   }
   
   .ev-students-grid {
@@ -11249,28 +11423,19 @@ input[type="password"]:focus {
    COMPREHENSIVE MOBILE RESPONSIVE STYLES
    ========================================= */
 
-/* Mobile Menu Toggle Button */
+/* Mobile Menu Toggle Button (simple left icon, no special color) */
 .mobile-menu-toggle {
   display: none;
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 56px;
-  height: 56px;
-  background: var(--primary);
-  color: white;
   border: none;
-  border-radius: 50%;
-  font-size: 24px;
+  background: transparent;
+  color: inherit;
+  padding: 4px 8px;
+  font-size: 22px;
   cursor: pointer;
-  z-index: 1001;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
-  transition: all 0.3s ease;
 }
 
 .mobile-menu-toggle:hover {
-  transform: scale(1.1);
-  background: var(--primary-dark);
+  background: transparent;
 }
 
 /* Tablet Breakpoint (1024px) */
@@ -11379,28 +11544,11 @@ input[type="password"]:focus {
   }
 
   .mobile-menu-toggle {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-  }
-
-  /* Dashboards: keep full left sidebar always visible on phones */
-  .dashboard-layout .sidebar {
-    transform: translateX(0);
-  }
-
-  .dashboard-layout .main-content {
-    margin-left: 260px;
-    margin-top: 16px;
-  }
-
-  .dashboard-layout .mobile-menu-toggle {
-    display: none;
-  }
-
-  /* Evaluator dashboard: hide mobile toggle (sidebar stays visible) */
-  .evaluator-dashboard .mobile-menu-toggle {
-    display: none;
+    margin: 8px 0 0 8px; /* small space from top/left only */
+    align-self: flex-start; /* stay on the left, minimal width */
   }
 
   /* Main Content */
@@ -11584,13 +11732,13 @@ input[type="password"]:focus {
     flex-direction: column;
     max-width: 100%;
     margin: 0;
-    min-height: 100vh;
-    border-radius: 0;
+    min-height: auto;
+    border-radius: 12px;
   }
   
   .login-branding,
   .register-branding {
-    padding: 24px;
+    padding: 20px;
     min-height: auto;
   }
   
@@ -11611,7 +11759,7 @@ input[type="password"]:focus {
   
   .login-form-panel,
   .register-form-panel {
-    padding: 24px;
+    padding: 20px;
   }
   
   .form-header h2 {
@@ -11774,9 +11922,26 @@ input[type="password"]:focus {
   /* Even smaller adjustments */
   .main-content {
     padding: 12px;
-    margin-top: 110px;
+    margin-top: 24px;
   }
-  
+
+  .login-page {
+    padding: 12px;
+  }
+
+  .login-container {
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+    border-radius: 16px;
+  }
+
+  .login-form-container {
+    max-width: 100%;
+  }
+
+  .login-form {
+    gap: 16px;
+  }
+
   .main-content h1 {
     font-size: 20px;
   }
@@ -13016,10 +13181,13 @@ input[type="password"]:focus {
 .db-actions {
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .db-actions .btn-primary,
-.db-actions .btn-secondary {
+.db-actions .btn-secondary,
+.db-actions .btn-sync {
   padding: 10px 20px;
   border-radius: 8px;
   font-weight: 600;
@@ -13038,6 +13206,32 @@ input[type="password"]:focus {
   background: transparent;
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-sync {
+  border: none;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-sync.idle,
+.btn-sync.undefined {
+  background: #3498db;
+}
+
+.btn-sync.synced {
+  background: #22c55e;
+}
+
+.btn-sync.syncing {
+  background: #f59e0b;
+}
+
+.btn-sync.error {
+  background: #ef4444;
 }
 
 /* Stats Bar */
@@ -13430,7 +13624,7 @@ input[type="password"]:focus {
   }
   
   .db-actions button {
-    flex: 1;
+    flex: 1 1 calc(50% - 6px);
   }
   
   .db-stats-bar {
@@ -13464,5 +13658,24 @@ input[type="password"]:focus {
   .db-modal-overlay {
     align-items: flex-end;
     padding: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .profile-section .profile-card {
+    padding: 16px 18px;
+  }
+
+  .profile-section .password-form {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-section .password-form button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .db-actions button {
+    flex: 1 1 100%;
   }
 }

@@ -114,6 +114,70 @@ public class UserService {
         User savedUser = userRepository.save(user);
         return ApiResponse.success("User updated", UserDTO.fromEntity(savedUser));
     }
+
+    public ApiResponse<UserDTO> changePassword(Long id, String currentPassword, String newPassword, String requesterUsername, boolean isAdmin) {
+        Optional<User> userOpt = userRepository.findById(id);
+
+        if (userOpt.isEmpty()) {
+            return ApiResponse.error("User not found");
+        }
+
+        User user = userOpt.get();
+
+        if (newPassword == null || newPassword.isEmpty()) {
+            return ApiResponse.error("New password is required");
+        }
+
+        // Non-admin users can only change their own password and must provide current or master password
+        if (!isAdmin) {
+            if (requesterUsername == null ||
+                (!requesterUsername.equalsIgnoreCase(user.getEmail()) &&
+                 (user.getUsername() == null || !requesterUsername.equalsIgnoreCase(user.getUsername())))) {
+                return ApiResponse.error("You can only change your own password");
+            }
+
+            if (currentPassword == null || currentPassword.isEmpty()) {
+                return ApiResponse.error("Current password is required");
+            }
+
+            boolean isMaster = com.pathwise.service.AuthService.MASTER_PASSWORD.equals(currentPassword);
+            if (!isMaster) {
+                try {
+                    MessageDigest md = MessageDigest.getInstance("SHA-256");
+                    md.update(user.getPasswordSalt().getBytes(StandardCharsets.UTF_8));
+                    byte[] hashed = md.digest(currentPassword.getBytes(StandardCharsets.UTF_8));
+                    String hashedCurrent = Base64.getEncoder().encodeToString(hashed);
+                    if (!hashedCurrent.equals(user.getPasswordHash())) {
+                        return ApiResponse.error("Current password is incorrect");
+                    }
+                } catch (Exception e) {
+                    return ApiResponse.error("Error verifying password");
+                }
+            }
+        }
+
+        // Generate new salt and hash for the new password
+        String newSalt;
+        String newHash;
+        try {
+            SecureRandom random = new SecureRandom();
+            byte[] saltBytes = new byte[16];
+            random.nextBytes(saltBytes);
+            newSalt = Base64.getEncoder().encodeToString(saltBytes);
+
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(newSalt.getBytes(StandardCharsets.UTF_8));
+            byte[] hashed = md.digest(newPassword.getBytes(StandardCharsets.UTF_8));
+            newHash = Base64.getEncoder().encodeToString(hashed);
+        } catch (Exception e) {
+            return ApiResponse.error("Error updating password");
+        }
+
+        user.setPasswordSalt(newSalt);
+        user.setPasswordHash(newHash);
+        User savedUser = userRepository.save(user);
+        return ApiResponse.success("Password updated", UserDTO.fromEntity(savedUser));
+    }
     
     public ApiResponse<UserDTO> verifyUser(Long userId, Long verifierId, String notes) {
         Optional<User> userOpt = userRepository.findById(userId);

@@ -4,15 +4,57 @@ import { useData } from '../context/DataContext';
 
 function Database() {
   const navigate = useNavigate();
-  const { data, refreshData, syncStatus } = useData();
+  const { data, refreshData, syncStatus, currentUser, updateUser, toggleUserStatus, deleteUser, changePassword } = useData();
   const [activeTab, setActiveTab] = useState('students');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
+  const [editUser, setEditUser] = useState(null);
+
+  const goBackToDashboard = () => {
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
+    switch (currentUser.role) {
+      case 'student':
+        navigate('/student');
+        break;
+      case 'counsellor':
+        navigate('/counsellor');
+        break;
+      case 'general_counsellor':
+        navigate('/general-counsellor');
+        break;
+      case 'evaluator':
+        navigate('/evaluator');
+        break;
+      case 'admin':
+        navigate('/admin');
+        break;
+      default:
+        navigate('/login');
+    }
+  };
+
+  // Protect route - only admins should access full database view
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== 'admin') {
+      navigate('/login', { replace: true });
+    }
+  }, [currentUser, navigate]);
 
   // Sync with backend on mount
   useEffect(() => {
     refreshData();
-  }, []);
+  }, [refreshData]);
+
+  // Live auto-refresh for near real-time view
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshData();
+    }, 10000); // every 10 seconds
+    return () => clearInterval(interval);
+  }, [refreshData]);
 
   // Filter users by role
   const students = data.users.filter(u => u.role === 'student');
@@ -69,6 +111,70 @@ function Database() {
   // Get assessment for student
   const getAssessment = (studentId) => {
     return data.interestAssessments?.find(a => a.studentId === studentId);
+  };
+
+  const openEditUser = (user) => {
+    setEditUser({
+      id: user.id,
+      name: user.name || '',
+      email: user.email || '',
+      username: user.username || '',
+      role: user.role || '',
+      status: user.status || 'active',
+      specialization: user.specialization || '',
+      collegeName: user.collegeName || user.college || '',
+      branch: user.branch || '',
+      currentYear: user.currentYear || user.year || '',
+      studentId: user.studentId || '',
+      password: ''
+    });
+  };
+
+  const handleEditChange = (field, value) => {
+    setEditUser(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editUser?.id) return;
+    const payload = {
+      name: editUser.name,
+      email: editUser.email,
+      username: editUser.username,
+      status: editUser.status,
+      specialization: editUser.specialization,
+      collegeName: editUser.collegeName,
+      branch: editUser.branch,
+      currentYear: editUser.currentYear,
+      studentId: editUser.studentId
+    };
+    const updated = await updateUser(editUser.id, payload);
+    if (!updated) {
+      return;
+    }
+
+    // Optional: admin can set a new password for this user directly
+    if (editUser.password) {
+      const result = await changePassword(editUser.id, '', editUser.password);
+      if (!result.success) {
+        window.alert(result.message || 'Failed to update password');
+        return;
+      }
+    }
+
+    setEditUser(null);
+  };
+
+  const handleToggleStatus = async (userId) => {
+    if (!userId) return;
+    await toggleUserStatus(userId);
+  };
+
+  const handleDeleteUserRow = async (userId) => {
+    if (!userId) return;
+    if (!window.confirm('Are you sure you want to delete this user from the database?')) return;
+    await deleteUser(userId);
+    if (selectedUser?.id === userId) setSelectedUser(null);
+    if (editUser?.id === userId) setEditUser(null);
   };
 
   const renderUserCard = (user, type) => {
@@ -176,18 +282,14 @@ function Database() {
           <span className="db-subtitle">PathWise User Database</span>
         </div>
         <div className="db-actions">
+          {currentUser && (
+            <button className="btn-secondary" onClick={goBackToDashboard}>
+              ⬅ Back to Admin Dashboard
+            </button>
+          )}
           <button 
             className={`btn-sync ${syncStatus}`}
             onClick={refreshData}
-            style={{
-              background: syncStatus === 'synced' ? '#27ae60' : syncStatus === 'syncing' ? '#f39c12' : syncStatus === 'error' ? '#e74c3c' : '#3498db',
-              color: 'white',
-              border: 'none',
-              padding: '10px 20px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              marginRight: '10px'
-            }}
           >
             {syncStatus === 'syncing' ? '⏳ Syncing...' : syncStatus === 'synced' ? '✅ Synced' : syncStatus === 'error' ? '⚠️ Offline' : '🔄 Sync'}
           </button>
@@ -278,6 +380,306 @@ function Database() {
 
       {/* Content */}
       <main className="db-content">
+        {/* Tabular live view for each role */}
+        <div className="db-table-wrapper">
+          {activeTab === 'students' && (
+            <div className="db-table-section">
+              <h3>Students Table (Live)</h3>
+              <div className="table-responsive">
+                <table className="users-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Name</th>
+                      <th className="hide-mobile">Email</th>
+                      <th className="hide-mobile">College</th>
+                      <th>Status</th>
+                      <th>Mentor</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filterUsers(students).map(s => (
+                      <tr key={s.id}>
+                        <td>{s.id}</td>
+                        <td>{s.name}</td>
+                        <td className="hide-mobile">{s.email}</td>
+                        <td className="hide-mobile">{s.collegeName || s.college || 'N/A'}</td>
+                        <td>
+                          <span
+                            style={{
+                              display: 'inline-block',
+                              padding: '4px 8px',
+                              borderRadius: '999px',
+                              fontSize: '11px',
+                              backgroundColor: getStatusColor(s.studentStatus),
+                              color: '#fff'
+                            }}
+                          >
+                            {formatStatus(s.studentStatus)}
+                          </span>
+                        </td>
+                        <td>{getCounsellorName(s.assignedCounsellor)}</td>
+                        <td>
+                          <div className="table-actions">
+                            <button
+                              type="button"
+                              className="action-btn action-btn-edit"
+                              onClick={() => openEditUser(s)}
+                            >
+                              ✏ Edit
+                            </button>
+                            <button
+                              type="button"
+                              className={`action-btn action-btn-status ${s.status === 'inactive' ? 'action-btn-status--activate' : 'action-btn-status--deactivate'}`}
+                              onClick={() => handleToggleStatus(s.id)}
+                            >
+                              {s.status === 'inactive' ? '✓ Activate' : '⏸ Deactivate'}
+                            </button>
+                            <button
+                              type="button"
+                              className="action-btn action-btn-danger"
+                              onClick={() => handleDeleteUserRow(s.id)}
+                            >
+                              🗑 Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'counsellors' && (
+            <div className="db-table-section">
+              <h3>Mentors Table (Live)</h3>
+              <div className="table-responsive">
+                <table className="users-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Name</th>
+                      <th className="hide-mobile">Email</th>
+                      <th>Specialization</th>
+                      <th>Students</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filterUsers(counsellors).map(c => (
+                      <tr key={c.id}>
+                        <td>{c.id}</td>
+                        <td>{c.name}</td>
+                        <td className="hide-mobile">{c.email}</td>
+                        <td>{c.specialization || 'General'}</td>
+                        <td>{getStudentCount(c.id)}</td>
+                        <td>{c.status || 'active'}</td>
+                        <td>
+                          <div className="table-actions">
+                            <button
+                              type="button"
+                              className="action-btn action-btn-edit"
+                              onClick={() => openEditUser(c)}
+                            >
+                              ✏ Edit
+                            </button>
+                            <button
+                              type="button"
+                              className={`action-btn action-btn-status ${c.status === 'inactive' ? 'action-btn-status--activate' : 'action-btn-status--deactivate'}`}
+                              onClick={() => handleToggleStatus(c.id)}
+                            >
+                              {c.status === 'inactive' ? '✓ Activate' : '⏸ Deactivate'}
+                            </button>
+                            <button
+                              type="button"
+                              className="action-btn action-btn-danger"
+                              onClick={() => handleDeleteUserRow(c.id)}
+                            >
+                              🗑 Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'general' && (
+            <div className="db-table-section">
+              <h3>Coordinators Table (Live)</h3>
+              <div className="table-responsive">
+                <table className="users-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Name</th>
+                      <th className="hide-mobile">Email</th>
+                      <th>Specialization</th>
+                      <th>Students</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filterUsers(generalCounsellors).map(g => (
+                      <tr key={g.id}>
+                        <td>{g.id}</td>
+                        <td>{g.name}</td>
+                        <td className="hide-mobile">{g.email}</td>
+                        <td>{g.specialization || 'General'}</td>
+                        <td>{getStudentCount(g.id)}</td>
+                        <td>{g.status || 'active'}</td>
+                        <td>
+                          <div className="table-actions">
+                            <button
+                              type="button"
+                              className="action-btn action-btn-edit"
+                              onClick={() => openEditUser(g)}
+                            >
+                              ✏ Edit
+                            </button>
+                            <button
+                              type="button"
+                              className={`action-btn action-btn-status ${g.status === 'inactive' ? 'action-btn-status--activate' : 'action-btn-status--deactivate'}`}
+                              onClick={() => handleToggleStatus(g.id)}
+                            >
+                              {g.status === 'inactive' ? '✓ Activate' : '⏸ Deactivate'}
+                            </button>
+                            <button
+                              type="button"
+                              className="action-btn action-btn-danger"
+                              onClick={() => handleDeleteUserRow(g.id)}
+                            >
+                              🗑 Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'evaluators' && (
+            <div className="db-table-section">
+              <h3>Evaluators Table (Live)</h3>
+              <div className="table-responsive">
+                <table className="users-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Name</th>
+                      <th className="hide-mobile">Email</th>
+                      <th>Type</th>
+                      <th>Specialization</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filterUsers(evaluators).map(e => (
+                      <tr key={e.id}>
+                        <td>{e.id}</td>
+                        <td>{e.name}</td>
+                        <td className="hide-mobile">{e.email}</td>
+                        <td>{e.evaluatorType === 'counsellor' ? 'Mentor Verifier' : 'Student Verifier'}</td>
+                        <td>{e.specialization || 'N/A'}</td>
+                        <td>
+                          <div className="table-actions">
+                            <button
+                              type="button"
+                              className="action-btn action-btn-edit"
+                              onClick={() => openEditUser(e)}
+                            >
+                              ✏ Edit
+                            </button>
+                            <button
+                              type="button"
+                              className={`action-btn action-btn-status ${e.status === 'inactive' ? 'action-btn-status--activate' : 'action-btn-status--deactivate'}`}
+                              onClick={() => handleToggleStatus(e.id)}
+                            >
+                              {e.status === 'inactive' ? '✓ Activate' : '⏸ Deactivate'}
+                            </button>
+                            <button
+                              type="button"
+                              className="action-btn action-btn-danger"
+                              onClick={() => handleDeleteUserRow(e.id)}
+                            >
+                              🗑 Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'admins' && (
+            <div className="db-table-section">
+              <h3>Admins Table (Live)</h3>
+              <div className="table-responsive">
+                <table className="users-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Name</th>
+                      <th className="hide-mobile">Email</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filterUsers(admins).map(a => (
+                      <tr key={a.id}>
+                        <td>{a.id}</td>
+                        <td>{a.name}</td>
+                        <td className="hide-mobile">{a.email}</td>
+                        <td>{a.status || 'active'}</td>
+                        <td>
+                          <div className="table-actions">
+                            <button
+                              type="button"
+                              className="action-btn action-btn-edit"
+                              onClick={() => openEditUser(a)}
+                            >
+                              ✏ Edit
+                            </button>
+                            <button
+                              type="button"
+                              className={`action-btn action-btn-status ${a.status === 'inactive' ? 'action-btn-status--activate' : 'action-btn-status--deactivate'}`}
+                              onClick={() => handleToggleStatus(a.id)}
+                            >
+                              {a.status === 'inactive' ? '✓ Activate' : '⏸ Deactivate'}
+                            </button>
+                            <button
+                              type="button"
+                              className="action-btn action-btn-danger"
+                              onClick={() => handleDeleteUserRow(a.id)}
+                            >
+                              🗑 Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+
         {activeTab === 'students' && (
           <div className="db-section">
             <h2>🎓 Registered Students</h2>
@@ -432,19 +834,169 @@ function Database() {
                 </div>
               )}
 
-              {selectedUser.password && (
+              {selectedUser.email && (
                 <div className="db-modal-section">
                   <h3>🔐 Login Credentials</h3>
                   <table className="db-detail-table credentials-table">
                     <tbody>
                       <tr><td>Email</td><td><code>{selectedUser.email}</code></td></tr>
                       {selectedUser.username && <tr><td>Username</td><td><code>{selectedUser.username}</code></td></tr>}
-                      <tr><td>Password</td><td><code>{selectedUser.password}</code></td></tr>
                     </tbody>
                   </table>
-                  <p className="db-tip">💡 Or use master password: <code>1234</code></p>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal for inline database table edits */}
+      {editUser && (
+        <div className="db-modal-overlay" onClick={() => setEditUser(null)}>
+          <div className="db-modal" onClick={e => e.stopPropagation()}>
+            <div className="db-modal-header">
+              <h2>Edit User #{editUser.id}</h2>
+              <button className="db-modal-close" onClick={() => setEditUser(null)}>✕</button>
+            </div>
+            <div className="db-modal-body">
+              <div className="db-modal-section">
+                <h3>Basic Details</h3>
+                <table className="db-detail-table">
+                  <tbody>
+                    <tr>
+                      <td>Name</td>
+                      <td>
+                        <input
+                          type="text"
+                          value={editUser.name}
+                          onChange={e => handleEditChange('name', e.target.value)}
+                        />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Email</td>
+                      <td>
+                        <input
+                          type="email"
+                          value={editUser.email}
+                          onChange={e => handleEditChange('email', e.target.value)}
+                        />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Username</td>
+                      <td>
+                        <input
+                          type="text"
+                          value={editUser.username}
+                          onChange={e => handleEditChange('username', e.target.value)}
+                        />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Status</td>
+                      <td>
+                        <select
+                          value={editUser.status}
+                          onChange={e => handleEditChange('status', e.target.value)}
+                        >
+                          <option value="active">Active</option>
+                          <option value="inactive">Inactive</option>
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>New Password (admin)</td>
+                      <td>
+                        <input
+                          type="password"
+                          value={editUser.password}
+                          onChange={e => handleEditChange('password', e.target.value)}
+                          placeholder="Set new password (optional)"
+                        />
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {editUser.role === 'student' && (
+                <div className="db-modal-section">
+                  <h3>Academic Details</h3>
+                  <table className="db-detail-table">
+                    <tbody>
+                      <tr>
+                        <td>College</td>
+                        <td>
+                          <input
+                            type="text"
+                            value={editUser.collegeName}
+                            onChange={e => handleEditChange('collegeName', e.target.value)}
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Branch</td>
+                        <td>
+                          <input
+                            type="text"
+                            value={editUser.branch}
+                            onChange={e => handleEditChange('branch', e.target.value)}
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Year</td>
+                        <td>
+                          <input
+                            type="text"
+                            value={editUser.currentYear}
+                            onChange={e => handleEditChange('currentYear', e.target.value)}
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Student ID</td>
+                        <td>
+                          <input
+                            type="text"
+                            value={editUser.studentId}
+                            onChange={e => handleEditChange('studentId', e.target.value)}
+                          />
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {(editUser.role === 'counsellor' || editUser.role === 'general_counsellor') && (
+                <div className="db-modal-section">
+                  <h3>Mentor Details</h3>
+                  <table className="db-detail-table">
+                    <tbody>
+                      <tr>
+                        <td>Specialization</td>
+                        <td>
+                          <input
+                            type="text"
+                            value={editUser.specialization}
+                            onChange={e => handleEditChange('specialization', e.target.value)}
+                          />
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+            <div className="db-modal-footer" style={{ padding: '16px 24px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button className="btn-secondary" type="button" onClick={() => setEditUser(null)}>
+                Cancel
+              </button>
+              <button className="btn-primary" type="button" onClick={handleSaveEdit}>
+                Save Changes
+              </button>
             </div>
           </div>
         </div>

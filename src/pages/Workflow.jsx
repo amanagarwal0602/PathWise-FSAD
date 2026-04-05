@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useData } from '../context/DataContext';
 
 function Workflow() {
   const navigate = useNavigate();
+  const { currentUser } = useData();
   const [activeSection, setActiveSection] = useState('credentials');
   const [copiedText, setCopiedText] = useState('');
 
@@ -108,6 +110,32 @@ function Workflow() {
     { icon: '📧', title: 'Username Login', description: 'Login with email OR username' }
   ];
 
+  const goBackToDashboard = () => {
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
+    switch (currentUser.role) {
+      case 'student':
+        navigate('/student');
+        break;
+      case 'counsellor':
+        navigate('/counsellor');
+        break;
+      case 'general_counsellor':
+        navigate('/general-counsellor');
+        break;
+      case 'evaluator':
+        navigate('/evaluator');
+        break;
+      case 'admin':
+        navigate('/admin');
+        break;
+      default:
+        navigate('/login');
+    }
+  };
+
   return (
     <div className="workflow-page">
       {/* Header */}
@@ -118,6 +146,11 @@ function Workflow() {
           <span className="workflow-subtitle">Jury Presentation Guide</span>
         </div>
         <div className="workflow-actions">
+          {currentUser && (
+            <button className="btn-secondary" onClick={goBackToDashboard}>
+              ⬅ Back to Dashboard
+            </button>
+          )}
           <button className="btn-primary" onClick={() => navigate('/login')}>
             🚀 Go to Login
           </button>

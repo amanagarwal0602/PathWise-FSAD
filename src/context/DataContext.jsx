@@ -1375,6 +1375,42 @@ export function DataProvider({ children }) {
     }
   };
 
+  // Change password for a user (self-service or admin override)
+  const changePassword = async (userId, currentPassword, newPassword) => {
+    try {
+      const res = await apiFetch(`/users/${userId}/change-password`, {
+        method: 'POST',
+        body: JSON.stringify({ currentPassword, newPassword })
+      });
+      const resData = await res.json();
+
+      if (res.ok && resData.success) {
+        const updatedUser = {
+          ...resData.data,
+          role: resData.data.role?.toLowerCase(),
+          status: resData.data.status?.toLowerCase(),
+          studentStatus: resData.data.status?.toLowerCase()
+        };
+
+        setData(prev => ({
+          ...prev,
+          users: prev.users.map(u => u.id === userId ? updatedUser : u)
+        }));
+
+        if (currentUser?.id === userId) {
+          setCurrentUser(updatedUser);
+        }
+
+        return { success: true, message: resData.message || 'Password updated successfully' };
+      }
+
+      return { success: false, message: resData.message || 'Failed to update password' };
+    } catch (err) {
+      console.error('Failed to change password', err);
+      return { success: false, message: 'Failed to update password' };
+    }
+  };
+
   // Update user profile
   const updateUserProfile = (userId, updates) => {
     setData(prev => ({
@@ -1440,6 +1476,7 @@ export function DataProvider({ children }) {
     deleteUser,
     toggleUserStatus,
     updateUser,
+    changePassword,
     updateUserProfile: updateUser, // Alias for backward compatibility
     skipInterestAssessment,
     getCounsellorRecommendations,

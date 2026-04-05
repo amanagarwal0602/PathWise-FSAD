@@ -90,9 +90,7 @@ function AppContent() {
           <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
       </MaintenanceWrapper>
-      {/* Global Help Center Button */}
-      {settings.features.helpCenterEnabled && <HelpCenter />}
-      {/* Global Customer Chat Widget */}
+      {/* Global Customer Chat Widget (primary help entry) */}
       <CustomerChat />
     </>
   );
