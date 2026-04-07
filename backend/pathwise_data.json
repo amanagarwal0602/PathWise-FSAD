@@ -17,16 +17,16 @@
     "guidanceStage" : null,
     "assignedCounsellor" : null,
     "assessmentCompleted" : false,
-    "assessmentSkipped" : null,
+    "assessmentSkipped" : false,
     "flagged" : false,
     "flagReason" : null,
     "specialization" : null,
     "rating" : 0,
     "reviewCount" : 0,
     "evaluatorType" : null,
-    "createdAt" : "2026-03-31T22:34:12"
+    "createdAt" : "2026-04-08T01:56:45.68251"
   }, {
-    "id" : 3,
+    "id" : 2,
     "name" : "Career Coordinator",
     "username" : "gc",
     "email" : "general@pathwise.com",
@@ -43,16 +43,16 @@
     "guidanceStage" : null,
     "assignedCounsellor" : null,
     "assessmentCompleted" : false,
-    "assessmentSkipped" : null,
+    "assessmentSkipped" : false,
     "flagged" : false,
     "flagReason" : null,
     "specialization" : "General",
     "rating" : 0,
     "reviewCount" : 0,
     "evaluatorType" : null,
-    "createdAt" : "2026-03-31T22:59:31"
+    "createdAt" : "2026-04-08T01:56:45.752123"
   }, {
-    "id" : 4,
+    "id" : 3,
     "name" : "Student Verifier 1",
     "username" : "e1",
     "email" : "evaluator1@pathwise.com",
@@ -69,16 +69,16 @@
     "guidanceStage" : null,
     "assignedCounsellor" : null,
     "assessmentCompleted" : false,
-    "assessmentSkipped" : null,
+    "assessmentSkipped" : false,
     "flagged" : false,
     "flagReason" : null,
     "specialization" : null,
     "rating" : 0,
     "reviewCount" : 0,
     "evaluatorType" : "student",
-    "createdAt" : "2026-03-31T22:59:31"
+    "createdAt" : "2026-04-08T01:56:45.757134"
   }, {
-    "id" : 5,
+    "id" : 4,
     "name" : "Student Verifier 2",
     "username" : "e2",
     "email" : "evaluator2@pathwise.com",
@@ -95,16 +95,16 @@
     "guidanceStage" : null,
     "assignedCounsellor" : null,
     "assessmentCompleted" : false,
-    "assessmentSkipped" : null,
+    "assessmentSkipped" : false,
     "flagged" : false,
     "flagReason" : null,
     "specialization" : null,
     "rating" : 0,
     "reviewCount" : 0,
     "evaluatorType" : "student",
-    "createdAt" : "2026-03-31T22:59:31"
+    "createdAt" : "2026-04-08T01:56:45.765135"
   }, {
-    "id" : 6,
+    "id" : 5,
     "name" : "Mentor Verifier 3",
     "username" : "e3",
     "email" : "evaluator3@pathwise.com",
@@ -121,16 +121,16 @@
     "guidanceStage" : null,
     "assignedCounsellor" : null,
     "assessmentCompleted" : false,
-    "assessmentSkipped" : null,
+    "assessmentSkipped" : false,
     "flagged" : false,
     "flagReason" : null,
     "specialization" : null,
     "rating" : 0,
     "reviewCount" : 0,
     "evaluatorType" : "mentor",
-    "createdAt" : "2026-03-31T22:59:31"
+    "createdAt" : "2026-04-08T01:56:45.771336"
   }, {
-    "id" : 7,
+    "id" : 6,
     "name" : "Mentor Verifier 4",
     "username" : "e4",
     "email" : "evaluator4@pathwise.com",
@@ -147,21 +147,21 @@
     "guidanceStage" : null,
     "assignedCounsellor" : null,
     "assessmentCompleted" : false,
-    "assessmentSkipped" : null,
+    "assessmentSkipped" : false,
     "flagged" : false,
     "flagReason" : null,
     "specialization" : null,
     "rating" : 0,
     "reviewCount" : 0,
     "evaluatorType" : "mentor",
-    "createdAt" : "2026-03-31T22:59:31"
+    "createdAt" : "2026-04-08T01:56:45.778355"
   }, {
-    "id" : 8,
+    "id" : 7,
     "name" : "Tech Mentor",
     "username" : "tm",
     "email" : "tech.mentor@pathwise.com",
     "role" : "counsellor",
-    "status" : "verified",
+    "status" : "pending_verification",
     "college" : "IIT Bombay",
     "branch" : "Computer Science & Engineering",
     "year" : "Graduate",
@@ -173,16 +173,16 @@
     "guidanceStage" : null,
     "assignedCounsellor" : null,
     "assessmentCompleted" : false,
-    "assessmentSkipped" : null,
+    "assessmentSkipped" : false,
     "flagged" : false,
     "flagReason" : null,
     "specialization" : "Engineering",
     "rating" : 4.8,
     "reviewCount" : 24,
     "evaluatorType" : null,
-    "createdAt" : "2026-03-31T22:59:31"
+    "createdAt" : "2026-04-08T01:56:45.785351"
   }, {
-    "id" : 9,
+    "id" : 8,
     "name" : "Business Mentor",
     "username" : "bm",
     "email" : "business.mentor@pathwise.com",
@@ -199,16 +199,16 @@
     "guidanceStage" : null,
     "assignedCounsellor" : null,
     "assessmentCompleted" : false,
-    "assessmentSkipped" : null,
+    "assessmentSkipped" : false,
     "flagged" : false,
     "flagReason" : null,
     "specialization" : "Business",
     "rating" : 4.6,
     "reviewCount" : 18,
     "evaluatorType" : null,
-    "createdAt" : "2026-03-31T22:59:31"
+    "createdAt" : "2026-04-08T01:56:45.793627"
   }, {
-    "id" : 10,
+    "id" : 9,
     "name" : "Health Mentor",
     "username" : "hm",
     "email" : "health.mentor@pathwise.com",
@@ -225,16 +225,16 @@
     "guidanceStage" : null,
     "assignedCounsellor" : null,
     "assessmentCompleted" : false,
-    "assessmentSkipped" : null,
+    "assessmentSkipped" : false,
     "flagged" : false,
     "flagReason" : null,
     "specialization" : "Medical",
     "rating" : 4.9,
     "reviewCount" : 31,
     "evaluatorType" : null,
-    "createdAt" : "2026-03-31T22:59:31"
+    "createdAt" : "2026-04-08T01:56:45.799715"
   }, {
-    "id" : 11,
+    "id" : 10,
     "name" : "Arts Mentor",
     "username" : "am",
     "email" : "arts.mentor@pathwise.com",
@@ -251,124 +251,16 @@
     "guidanceStage" : null,
     "assignedCounsellor" : null,
     "assessmentCompleted" : false,
-    "assessmentSkipped" : null,
+    "assessmentSkipped" : false,
     "flagged" : false,
     "flagReason" : null,
     "specialization" : "Arts",
     "rating" : 4.7,
     "reviewCount" : 22,
     "evaluatorType" : null,
-    "createdAt" : "2026-03-31T22:59:31"
+    "createdAt" : "2026-04-08T01:56:45.806716"
   }, {
-    "id" : 12,
-    "name" : "Demo Student",
-    "username" : "ds",
-    "email" : "sample@gmail.com",
-    "role" : "student",
-    "status" : "active",
-    "college" : "Delhi Technological University",
-    "branch" : "Computer Science & Engineering",
-    "year" : "3",
-    "careerGoals" : "Become a full-stack developer and eventually start my own tech company",
-    "achievements" : "Won Smart India Hackathon 2024, Google Summer of Code participant, 3-star CodeChef",
-    "phoneNumber" : "+91 90000 12345",
-    "studentId" : "DTU2022CS0456",
-    "idProofType" : "College ID Card",
-    "guidanceStage" : "initial",
-    "assignedCounsellor" : null,
-    "assessmentCompleted" : false,
-    "assessmentSkipped" : null,
-    "flagged" : false,
-    "flagReason" : null,
-    "specialization" : null,
-    "rating" : 0,
-    "reviewCount" : 0,
-    "evaluatorType" : null,
-    "createdAt" : "2026-03-31T22:59:31",
-    "studentStatus" : "active"
-  }, {
-    "id" : 13,
-    "name" : "Aman Agarwal",
-    "username" : "amanagarwal0602",
-    "email" : "amanagarwal0602@gmail.com",
-    "role" : "student",
-    "status" : "pending_verification",
-    "college" : "KLU",
-    "branch" : "CSE",
-    "year" : "2",
-    "careerGoals" : "this is my career goal",
-    "achievements" : "this is my achiebements/skills",
-    "phoneNumber" : "9276830904",
-    "studentId" : "2400033009",
-    "idProofType" : "College ID Card",
-    "guidanceStage" : "initial",
-    "assignedCounsellor" : null,
-    "assessmentCompleted" : false,
-    "assessmentSkipped" : null,
-    "flagged" : false,
-    "flagReason" : null,
-    "specialization" : null,
-    "rating" : 0,
-    "reviewCount" : 0,
-    "evaluatorType" : null,
-    "createdAt" : "2026-03-31T23:11:55",
-    "studentStatus" : "pending_verification"
-  }, {
-    "id" : 14,
-    "name" : "Aman",
-    "username" : "aman",
-    "email" : "aman@gmail.com",
-    "role" : "student",
-    "status" : "verified",
-    "college" : "KLU",
-    "branch" : "CSE",
-    "year" : "2",
-    "careerGoals" : "my career goals",
-    "achievements" : "my achievements",
-    "phoneNumber" : "1234567890",
-    "studentId" : "2400030214",
-    "idProofType" : "College ID Card",
-    "guidanceStage" : "initial",
-    "assignedCounsellor" : 8,
-    "assessmentCompleted" : false,
-    "assessmentSkipped" : true,
-    "flagged" : false,
-    "flagReason" : null,
-    "specialization" : null,
-    "rating" : 0,
-    "reviewCount" : 0,
-    "evaluatorType" : null,
-    "createdAt" : "2026-03-31T23:16:09",
-    "studentStatus" : "verified"
-  }, {
-    "id" : 18,
-    "name" : "Prateek Sharma",
-    "username" : "prateek",
-    "email" : "p@gmail.com",
-    "role" : "student",
-    "status" : "verified",
-    "college" : "klu",
-    "branch" : "cse",
-    "year" : "2",
-    "careerGoals" : "Prateek career Goal",
-    "achievements" : "Prateek achievements",
-    "phoneNumber" : "1234512458",
-    "studentId" : "2400031402",
-    "idProofType" : "College ID Card",
-    "guidanceStage" : "initial",
-    "assignedCounsellor" : null,
-    "assessmentCompleted" : false,
-    "assessmentSkipped" : null,
-    "flagged" : false,
-    "flagReason" : null,
-    "specialization" : null,
-    "rating" : 0,
-    "reviewCount" : 0,
-    "evaluatorType" : null,
-    "createdAt" : "2026-04-01T16:04:52",
-    "studentStatus" : "verified"
-  }, {
-    "id" : 20,
+    "id" : 11,
     "name" : "Student 1",
     "username" : "student1",
     "email" : "student1@test.com",
@@ -392,10 +284,10 @@
     "rating" : 0,
     "reviewCount" : 0,
     "evaluatorType" : null,
-    "createdAt" : "2026-04-01T23:17:29",
+    "createdAt" : "2026-04-08T01:56:45.813771",
     "studentStatus" : "pending_verification"
   }, {
-    "id" : 21,
+    "id" : 12,
     "name" : "Student 2",
     "username" : "student2",
     "email" : "student2@test.com",
@@ -419,22 +311,22 @@
     "rating" : 0,
     "reviewCount" : 0,
     "evaluatorType" : null,
-    "createdAt" : "2026-04-01T23:17:29",
-    "studentStatus" : "pending_verification"
+    "createdAt" : "2026-04-08T01:56:45.81977",
+    "studentStatus" : "active"
   }, {
-    "id" : 22,
-    "name" : "Rajan Aryan",
-    "username" : "aryan",
-    "email" : "aryan@gmail.com",
+    "id" : 13,
+    "name" : "Aman Agarwal",
+    "username" : "amanagarwal0602",
+    "email" : "amanagarwal0602@gmail.com",
     "role" : "student",
     "status" : "pending_verification",
-    "college" : "Kl University",
-    "branch" : "Computer Science",
+    "college" : "KLU",
+    "branch" : "CSE",
     "year" : "2",
-    "careerGoals" : "",
-    "achievements" : "",
-    "phoneNumber" : "8770445532",
-    "studentId" : "2400031465",
+    "careerGoals" : "this is my career goal",
+    "achievements" : "this is my achiebements/skills",
+    "phoneNumber" : "9276830904",
+    "studentId" : "2400033009",
     "idProofType" : "College ID Card",
     "guidanceStage" : "initial",
     "assignedCounsellor" : null,
@@ -446,300 +338,68 @@
     "rating" : 0,
     "reviewCount" : 0,
     "evaluatorType" : null,
-    "createdAt" : "2026-04-05T21:10:05",
+    "createdAt" : "2026-04-08T01:56:45.826077",
     "studentStatus" : "pending_verification"
   }, {
-    "id" : 23,
-    "name" : "Suhani",
-    "username" : "suhani",
-    "email" : "suhani@gmail.com",
+    "id" : 14,
+    "name" : "Aman",
+    "username" : "aman",
+    "email" : "aman@gmail.com",
     "role" : "student",
-    "status" : "verified",
-    "college" : "Klu",
-    "branch" : "Cse",
+    "status" : "pending_verification",
+    "college" : "KLU",
+    "branch" : "CSE",
     "year" : "2",
-    "careerGoals" : "Suhani career goals",
-    "achievements" : "Suhani achievements",
-    "phoneNumber" : "7878530298",
-    "studentId" : "2400033073",
+    "careerGoals" : "my career goals",
+    "achievements" : "my achievements",
+    "phoneNumber" : "1234567890",
+    "studentId" : "2400030214",
     "idProofType" : "College ID Card",
     "guidanceStage" : "initial",
-    "assignedCounsellor" : 10,
+    "assignedCounsellor" : null,
     "assessmentCompleted" : false,
-    "assessmentSkipped" : true,
+    "assessmentSkipped" : false,
     "flagged" : false,
     "flagReason" : null,
     "specialization" : null,
     "rating" : 0,
     "reviewCount" : 0,
     "evaluatorType" : null,
-    "createdAt" : "2026-04-05T21:55:11",
-    "studentStatus" : "verified"
+    "createdAt" : "2026-04-08T01:56:45.832074",
+    "studentStatus" : "pending_verification"
+  }, {
+    "id" : 15,
+    "name" : "Demo Student",
+    "username" : "ds",
+    "email" : "sample@gmail.com",
+    "role" : "student",
+    "status" : "active",
+    "college" : "Delhi Technological University",
+    "branch" : "Computer Science & Engineering",
+    "year" : "3",
+    "careerGoals" : "Become a full-stack developer and eventually start my own tech company",
+    "achievements" : "Won Smart India Hackathon 2024, Google Summer of Code participant, 3-star CodeChef",
+    "phoneNumber" : "+91 90000 12345",
+    "studentId" : "DTU2022CS0456",
+    "idProofType" : "College ID Card",
+    "guidanceStage" : "initial",
+    "assignedCounsellor" : null,
+    "assessmentCompleted" : false,
+    "assessmentSkipped" : false,
+    "flagged" : false,
+    "flagReason" : null,
+    "specialization" : null,
+    "rating" : 0,
+    "reviewCount" : 0,
+    "evaluatorType" : null,
+    "createdAt" : "2026-04-08T01:56:45.836074",
+    "studentStatus" : "active"
   } ],
-  "meetings" : [ {
-    "id" : 1775154676474,
-    "studentId" : 14,
-    "counsellorId" : 8,
-    "topic" : "first meeting",
-    "date" : "2026-04-04",
-    "time" : "05:45",
-    "status" : "approved",
-    "createdAt" : "2026-04-02T18:31:16.474Z"
-  }, {
-    "id" : 11,
-    "studentId" : 14,
-    "counsellorId" : 8,
-    "title" : "for 1",
-    "description" : "Title: for 1\nDate: 2026-04-04\nTime: 10:30 AM\nLink: meeting.com\nPlatform: zoom\nMeeting ID: 1234567\nPassword: abra ka dabra",
-    "scheduledTime" : "2026-04-04T10:30:00",
-    "duration" : 30,
-    "status" : "scheduled",
-    "meetingLink" : "meeting.com",
-    "notes" : null,
-    "createdAt" : "2026-04-03T00:19:44.520089",
-    "updatedAt" : "2026-04-03T00:19:44.520089",
-    "date" : "2026-04-04",
-    "time" : "10:30",
-    "participants" : [ 14 ]
-  }, {
-    "id" : 1775157544367,
-    "studentId" : 14,
-    "counsellorId" : 8,
-    "topic" : "i need consultation",
-    "date" : "2026-04-04",
-    "time" : "12:00",
-    "status" : "approved",
-    "createdAt" : "2026-04-02T19:19:04.367Z"
-  }, {
-    "id" : 12,
-    "studentId" : 14,
-    "counsellorId" : 8,
-    "title" : "i need consultation",
-    "description" : "Title: i need consultation\nDate: 2026-04-04\nTime: 12:00 PM\nLink: https://jhm\nPlatform: ljk\nMeeting ID: 86541\nPassword: 98645",
-    "scheduledTime" : "2026-04-04T12:00:00",
-    "duration" : 30,
-    "status" : "scheduled",
-    "meetingLink" : "https://jhm",
-    "notes" : null,
-    "createdAt" : "2026-04-03T01:02:24.6489285",
-    "updatedAt" : "2026-04-03T01:02:24.6489285",
-    "date" : "2026-04-04",
-    "time" : "12:00",
-    "participants" : [ 14 ]
-  } ],
+  "meetings" : [ ],
   "groups" : [ ],
-  "testResults" : [ {
-    "id" : 1775067713795,
-    "studentId" : 14,
-    "answers" : {
-      "1" : [ 2 ],
-      "2" : [ 2 ],
-      "3" : [ 5 ],
-      "4" : [ 4 ],
-      "5" : [ 2 ],
-      "6" : [ 0 ],
-      "7" : [ 0 ],
-      "8" : [ 1 ],
-      "9" : [ 2 ],
-      "10" : [ 4 ],
-      "11" : [ 3 ],
-      "12" : [ 0 ],
-      "13" : [ 4 ],
-      "14" : [ 3 ],
-      "15" : [ 5 ]
-    },
-    "categoryCounts" : {
-      "technical" : 3,
-      "creative" : 1,
-      "analytical" : 3,
-      "social" : 3,
-      "leadership" : 1,
-      "teamwork" : 0,
-      "independent" : 1,
-      "risk_taker" : 2,
-      "risk_averse" : 1,
-      "balanced" : 0
-    },
-    "topCategory" : "technical",
-    "recommendedCareers" : [ "Software Engineer", "Mechanical Engineer", "Civil Engineer", "Network Administrator", "Data Engineer", "Robotics Engineer", "DevOps Engineer", "Cloud Architect" ],
-    "completedAt" : "2026-04-01T18:21:53.795Z"
-  } ],
-  "interestAssessments" : [ {
-    "id" : 1775067713794,
-    "studentId" : 14,
-    "answers" : {
-      "1" : [ 2 ],
-      "2" : [ 2 ],
-      "3" : [ 5 ],
-      "4" : [ 4 ],
-      "5" : [ 2 ],
-      "6" : [ 0 ],
-      "7" : [ 0 ],
-      "8" : [ 1 ],
-      "9" : [ 2 ],
-      "10" : [ 4 ],
-      "11" : [ 3 ],
-      "12" : [ 0 ],
-      "13" : [ 4 ],
-      "14" : [ 3 ],
-      "15" : [ 5 ]
-    },
-    "sectionScores" : {
-      "Career Interests" : {
-        "total" : 2,
-        "traits" : {
-          "analytical" : 2
-        }
-      },
-      "Technical vs Creative" : {
-        "total" : 2,
-        "traits" : {
-          "creative" : 1,
-          "technical" : 1
-        }
-      },
-      "Leadership & Teamwork" : {
-        "total" : 2,
-        "traits" : {
-          "independent" : 1,
-          "leadership" : 1
-        }
-      },
-      "Risk-Taking Ability" : {
-        "total" : 2,
-        "traits" : {
-          "risk_taker" : 2
-        }
-      },
-      "Problem-Solving Style" : {
-        "total" : 2,
-        "traits" : {
-          "technical" : 1,
-          "social" : 1
-        }
-      },
-      "Communication Preference" : {
-        "total" : 2,
-        "traits" : {
-          "social" : 2
-        }
-      },
-      "Work Environment" : {
-        "total" : 3,
-        "traits" : {
-          "analytical" : 1,
-          "technical" : 1,
-          "risk_averse" : 1
-        }
-      }
-    },
-    "dominantTraits" : [ {
-      "trait" : "technical",
-      "count" : 3,
-      "percentage" : 20
-    }, {
-      "trait" : "analytical",
-      "count" : 3,
-      "percentage" : 20
-    }, {
-      "trait" : "social",
-      "count" : 3,
-      "percentage" : 20
-    } ],
-    "suggestedFields" : [ {
-      "field" : "IT",
-      "count" : 3,
-      "percentage" : 20
-    }, {
-      "field" : "Business",
-      "count" : 2,
-      "percentage" : 13
-    }, {
-      "field" : "Management",
-      "count" : 2,
-      "percentage" : 13
-    }, {
-      "field" : "Counselling",
-      "count" : 2,
-      "percentage" : 13
-    }, {
-      "field" : "Media",
-      "count" : 1,
-      "percentage" : 7
-    } ],
-    "personalityInsights" : [ "You have a strong technical inclination and enjoy working with systems and logic." ],
-    "completedAt" : "2026-04-01T18:21:53.794Z"
-  } ],
+  "testResults" : [ ],
+  "interestAssessments" : [ ],
   "studentNotes" : [ ],
-  "counsellorRecommendations" : [ {
-    "studentId" : 14,
-    "recommendations" : [ {
-      "counsellorId" : 11,
-      "counsellorName" : "Arts Mentor",
-      "specialization" : "Arts",
-      "matchScore" : 14,
-      "matchReasons" : [ "Expertise in Media", "Available capacity" ],
-      "currentStudentCount" : 0,
-      "isAvailable" : true
-    }, {
-      "counsellorId" : 10,
-      "counsellorName" : "Health Mentor",
-      "specialization" : "Medical",
-      "matchScore" : 10,
-      "matchReasons" : [ "Available capacity" ],
-      "currentStudentCount" : 0,
-      "isAvailable" : true
-    } ],
-    "generatedAt" : "2026-04-01T18:21:53.795Z"
-  } ],
-  "verificationRequests" : [ {
-    "id" : 1775040782356,
-    "studentId" : 18,
-    "evaluatorId" : 4,
-    "action" : "approved",
-    "notes" : "",
-    "timestamp" : "2026-04-01T10:53:02.357Z"
-  }, {
-    "id" : 1775068193717,
-    "studentId" : 8,
-    "evaluatorId" : 7,
-    "action" : "approved",
-    "notes" : "",
-    "timestamp" : "2026-04-01T18:29:53.717Z"
-  }, {
-    "id" : 1775069012850,
-    "studentId" : 8,
-    "evaluatorId" : 7,
-    "action" : "approved",
-    "notes" : "",
-    "timestamp" : "2026-04-01T18:43:32.850Z"
-  }, {
-    "id" : 1775104393250,
-    "studentId" : 8,
-    "evaluatorId" : 7,
-    "action" : "approved",
-    "notes" : "",
-    "timestamp" : "2026-04-02T04:33:13.250Z"
-  }, {
-    "id" : 1775154750335,
-    "studentId" : 8,
-    "evaluatorId" : 7,
-    "action" : "approved",
-    "notes" : "u are verified",
-    "timestamp" : "2026-04-02T18:32:30.335Z"
-  }, {
-    "id" : 1775406382244,
-    "studentId" : 23,
-    "evaluatorId" : 4,
-    "action" : "approved",
-    "notes" : "Verified",
-    "timestamp" : "2026-04-05T16:26:22.244Z"
-  }, {
-    "id" : 1775409481438,
-    "studentId" : 14,
-    "evaluatorId" : 4,
-    "action" : "approved",
-    "notes" : "",
-    "timestamp" : "2026-04-05T17:18:01.438Z"
-  } ]
+  "counsellorRecommendations" : [ ],
+  "verificationRequests" : [ ]
 }

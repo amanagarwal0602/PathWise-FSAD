@@ -1,4 +1,117 @@
 ================================================================================
+                    PATHWISE - PROJECT WORKFLOW & TECH STACK
+================================================================================
+
+This document is written like we are explaining the project
+to a non-technical mentor and to our future selves.
+
+-------------------------------------------------------------------------------
+1. HIGH LEVEL PITCH (WHAT IS PATHWISE?)
+-------------------------------------------------------------------------------
+
+PathWise is a career guidance platform where:
+- Students register, take an interest assessment and chat with counsellors/mentors
+- Counsellors and verification specialists review and verify users
+- Career mentors give one‑to‑one guidance based on real assessment data
+
+In simple words: "It is an online career guidance and mentoring system
+where students don’t just fill forms – they get filtered, verified and
+guided step‑by‑step by real counsellors."
+
+-------------------------------------------------------------------------------
+2. TECH STACK (TOOLS WE USED)
+-------------------------------------------------------------------------------
+
+Frontend (what the user sees):
+- React + Vite (modern JavaScript UI framework and bundler)
+- HTML, CSS (Tailwind‑style utility classes and custom CSS in src/styles)
+- Runs on: Node.js (local dev server via Vite)
+
+Backend (brain of the system):
+- Java 21
+- Spring Boot 3.2 (for REST APIs, security, validation, WebSocket signaling)
+- Spring Data JPA (to talk to the database)
+- MySQL (main production database)
+- H2 (in‑memory database for local/dev)
+
+Security & Auth:
+- Spring Security (authentication & authorization)
+- JWT (JSON Web Tokens) for login sessions
+- Custom password hashing and rate‑limiting logic
+
+Infrastructure / Dev Tools:
+- Maven 3.9.6 (build tool for Java backend)
+- Node.js 20 (local frontend dev server & build)
+- Cloudflare Tunnel (to securely expose localhost to the internet
+  so mentors/evaluators can access our local backend/frontend demo)
+- Vercel (for hosting the React frontend in production/demo)
+
+-------------------------------------------------------------------------------
+3. SYSTEM ARCHITECTURE (HOW PIECES TALK TO EACH OTHER)
+-------------------------------------------------------------------------------
+
+1) Frontend (React app)
+   - Deployed on Vercel or run locally at http://localhost:5173
+   - Talks to backend using HTTP APIs and WebSockets
+   - Base URL configured via VITE_API_URL in .env.local
+
+2) Backend (Spring Boot API)
+   - Runs at http://localhost:8080 (or exposed via Cloudflare URL)
+   - Exposes REST endpoints under /api/**
+   - Handles login, registration, verification, chat, assessments, meetings
+   - Uses JWT + Spring Security to protect sensitive endpoints
+
+3) Database
+   - In production: MySQL hosted at sql12.freesqldatabase.com
+   - In local/dev: H2 or MySQL depending on application.properties
+
+4) Cloudflare Tunnel
+   - We run start-cloudflare-tunnel.ps1 to create a public https URL
+   - That URL forwards traffic securely to our local backend/frontend
+   - Useful for live demos to mentor without deploying full backend
+
+Data flow summary (simple story):
+- Frontend → sends HTTP request to → Backend → reads/writes → Database
+- Backend → returns JSON → Frontend → renders UI and updates dashboards
+
+-------------------------------------------------------------------------------
+4. PROJECT WORKFLOW (AS A TEAM / FOR DEMOS)
+-------------------------------------------------------------------------------
+
+Step 1: Start backend
+- cd backend
+- Run: .\apache-maven-3.9.6\bin\mvn.cmd spring-boot:run
+- Backend listens on http://localhost:8080
+
+Step 2: Start frontend
+- npm install   (first time only, in project root)
+- npm run dev   (or use Vite dev script from package.json)
+- Frontend listens on http://localhost:5173
+
+Step 3: Connect frontend to backend
+- In .env.local set: VITE_API_URL=http://localhost:8080/api
+- Restart Vite dev server if URL changes
+
+Step 4 (optional): Expose locally running app to internet
+- Run: start-cloudflare-tunnel.ps1
+- Get the public https URL from Cloudflare output
+- Update VITE_API_URL to that URL + /api (for demo if needed)
+- Share that URL with mentor so they can access our local backend
+
+Step 5: Use the platform end‑to‑end
+- Student registers and logs in
+- Evaluator verifies student
+- Student completes assessment
+- Career coordinator chats + assigns mentor
+- Mentor provides guidance via chat & meetings
+
+When we pitch to mentor we can say:
+"We built a full‑stack system. React on the front for user experience,
+Spring Boot and MySQL on the back for business logic and data, and
+Cloudflare/Vercel to safely share our work online. The whole journey
+from registration to active guidance is implemented and testable."
+
+================================================================================
                     PATHWISE - COMPLETE TESTING WORKFLOW
 ================================================================================
 

@@ -1,0 +1,101 @@
+PATHWISE PROJECT START GUIDE
+============================
+
+1) BACKEND (SPRING BOOT)
+------------------------
+
+From project root:  D:\OneDrive\Desktop\Fsad Project
+
+- To (re)start backend on port 9090:
+
+    powershell -ExecutionPolicy Bypass -File .\restart-backend.ps1
+
+This will:
+- Stop anything using port 9090
+- Run: backend\apache-maven-3.9.6\bin\mvn.cmd spring-boot:run
+
+
+2) CLOUDFLARE TUNNEL (PUBLIC BACKEND URL)
+-----------------------------------------
+
+Requires cloudflared installed (already done) at:
+- C:\Program Files (x86)\cloudflared\cloudflared.exe
+
+From project root:
+
+    powershell -ExecutionPolicy Bypass -File .\start-cloudflare-tunnel.ps1
+
+cloudflared will print a URL like:
+
+    https://something-random.trycloudflare.com
+
+Your public API base URL for this session is then:
+
+    https://something-random.trycloudflare.com/api
+
+(Replace "something-random" with the actual tunnel URL shown in the terminal.
+This URL changes every time you restart the tunnel.)
+
+Keep the cloudflared terminal OPEN while you want the URL to work.
+
+
+3) FRONTEND (VITE + REACT)
+--------------------------
+
+From project root (first time):
+
+    npm install
+
+Then to run locally (dev server):
+
+    npm run dev
+
+The frontend dev server will run on:
+- http://localhost:5173  (default Vite port)
+
+The frontend reads the backend URL from the Vite env variable VITE_API_URL,
+defined and used in: src/utils/api.js
+
+
+4) LOCAL ENV: WHERE TO PASTE THE CLOUDFLARE LINK
+-----------------------------------------------
+
+Create a file named .env.local in project root (same folder as package.json)
+if it does not already exist, and add:
+
+    VITE_API_URL=https://YOUR_TUNNEL_URL.trycloudflare.com/api
+
+Example (DO NOT copy this exactly; use your current tunnel URL):
+
+    VITE_API_URL=https://has-graduates-temporal-moving.trycloudflare.com/api
+
+Whenever you restart the tunnel and get a NEW URL, update VITE_API_URL in
+.env.local to that new value and restart the Vite dev server.
+
+
+5) VERCEL DEPLOYMENT: ENV VARIABLE
+----------------------------------
+
+On the Vercel website:
+- Go to your project
+- Open: Settings -> Environment Variables
+- Add a new variable:
+
+    Name:  VITE_API_URL
+    Value: https://YOUR_TUNNEL_URL.trycloudflare.com/api
+
+- Scope: choose the environments where you want it (Production, Preview,
+  Development) and click "Save" / "Add".
+- Redeploy the project (or Vercel will redeploy automatically) so that the
+  new VITE_API_URL is picked up.
+
+Your frontend code (src/utils/api.js) uses:
+
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9090/api';
+
+So:
+- Locally: if .env.local has VITE_API_URL set, frontend calls the Cloudflare URL.
+- On Vercel: it uses the VITE_API_URL you configured in the Vercel dashboard.
+- If VITE_API_URL is NOT set, it falls back to http://localhost:9090/api.
+
+END OF GUIDE

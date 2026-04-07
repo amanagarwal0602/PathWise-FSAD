@@ -5,6 +5,8 @@ import com.pathwise.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 
 import java.nio.charset.StandardCharsets;
@@ -13,10 +15,26 @@ import java.util.Base64;
 import java.security.SecureRandom;
 
 @SpringBootApplication
-public class PathWiseApplication {
+public class PathWiseApplication extends SpringBootServletInitializer {
+
+    @Override
+    protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
+        return builder.sources(PathWiseApplication.class);
+    }
 
     public static void main(String[] args) {
-        SpringApplication.run(PathWiseApplication.class, args);
+        System.out.println("[PathWise] Starting PathWiseApplication main()...");
+        try {
+            SpringApplication.run(PathWiseApplication.class, args);
+        } catch (Exception e) {
+            // DevTools throws SilentExitException during its normal restart cycle — ignore it
+            if (e.getClass().getName().contains("SilentExitException")) {
+                System.out.println("[PathWise] DevTools restart triggered (normal behavior).");
+            } else {
+                System.err.println("[PathWise] FATAL error during Spring Boot startup:");
+                e.printStackTrace();
+            }
+        }
     }
 
     private String generateSalt() {
